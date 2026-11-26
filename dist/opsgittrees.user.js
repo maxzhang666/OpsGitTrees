@@ -2,9 +2,11 @@
 // @name               OpsGitTrees
 // @namespace          OpsGitTrees
 // @version            0.1.1
+// @author             maxzhang666
 // @description        Lightweight GitHub repository tree and path navigation
 // @description:zh-CN  轻量的 GitHub 仓库文件树与路径导航
 // @icon               https://raw.githubusercontent.com/maxzhang666/OpsGitTrees/main/assets/icon.png
+// @homepageURL        https://github.com/maxzhang666/OpsGitTrees
 // @match              https://github.com/*
 // @sandbox            DOM
 // @connect            api.github.com

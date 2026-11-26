@@ -7,6 +7,8 @@ export default defineConfig({
     userscript: {
       name: 'OpsGitTrees',
       namespace: 'OpsGitTrees',
+      author: 'maxzhang666',
+      homepageURL: 'https://github.com/maxzhang666/OpsGitTrees',
       version: '0.1.1',
       description: { '': 'Lightweight GitHub repository tree and path navigation', 'zh-CN': '轻量的 GitHub 仓库文件树与路径导航' },
       icon: 'https://raw.githubusercontent.com/maxzhang666/OpsGitTrees/main/assets/icon.png',
