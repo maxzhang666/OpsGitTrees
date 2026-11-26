@@ -15,6 +15,32 @@ const totalLimit = 16 * 1024 * 1024;
 interface CacheEnvelope { schema: 2; repoId: number; scope: string; private: boolean; usedAt: number; treeSha: string }
 type CacheRecord = CacheEnvelope & ({ kind: 'commit'; commitSha: string } | { kind: 'response'; recursive: boolean; response: TreeResponse } | { kind: 'split'; recursive: true });
 interface RecordValue { schema: 1; scope: string; private: boolean; usedAt: number; entries?: readonly TreeEntry[]; view?: ViewState }
+interface StoredRecord { key: string; raw: string; bytes: number; usedAt: number; record: RecordValue | CacheRecord }
+interface CoverageGroup {
+  blocks: Map<string, { recursive?: TreeResponse; listing?: TreeResponse }>;
+  memo: Map<string, boolean>;
+  visiting: Set<string>;
+}
+const recent = new Map<string, number>();
+function rememberUse(key: string): void {
+  recent.delete(key); recent.set(key, Date.now());
+  if (recent.size > 1024) {
+    const oldest = recent.keys().next().value;
+    if (oldest !== undefined) recent.delete(oldest);
+  }
+}
+function hasCachedCoverage(group: CoverageGroup, sha: string): boolean {
+  const known = group.memo.get(sha);
+  if (known !== undefined) return known;
+  const cached = group.blocks.get(sha);
+  if (cached?.recursive && !cached.recursive.truncated) { group.memo.set(sha, true); return true; }
+  if (group.visiting.has(sha)) return false;
+  if (!cached?.listing || cached.listing.truncated) { group.memo.set(sha, false); return false; }
+  group.visiting.add(sha);
+  const complete = cached.listing.tree.every(entry => entry.type !== 'tree' || hasCachedCoverage(group, entry.sha));
+  group.visiting.delete(sha); group.memo.set(sha, complete);
+  return complete;
+}
 export class StorageLimitError extends Error {
   readonly detail = msg('Persistent-cache budget exceeded; loaded paths remain available in memory.');
   constructor() { super(); this.message = renderText(this.detail); }
@@ -57,45 +83,76 @@ function parseCache(key: string, value: unknown): CacheRecord | null {
 async function readCacheRecord(key: string, context: CommitContext, scope: AuthScope): Promise<CacheRecord | null> {
   if (!await allowed(context, scope)) return null;
   const record = parseCache(key, await GM.getValue(key));
-  if (!record || record.scope !== cacheScope(context, scope) || record.private !== (context.visibility !== 'public') || !await allowed(context, scope)) return null;
+  if (!record || record.scope !== cacheScope(context, scope) || record.private !== (context.visibility !== 'public') || !await allowed(context, scope)) { recent.delete(key); return null; }
+  rememberUse(key);
   return record;
 }
 // Callers hold storage before taking authorization; helpers never reacquire storage.
-async function deleteUnchanged(key: string, raw: unknown, scope: AuthScope): Promise<boolean> {
+async function changeUnchanged(key: string, raw: unknown, scope: AuthScope, replacement?: string): Promise<boolean> {
   return withAuthLock(async () => {
     if (!isAuthScopeCurrent(scope)) return false;
     const current = await GM.getValue(key);
     if (!isAuthScopeCurrent(scope) || current !== raw) return false;
-    await GM.deleteValue(key);
+    if (replacement === undefined) { await GM.deleteValue(key); recent.delete(key); }
+    else await GM.setValue(key, replacement);
     return true;
   });
 }
 async function readRecord(key: string, context: RepoContext, scope: AuthScope): Promise<RecordValue | null> {
   if (!await allowed(context, scope)) return null;
   const record = parse(await GM.getValue(key));
-  if (!record || record.scope !== cacheScope(context, scope) || record.private !== (context.visibility !== 'public') || !await allowed(context, scope)) return null;
+  if (!record || record.scope !== cacheScope(context, scope) || record.private !== (context.visibility !== 'public') || !await allowed(context, scope)) { recent.delete(key); return null; }
+  rememberUse(key);
   return record;
 }
 async function trim(): Promise<void> {
   const scope = await readAuthScope();
-  const records: { key: string; raw: string; bytes: number; usedAt: number }[] = [];
+  const records: StoredRecord[] = [];
+  const groups = new Map<string, CoverageGroup>();
+  const present = new Set<string>();
   for (const key of await GM.listValues()) {
     if (!key.startsWith(prefix) && !key.startsWith(cachePrefix)) continue;
     const raw = await GM.getValue<unknown>(key);
     if (!isAuthScopeCurrent(scope)) return;
     const record = key.startsWith(cachePrefix) ? parseCache(key, raw) : parse(raw);
     if (!record || (record.private && (!scope.authenticated || record.scope !== scope.id))) {
-      await deleteUnchanged(key, raw, scope);
+      await changeUnchanged(key, raw, scope);
       continue;
     }
-    if (key.startsWith(cachePrefix)) continue;
-    records.push({ key, raw: raw as string, bytes: encoder.encode(raw as string).byteLength, usedAt: record.usedAt });
+    present.add(key);
+    records.push({ key, raw: raw as string, bytes: encoder.encode(raw as string).byteLength, usedAt: Math.max(record.usedAt, recent.get(key) ?? record.usedAt), record });
+    if (record.schema !== 2 || record.kind !== 'response') continue;
+    const identity = JSON.stringify([record.repoId, record.scope]);
+    let group = groups.get(identity);
+    if (!group) { group = { blocks: new Map(), memo: new Map(), visiting: new Set() }; groups.set(identity, group); }
+    let blocks = group.blocks.get(record.treeSha);
+    if (!blocks) { blocks = {}; group.blocks.set(record.treeSha, blocks); }
+    blocks[record.recursive ? 'recursive' : 'listing'] = record.response;
   }
-  let size = records.reduce((n, r) => n + r.bytes, 0);
+  if (!isAuthScopeCurrent(scope)) return;
+  for (const key of recent.keys()) if (!present.has(key)) recent.delete(key);
+  let size = records.reduce((bytes, item) => bytes + item.bytes, 0);
   records.sort((a, b) => a.usedAt - b.usedAt);
-  for (const record of records) {
-    if (size <= totalLimit || !isAuthScopeCurrent(scope)) break;
-    if (await deleteUnchanged(record.key, record.raw, scope)) size -= record.bytes;
+  for (const item of records) {
+    if (!isAuthScopeCurrent(scope)) return;
+    const record = item.record;
+    if (record.schema !== 2 || record.kind !== 'response' || !record.recursive || !record.response.truncated) continue;
+    const group = groups.get(JSON.stringify([record.repoId, record.scope]));
+    if (size <= totalLimit && (!group || !hasCachedCoverage(group, record.treeSha))) continue;
+    const split: CacheRecord = { schema: 2, kind: 'split', repoId: record.repoId, scope: record.scope, private: record.private, usedAt: record.usedAt, treeSha: record.treeSha, recursive: true };
+    const replacement = serialize(split), bytes = encoder.encode(replacement).byteLength;
+    if (await changeUnchanged(item.key, item.raw, scope, replacement)) {
+      size += bytes - item.bytes; item.raw = replacement; item.bytes = bytes; item.record = split;
+    }
+  }
+  for (const skeleton of [false, true]) {
+    for (const item of records) {
+      if (size <= totalLimit || !isAuthScopeCurrent(scope)) return;
+      const record = item.record;
+      const recovery = record.schema === 2 && (record.kind === 'split' || (record.kind === 'response' && !record.recursive));
+      if (recovery !== skeleton) continue;
+      if (await changeUnchanged(item.key, item.raw, scope)) size -= item.bytes;
+    }
   }
 }
 function serialize(record: RecordValue | CacheRecord): string {
@@ -107,7 +164,7 @@ async function finishWrite(key: string, serialized: string, context: CommitConte
   const authorized = await allowed(context, scope);
   if (authorized) await trim();
   if (!authorized || !await allowed(context, scope)) {
-    await deleteUnchanged(key, serialized, await readAuthScope());
+    await changeUnchanged(key, serialized, await readAuthScope());
     throw new DOMException('Authorization changed', 'AbortError');
   }
 }
@@ -115,7 +172,17 @@ async function writeRecord(key: string, context: CommitContext, scope: AuthScope
   await navigator.locks.request(storageLock, async () => {
     if (!await allowed(context, scope)) throw new DOMException('Authorization changed', 'AbortError');
     const serialized = serialize(record);
+    if (record.schema === 2 && record.kind === 'response') {
+      const raw = await GM.getValue<unknown>(key), previous = parseCache(key, raw);
+      if (!await allowed(context, scope)) throw new DOMException('Authorization changed', 'AbortError');
+      if (record.response.truncated && (previous?.kind === 'split' || (previous?.kind === 'response' && !previous.response.truncated))) {
+        rememberUse(key);
+        await finishWrite(key, raw as string, context, scope);
+        return;
+      }
+    }
     await GM.setValue(key, serialized);
+    rememberUse(key);
     await finishWrite(key, serialized, context, scope);
   });
 }
@@ -151,7 +218,6 @@ export async function writeTreeBlock(context: RepoContext, scope: AuthScope, sha
 export async function readTree(context: RepoContext, scope: AuthScope): Promise<readonly TreeEntry[] | null> {
   const record = await readRecord(treeKey(context, scope), context, scope);
   if (!record?.entries || !Array.isArray(record.entries)) return null;
-  void writeTree(context, scope, record.entries).catch(() => undefined);
   return record.entries;
 }
 export async function writeTree(context: RepoContext, scope: AuthScope, entries: readonly TreeEntry[]): Promise<void> { await writeRecord(treeKey(context, scope), context, scope, { schema: 1, scope: cacheScope(context, scope), private: context.visibility !== 'public', usedAt: Date.now(), entries }); }

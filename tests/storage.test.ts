@@ -1,6 +1,7 @@
 import { expect, it, vi } from 'vitest';
 import { clearToken, configureToken, readAuthScope } from '../src/credentials';
 import { purgePrivateData, readCommitTree, readSettings, readTree, readTreeBlock, readView, StorageLimitError, writeCommitTree, writeSettings, writeTree, writeTreeBlock, writeView } from '../src/storage';
+import { TreeIndex } from '../src/tree-index';
 import type { TreeResponse, ViewState } from '../src/types';
 import { context, entry, sha } from './fixtures';
 import { deferred, GM, setHttpHandler, values } from './gm';
@@ -184,6 +185,98 @@ it('page-exit view persistence submits synchronously even while the storage lock
     expect([...values.keys()].some(key => key.startsWith('ogt:data:v1:["view",'))).toBe(true);
   } finally { release.resolve(); await Promise.all([holder, writing]); }
   expect(await readView(context, scope)).toEqual(state);
+});
+it('evictionPreservesRecoverySkeleton', async () => {
+  const scope = await readAuthScope(); await purgePrivateData();
+  vi.spyOn(Date, 'now').mockReturnValue(1000);
+  const partial: TreeResponse = { ...response, truncated: true, tree: [entry('ready.ts'), entry('界'.repeat(2 * 1024 * 1024))] };
+  const listing: TreeResponse = { ...response, tree: [entry('a', 'tree', 4), entry('missing', 'tree', 5)] };
+  const child: TreeResponse = { sha: sha(4), truncated: false, tree: [entry('done.ts')] };
+  const ordinary: TreeResponse = { sha: sha(6), truncated: false, tree: [entry('x'.repeat(3 * 1024 * 1024))] };
+  const index = new TreeIndex(); index.add(partial.tree); const paths = [...index.view('partial').entries.keys()];
+  values.set(blockKey(), JSON.stringify({ ...responseRecord(), usedAt: 0, response: partial }));
+  values.set(blockKey('public', context.rootTreeSha, false), JSON.stringify({ ...responseRecord(), usedAt: 1, recursive: false, response: listing }));
+  values.set(blockKey('public', sha(4)), JSON.stringify({ ...responseRecord(), usedAt: 4, treeSha: sha(4), response: child }));
+  values.set(blockKey('public', sha(6)), JSON.stringify({ ...responseRecord(), usedAt: 1, treeSha: sha(6), response: ordinary }));
+  await purgePrivateData();
+  expect(await readTreeBlock(context, scope, context.rootTreeSha, true)).toEqual({ kind: 'split' });
+  expect(await readTreeBlock(context, scope, context.rootTreeSha, false)).toEqual({ kind: 'response', response: listing });
+  expect(await readTreeBlock(context, scope, sha(4), true)).toEqual({ kind: 'response', response: child });
+  expect([...index.view('partial').entries.keys()]).toEqual(paths);
+  const raw = values.get(blockKey('public', sha(6)));
+  const state: ViewState = { browsing: { expanded: ['z'.repeat(3 * 1024 * 1024)], scrollTop: 0, anchorPath: null, anchorOffset: 0 }, search: null };
+  values.set('ogt:data:v1:' + JSON.stringify(['tree', context.repoId, context.rootTreeSha, 'public']), JSON.stringify({ schema: 1, scope: 'public', private: false, usedAt: 2, entries: [entry('z'.repeat(1.5 * 1024 * 1024))] }));
+  values.set('ogt:data:v1:' + JSON.stringify(['view', context.repoId, context.refKind, context.refName, 'public']), JSON.stringify({ schema: 1, scope: 'public', private: false, usedAt: 3, view: state }));
+  expect(await readTreeBlock(context, scope, sha(6), true)).toEqual({ kind: 'response', response: ordinary });
+  expect(values.get(blockKey('public', sha(6)))).toBe(raw);
+  await writeTreeBlock(context, scope, sha(8), true, { ...ordinary, sha: sha(8) });
+  expect(await readTree(context, scope)).toBeNull(); expect(await readView(context, scope)).toEqual(state);
+  expect(await readTreeBlock(context, scope, sha(6), true)).toEqual({ kind: 'response', response: ordinary });
+  expect(await readTreeBlock(context, scope, context.rootTreeSha, true)).toEqual({ kind: 'split' });
+  expect(await readTreeBlock(context, scope, context.rootTreeSha, false)).toEqual({ kind: 'response', response: listing });
+  expect(await readTreeBlock(context, scope, sha(4), true)).toEqual({ kind: 'response', response: child });
+  values.clear(); await purgePrivateData();
+  const largeListing: TreeResponse = { ...response, tree: [entry('y'.repeat(5 * 1024 * 1024))] };
+  values.set(blockKey(), JSON.stringify({ ...splitRecord('public', context.rootTreeSha), usedAt: 0 }));
+  values.set(blockKey('public', context.rootTreeSha, false), JSON.stringify({ ...responseRecord(), usedAt: 1, recursive: false, response: largeListing }));
+  values.set(blockKey('public', sha(9), false), JSON.stringify({ ...responseRecord(), usedAt: 2, treeSha: sha(9), recursive: false, response: { ...largeListing, sha: sha(9) } }));
+  await purgePrivateData();
+  expect(await readTreeBlock(context, scope, context.rootTreeSha, true)).toBeNull();
+  expect(await readTreeBlock(context, scope, context.rootTreeSha, false)).toBeNull();
+  expect(await readTreeBlock(context, scope, sha(9), false)).toEqual({ kind: 'response', response: { ...largeListing, sha: sha(9) } });
+  const bytes = [...values.entries()].reduce((size, [key, value]) => key.startsWith(cachePrefix) ? size + new TextEncoder().encode(value as string).byteLength : size, 0);
+  expect(bytes).toBeLessThanOrEqual(16 * 1024 * 1024);
+});
+it.each([
+  ['missing', false], ['wrong scope', false], ['wrong repository', false], ['corrupt', false], ['split', false], ['cycle', false],
+  ['complete recursive', true], ['complete enumeration', true],
+  ['truncated enumeration', false],
+] as const)('splitRequiresCachedCoverage: %s', async (kind, covered) => {
+  const scope = await authorize();
+  const partial: TreeResponse = { ...response, truncated: true };
+  await writeTreeBlock(context, scope, context.rootTreeSha, true, partial);
+  await writeTreeBlock(context, scope, context.rootTreeSha, false, { ...response, tree: [entry('child', 'tree', 4)] });
+  const child: TreeResponse = { sha: sha(4), truncated: false, tree: [] };
+  const fixture = { ...responseRecord(), treeSha: sha(4), response: child };
+  if (kind === 'wrong scope') values.set(blockKey(scope.id, sha(4)), JSON.stringify({ ...fixture, scope: scope.id, private: true }));
+  else if (kind === 'wrong repository') values.set(cachePrefix + JSON.stringify(['tree', 2, sha(4), true, 'public']), JSON.stringify({ ...fixture, repoId: 2 }));
+  else if (kind === 'corrupt') values.set(blockKey('public', sha(4)), JSON.stringify({ ...fixture, response: { ...child, tree: [entry('../bad.ts')] } }));
+  else if (kind === 'split') values.set(blockKey('public', sha(4)), JSON.stringify(splitRecord('public', sha(4))));
+  else if (kind === 'cycle') values.set(blockKey('public', sha(4), false), JSON.stringify({ ...fixture, recursive: false, response: { ...child, tree: [entry('loop', 'tree', 4)] } }));
+  else if (kind === 'truncated enumeration') values.set(blockKey('public', sha(4), false), JSON.stringify({ ...fixture, recursive: false, response: { ...child, truncated: true } }));
+  else if (kind === 'complete recursive') values.set(blockKey('public', sha(4)), JSON.stringify(fixture));
+  else if (kind === 'complete enumeration') {
+    values.set(blockKey('public', sha(4), false), JSON.stringify({ ...fixture, recursive: false, response: { ...child, tree: [entry('leaf', 'tree', 5)] } }));
+    values.set(blockKey('public', sha(5)), JSON.stringify({ ...fixture, treeSha: sha(5), response: { ...child, sha: sha(5) } }));
+  }
+  await purgePrivateData();
+  expect(await readTreeBlock(context, scope, context.rootTreeSha, true)).toEqual(covered ? { kind: 'split' } : { kind: 'response', response: partial });
+});
+it('latePartialWritesKeepStrongerBlocks', async () => {
+  const scope = await readAuthScope(); const partial: TreeResponse = { ...response, truncated: true, tree: [entry('late.ts')] };
+  for (const recursive of [true, false]) {
+    await writeTreeBlock(context, scope, context.rootTreeSha, recursive, response);
+    await writeTreeBlock(context, scope, context.rootTreeSha, recursive, partial);
+    expect(await readTreeBlock(context, scope, context.rootTreeSha, recursive)).toEqual({ kind: 'response', response });
+  }
+  values.set(blockKey(), JSON.stringify(splitRecord('public', context.rootTreeSha)));
+  await writeTreeBlock(context, scope, context.rootTreeSha, true, partial);
+  expect(await readTreeBlock(context, scope, context.rootTreeSha, true)).toEqual({ kind: 'split' });
+  await writeTreeBlock(context, scope, context.rootTreeSha, true, response);
+  expect(await readTreeBlock(context, scope, context.rootTreeSha, true)).toEqual({ kind: 'response', response });
+});
+it('legacyEvictionLeavesV2Untouched', async () => {
+  const scope = await authorize(); const state: ViewState = { browsing: { expanded: ['docs'], scrollTop: 12, anchorPath: null, anchorOffset: 0 }, search: null };
+  await writeTree(context, scope, [entry('legacy.ts')]); await writeView(context, scope, state);
+  await writeSettings({ width: 320 }); await writeCommitTree(context, scope); await writeTreeBlock(context, scope, context.rootTreeSha, true, response);
+  values.set(blockKey('public', sha(4)), JSON.stringify(splitRecord('public')));
+  await purgePrivateData();
+  expect(await readTree(context, scope)).toEqual([entry('legacy.ts')]); expect(await readView(context, scope)).toEqual(state);
+  for (const key of await GM.listValues()) if (key.startsWith('ogt:data:v1:')) await GM.deleteValue(key);
+  expect(await readCommitTree(context, scope)).toBe(context.rootTreeSha);
+  expect(await readTreeBlock(context, scope, context.rootTreeSha, true)).toEqual({ kind: 'response', response });
+  expect(await readTreeBlock(context, scope, sha(4), true)).toEqual({ kind: 'split' });
+  expect((await readAuthScope()).id).toBe(scope.id); expect((await readSettings()).width).toBe(320);
 });
 
 it('concurrent changes to different preferences preserve both choices', async () => {

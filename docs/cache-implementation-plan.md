@@ -86,16 +86,16 @@ export function writeTreeBlock(context: RepoContext, scope: AuthScope, sha: stri
 
 **Files:** 修改 `src/storage.ts`、`tests/storage.test.ts`；消费任务 1 的 v2 记录与读写接口，不新增公开存储接口。
 
-- [ ] 添加 `evictionPreservesRecoverySkeleton`：总量超过 16 MiB 时先缩减截断正文，再淘汰普通块，最后才回收非递归枚举／split 标记；同级按最近使用提示排序，仍超预算时不永久固定骨架。
+- [x] 添加 `evictionPreservesRecoverySkeleton`：总量超过 16 MiB 时先缩减截断正文，再淘汰普通块，最后才回收非递归枚举／split 标记；同级按最近使用提示排序，仍超预算时不永久固定骨架。
   关键断言：`expect(await readTreeBlock(context, scope, context.rootTreeSha, true)).toEqual({ kind: 'split' })`，且非递归枚举和已完成子块仍可读；回收不能改变原运行时索引的路径集合。
-- [ ] 添加 `splitRequiresCachedCoverage`：完整递归块或完整非递归枚举加全部已缓存完整后代才能证明覆盖；缺失／损坏子块和 split 本身不能证明覆盖。覆盖成立可将对应截断正文替为 split；容量压力下也可回收该正文，但必须保留不完整语义。
-- [ ] 添加 `latePartialWritesKeepStrongerBlocks`：同一键晚到的截断正文不覆盖完整响应或已有 split，完整响应可以替代 split。预算删除和降级复用任务 1 的授权及替换值检查；旧授权清理竞态已经在任务 1 验收，不延后到此处。
-- [ ] 添加 `legacyEvictionLeavesV2Untouched`：模拟旧版本按 `ogt:data:v1:` 回收，新 v2 数据仍可读。任务 4 切换前不启用旧 tree 的升级删除，避免提前破坏仍依赖旧快照的导航链路。
-- [ ] 改造预算扫描：合计 v2 数据、必要元数据及 view；切换前仍将合法旧 tree 计为普通预算项，任务 4 退出旧读写后才启用升级清理。每轮扫描只解析一次记录，覆盖证明按 SHA 记忆并检查访问环，不每个节点重建全索引。
-- [ ] 对已被缓存完整覆盖的截断响应及预算回收候选，使用相同键原子降为 split。覆盖证明只用已校验缓存块，不用“当前内存索引已完整”冒充已落盘后代仍存在。
-- [ ] 命中只更新有界的标签页内最近使用提示，回收时回退记录 usedAt；提示随记录清理，丢失只影响排序，不为命中重写大响应正文或增加一套持久化索引。
-- [ ] 将分级回收接入写后复核和启动维护，不承诺零瞬时超额；单记录超总预算拒写与 `purgePrivateData()` 的 v2／旧私有记录清理由任务 1 提供，本任务直接复用，不作为任务 1 的后置补丁。
-- [ ] 运行 `pnpm exec vitest run tests/storage.test.ts tests/credentials.test.ts`；预期全部通过。提交 `feat: reclaim cache blocks with safe version isolation`。
+- [x] 添加 `splitRequiresCachedCoverage`：完整递归块或完整非递归枚举加全部已缓存完整后代才能证明覆盖；缺失／损坏子块和 split 本身不能证明覆盖。覆盖成立可将对应截断正文替为 split；容量压力下也可回收该正文，但必须保留不完整语义。
+- [x] 添加 `latePartialWritesKeepStrongerBlocks`：同一键晚到的截断正文不覆盖完整响应或已有 split，完整响应可以替代 split。预算删除和降级复用任务 1 的授权及替换值检查；旧授权清理竞态已经在任务 1 验收，不延后到此处。
+- [x] 添加 `legacyEvictionLeavesV2Untouched`：模拟旧版本按 `ogt:data:v1:` 回收，新 v2 数据仍可读。任务 4 切换前不启用旧 tree 的升级删除，避免提前破坏仍依赖旧快照的导航链路。
+- [x] 改造预算扫描：合计 v2 数据、必要元数据及 view；切换前仍将合法旧 tree 计为普通预算项，任务 4 退出旧读写后才启用升级清理。每轮扫描只解析一次记录，覆盖证明按 SHA 记忆并检查访问环，不每个节点重建全索引。
+- [x] 对已被缓存完整覆盖的截断响应及预算回收候选，使用相同键原子降为 split。覆盖证明只用已校验缓存块，不用“当前内存索引已完整”冒充已落盘后代仍存在。
+- [x] 命中只更新有界的标签页内最近使用提示，回收时回退记录 usedAt；提示随记录清理，丢失只影响排序，不为命中重写大响应正文或增加一套持久化索引。
+- [x] 将分级回收接入写后复核和启动维护，不承诺零瞬时超额；单记录超总预算拒写与 `purgePrivateData()` 的 v2／旧私有记录清理由任务 1 提供，本任务直接复用，不作为任务 1 的后置补丁。
+- [x] 运行 `pnpm exec vitest run tests/storage.test.ts tests/credentials.test.ts`；预期全部通过。提交 `feat: reclaim cache blocks with safe version isolation`。
 
 ## 任务 3：缓存恢复
 
