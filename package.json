@@ -1,0 +1,24 @@
+{
+  "name": "opsgittrees",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.30.3",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "jsdom": "26.1.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.8",
+    "vite-plugin-monkey": "8.1.1",
+    "vitest": "5.1.1"
+  }
+}
