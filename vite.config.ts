@@ -19,5 +19,5 @@ export default defineConfig({
     build: { fileName: 'opsgittrees.user.js' },
     server: { open: false },
   })],
-  build: { target: 'es2022', minify: true, license: { fileName: 'THIRD-PARTY-LICENSES.md' }, rolldownOptions: { output: { postBanner: '/* Icon licenses: see THIRD-PARTY-LICENSES.md. */' } } },
+  build: { target: 'es2022', minify: true },
 });
