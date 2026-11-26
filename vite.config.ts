@@ -7,7 +7,7 @@ export default defineConfig({
     userscript: {
       name: 'OpsGitTrees',
       namespace: 'OpsGitTrees',
-      version: '0.1.0',
+      version: '0.1.1',
       description: { '': 'Lightweight GitHub repository tree and path navigation', 'zh-CN': '轻量的 GitHub 仓库文件树与路径导航' },
       match: ['https://github.com/*'],
       connect: ['api.github.com'],
