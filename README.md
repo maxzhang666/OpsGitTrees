@@ -4,20 +4,26 @@
 
 **脚本负责文件导航，GitHub 负责代码展示。** 默认主动预加载目录索引，不预加载文件内容，也不另做代码编辑器。
 
+## 项目链接
+
+- **GitHub 仓库**：[github.com/maxzhang666/OpsGitTrees](https://github.com/maxzhang666/OpsGitTrees)
+- **安装脚本**：[opsgittrees.user.js](https://raw.githubusercontent.com/maxzhang666/OpsGitTrees/main/dist/opsgittrees.user.js)
+- **问题反馈**：[GitHub Issues](https://github.com/maxzhang666/OpsGitTrees/issues)
+
 ## 界面预览
 
-![OpsGitTrees 文件树导航界面](assets/screenshots/overview.webp)
+![OpsGitTrees 文件树导航界面](https://raw.githubusercontent.com/maxzhang666/OpsGitTrees/main/assets/screenshots/overview.webp)
 
 <details>
 <summary>侧栏设置与 Token 管理</summary>
 
 **侧栏设置**
 
-<img src="assets/screenshots/settings.webp" alt="OpsGitTrees 侧栏设置" width="320">
+<img src="https://raw.githubusercontent.com/maxzhang666/OpsGitTrees/main/assets/screenshots/settings.webp" alt="OpsGitTrees 侧栏设置" width="320">
 
 **Token 管理**
 
-<img src="assets/screenshots/token-management.webp" alt="OpsGitTrees Token 管理弹窗" width="640">
+<img src="https://raw.githubusercontent.com/maxzhang666/OpsGitTrees/main/assets/screenshots/token-management.webp" alt="OpsGitTrees Token 管理弹窗" width="640">
 
 </details>
 
@@ -37,7 +43,7 @@
 ## 安装
 
 1. 安装并启用 [ScriptCat（脚本猫）](https://scriptcat.org/) 浏览器扩展。
-2. 打开本项目的 [脚本文件 `opsgittrees.user.js`](dist/opsgittrees.user.js)，点击 **Raw** 查看原始脚本，按脚本管理器提示安装。若未弹出安装页，可在脚本猫中新建脚本，粘贴完整脚本内容后保存。
+2. 点击 [安装脚本](https://raw.githubusercontent.com/maxzhang666/OpsGitTrees/main/dist/opsgittrees.user.js)，按脚本管理器提示安装。若浏览器只显示脚本文本，可复制完整内容，在脚本猫中新建脚本并保存。
 3. 打开或刷新 GitHub 仓库首页、目录页或文件页，即可看到左侧文件导航。
 4. 如脚本管理器提示连接授权，请允许访问 `api.github.com`，用于读取仓库目录及验证 Token。
 
@@ -106,3 +112,9 @@
 ## 当前版本与兼容性
 
 当前版本为 **0.1.1**，仍处于早期阶段。已在真实 ScriptCat 环境验证部分交互；有效 Token 的完整保存／清除流程、真实私有仓库授权，以及其他浏览器和脚本管理器组合尚未完成完整实测，不作全面兼容承诺。
+
+## 反馈与参与
+
+遇到问题或有功能建议，欢迎到 [GitHub Issues](https://github.com/maxzhang666/OpsGitTrees/issues) 提交。反馈时请附上脚本版本、浏览器和脚本管理器版本、复现步骤，以及相关截图或错误提示。
+
+欢迎通过 [Pull Request](https://github.com/maxzhang666/OpsGitTrees/pulls) 提交修复或改进。
