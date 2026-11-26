@@ -25,5 +25,2428 @@
 // @noframes
 // ==/UserScript==
 
-(function(){"use strict";var e=typeof GM<`u`?GM:void 0,t=typeof GM_getValue<`u`?GM_getValue:void 0,n=typeof GM_info<`u`?GM_info:void 0,r=typeof GM_setValue<`u`?GM_setValue:void 0,i={"Keyboard shortcuts":`键盘快捷键`,"Token management":`Token 管理`,"Token saved":`Token 已保存`,"Token input is unavailable in this execution context. Reinstall the current script with content / DOM isolation enabled, then reload GitHub. No Token was requested.":`当前执行环境无法输入 Token。请以 content／DOM 隔离模式重新安装脚本并刷新 GitHub；尚未读取 Token。`,"{stage} stage: {error}":`{stage}阶段：{error}`,input:`输入`,identity:`身份验证`,storage:`存储`,"API check: {error}":`API 检查：{error}`,"Cancelled or authorization changed. Candidate not saved.":`已取消或授权已变更，未保存候选 Token。`,"Userscript storage could not be accessed. Check the manager before retrying.":`无法访问脚本存储，请检查脚本管理器后重试。`,"Local Token cleared. Private cache is invalidated. Revoke the Token separately on GitHub if needed.":`已清除本地 Token，私有缓存已失效。如需撤销 Token，请另行前往 GitHub 操作。`,"Close Token configuration":`关闭 Token 配置`,"Show Token":`显示 Token`,"Hide Token":`隐藏 Token`,"Verify & save":`验证并保存`,"Cancel check":`取消检查`,"Check saved Token":`检查已保存的 Token`,"Create a fine-grained Token ↗":`创建细粒度 Token ↗`,"Manage / revoke on GitHub ↗":`在 GitHub 管理／撤销 ↗`,"Minimum access":`最小权限`,"Contents: Read-only · Metadata: Read-only":`Contents、Metadata：只读`,"This page can read the Token. Clearing locally does not revoke it on GitHub.":`此页面可读取 Token。本地清除不会在 GitHub 撤销它。`,"Not configured":`未配置`,"Token · public and private repositories":`Token · 公开和私有仓库`,Anonymous:`匿名`,"Cancelling the check…":`正在取消检查…`,"Checking identity with GitHub. Candidate is not saved yet…":`正在向 GitHub 验证身份，候选 Token 尚未保存…`,"Saved and read back from userscript storage. API account: @{login}. Repository permissions are checked separately.":`已写入脚本存储并读回确认。API 账户：@{login}。仓库权限需单独检查。`,"Token saved. API requests now use @{login}.":`Token 已保存，API 请求现在使用 @{login}。`,"Checking saved Token identity…":`正在检查已存 Token 的身份…`,"Identity verified: @{login}.":`身份已验证：@{login}。`,"Enter a Token to verify and save.":`请输入要验证并保存的 Token。`,"{error} Existing credential kept.":`{error} 原有凭据已保留。`,"Identity request could not be completed.":`无法完成身份请求。`,"Stored credential could not be confirmed. Check the userscript manager.":`无法确认已存凭据，请检查脚本管理器。`,"Could not confirm the credential write. Check the userscript manager storage before retrying.":`无法确认凭据写入，请检查脚本管理器的存储后重试。`,"GitHub rate limit remains active. Resume after {time}.":`GitHub 限流仍在生效，请在 {time} 后继续。`,"GitHub API redirected outside the allowed origin.":`GitHub API 重定向到了未获准的源。`,"GitHub rate limit reached. Resume after {time}.":`已触发 GitHub 限流，请在 {time} 后继续。`,"GitHub rejected the Token (HTTP 401): invalid, expired or revoked. Replace or clear it in the Token configuration dialog.":`GitHub 拒绝了此 Token（HTTP 401）：可能无效、已过期或已被撤销。请在 Token 配置弹窗中替换或清除。`,"Organization SSO authorization is required.":`需要组织的 SSO 授权。`,"GitHub denied access. Check repository scope, organization approval and read-only permissions.":`GitHub 拒绝访问，请检查仓库范围、组织审批和只读权限。`,"Repository or object not found, or the current credential has no access.":`仓库或对象不存在，或当前凭据无权访问。`,"GitHub reported a repository conflict; this response alone does not prove it is empty.":`GitHub 报告仓库冲突，仅凭此响应不能认定仓库为空。`,"GitHub API request failed (HTTP {status}).":`GitHub API 请求失败（HTTP {status}）。`,"Unrecognized GitHub API response.":`无法识别 GitHub API 响应。`,"GitHub API request failed. Check the network and userscript manager permissions.":`GitHub API 请求失败，请检查网络和脚本管理器权限。`,"GitHub returned an invalid object identifier.":`GitHub 返回了无效的对象标识符。`,"GitHub returned an invalid account identity.":`GitHub 返回了无效的账户身份。`,"GitHub returned invalid repository metadata.":`GitHub 返回了无效的仓库元数据。`,"Repository context changed.":`仓库上下文已变更。`,"GitHub returned a different commit or no root tree.":`GitHub 返回了不同的提交或缺少根目录树。`,"GitHub returned invalid tree metadata.":`GitHub 返回了无效的目录树元数据。`,"GitHub returned an invalid tree entry.":`GitHub 返回了无效的目录树条目。`,"GitHub rate limit remains active.":`GitHub 限流仍在生效。`,"GitHub request quota is low. Loaded paths remain usable; continue after the quota resets.":`GitHub 请求额度不足，已加载的路径仍可使用；请在额度重置后继续。`,"GitHub truncated a non-recursive directory listing. Results remain incomplete; this API cannot enumerate all entries.":`GitHub 截断了非递归目录列表，结果仍不完整；此 API 无法枚举全部条目。`,"Authorization changed; private index cleared.":`授权已变更，已清除私有索引。`,"Directory request failed.":`目录请求失败。`,"Invalid repository URL":`仓库 URL 无效`,"Waiting for GitHub repository context…":`正在等待 GitHub 仓库上下文…`,"Script menu could not be updated.":`无法更新脚本菜单。`,Language:`语言`,"Interface language":`界面语言`,"Follow browser":`跟随浏览器`,"OpsGitTrees repository navigation":`OpsGitTrees 仓库文件导航`,"Collapse file navigation":`收起文件导航`,Repository:`仓库`,"Find a file or path…":`查找文件或路径…`,"Find a file or path":`查找文件或路径`,"Clear search":`清空搜索`,"Locate current file":`定位当前文件`,"Open navigation settings":`打开导航设置`,"Close navigation settings":`关闭导航设置`,"Continue loading":`继续加载`,"Continue directory loading":`继续加载目录`,"Repository files":`仓库文件`,"Enable Alt+Shift+O / Alt+Shift+F":`启用 Alt+Shift+O / Alt+Shift+F 快捷键`,"GitHub API authentication":`GitHub API 认证`,"Manage Token…":`管理 Token…`,"Open Token configuration dialog":`打开 Token 配置弹窗`,"Clear local Token":`清除本地 Token`,"Check current repository":`检查当前仓库`,"FILES ›":`文件 ›`,"Open file navigation":`打开文件导航`,"Resize file navigation":`调整文件导航宽度`,"{name} (submodule; open parent directory on GitHub)":`{name}（子模块；在 GitHub 打开父目录）`,"No matching paths.":`没有匹配的路径。`,"No loaded paths match. The index is incomplete.":`已加载的路径中没有匹配项，索引尚不完整。`,"No files in this version.":`此版本没有文件。`,"This repository is empty.":`此仓库为空。`,"Loading repository index…":`正在加载仓库索引…`,"{count} paths · {state}":`{count} 个路径 · {state}`,Complete:`完整`,"Index incomplete — {state}":`索引不完整 — {state}`,"{count} pending":`{count} 项待加载`,loading:`加载中`,partial:`部分完成`,complete:`完整`,paused:`已暂停`,failed:`失败`,empty:`空仓库`,"Token saved · @{login}":`Token 已保存 · @{login}`,"No Token configured.":`未配置 Token。`,"The operation failed. Check the network and userscript manager storage permissions.":`操作失败，请检查网络和脚本管理器的存储权限。`,"Settings could not be saved.":`无法保存设置。`,"Reading position could not be saved. Check manager storage.":`无法保存阅读位置，请检查脚本管理器的存储。`,"Could not read the current GitHub page context.":`无法读取当前 GitHub 页面上下文。`,"GitHub page context is not recognized. No branch or commit was guessed.":`无法识别 GitHub 页面上下文，未猜测分支或提交。`,"Configure a fine-grained read-only PAT in Settings → API authentication to read this repository.":`请在“设置 → API 认证”中配置细粒度只读 PAT，以读取此仓库。`,"Persistent cache unavailable; index remains usable in memory.":`持久化缓存不可用，仍可使用内存中的索引。`,"Current GitHub context is unresolved. Reload the page and try again.":`尚未识别当前 GitHub 上下文，请刷新页面后重试。`,"Checking identity and repository access…":`正在检查身份和仓库访问权限…`,"Repository metadata access verified. Empty repository: Contents permission was not exercised.":`已验证仓库元数据访问权限。仓库为空，未检验 Contents 权限。`,"Repository read access verified.":`已验证仓库读取权限。`,"Authorization changed; private data stopped. Storage cleanup failed.":`授权已变更，已停止使用私有数据；存储清理失败。`,"Cache cleanup failed. Check manager storage.":`缓存清理失败，请检查脚本管理器的存储。`,"Could not start. Check userscript manager permissions and storage.":`启动失败，请检查脚本管理器的权限和存储。`,"OpsGitTrees: Manage Token…":`OpsGitTrees：管理 Token…`,"OpsGitTrees: Open file navigation":`OpsGitTrees：打开文件导航`,"Snapshot exceeds the 4 MiB persistent-cache limit; the complete index remains available in memory.":`快照超过 4 MiB 的持久化缓存上限，完整索引仍可在内存中使用。`},a=`auto`,o=new Set;function s(e){if(e!==`auto`)return e;for(let e of navigator.languages?.length?navigator.languages:[navigator.language]){if(/^zh(?:-|$)/i.test(e))return`zh-CN`;if(/^en(?:-|$)/i.test(e))return`en`}return`en`}var c=s(a);function l(){return c}function u(e){a=e;let t=s(e);if(t!==c){c=t;for(let e of o)e()}}function d(e){return o.add(e),()=>{o.delete(e)}}function f(e,t){return t?{key:e,values:t}:{key:e}}function p(e,t){let n=c===`zh-CN`?i[e]:e;return t?n.replace(/\{(\w+)\}/g,(e,n)=>{let r=t[n];return typeof r==`number`?r.toLocaleString(c):r instanceof Date?r.toLocaleTimeString(c):typeof r==`string`?r:h(r)}):n}function m(){let e=[];return{bind(t,n,r){let i=()=>{r&&t instanceof Element?t.setAttribute(r,h(n)):t.textContent=h(n)};return e.push(i),i(),t},refresh(){for(let t of e)t()}}}function h(e){return typeof e==`string`?e:p(e.key,e.values)}window.addEventListener(`languagechange`,()=>{a===`auto`&&u(`auto`)});var g=class extends Error{kind;detail;resumeAt;constructor(e,t,n=null){super(h(t)),this.kind=e,this.detail=t,this.resumeAt=n,this.name=`ApiError`}},_=/^[a-f0-9]{40}$/i,v=()=>new DOMException(`Request cancelled`,`AbortError`);function y(t){let n={remaining:null,resumeAt:null,blockedUntil:null};async function r(r,i){if(i.aborted)throw v();if(n.blockedUntil&&n.blockedUntil>Date.now())throw new g(`rate`,f(`GitHub rate limit remains active. Resume after {time}.`,{time:new Date(n.blockedUntil)}),n.blockedUntil);let a={Accept:`application/vnd.github+json`,"X-GitHub-Api-Version":`2026-03-10`};t&&(a.Authorization=`Bearer `+t);let o=e.xmlHttpRequest({method:`GET`,url:`https://api.github.com`+r,headers:a,responseType:`json`,anonymous:!0,redirect:`error`,timeout:3e4}),s=()=>o.abort();i.addEventListener(`abort`,s,{once:!0});try{let e=await o;if(i.aborted)throw v();if(new URL(e.finalUrl).origin!==`https://api.github.com`)throw new g(`invalid`,f(`GitHub API redirected outside the allowed origin.`));let t=new Map(e.responseHeaders.split(/\r?\n/).filter(e=>e.includes(`:`)).map(e=>{let t=e.indexOf(`:`);return[e.slice(0,t).toLowerCase().trim(),e.slice(t+1).trim()]})),r=t.get(`x-ratelimit-remaining`);r!==void 0&&/^\d+$/.test(r)&&(n.remaining=Number(r));let a=Number(t.get(`x-ratelimit-reset`))*1e3,s=t.get(`retry-after`),c=s?/^\d+$/.test(s)?Date.now()+Number(s)*1e3:Date.parse(s):0;if(Number.isFinite(c)||(c=0),n.resumeAt=Math.max(Number.isFinite(a)?a:0,c)||null,e.status===429||e.status===403&&(n.remaining===0||s))throw n.resumeAt=n.resumeAt&&n.resumeAt>Date.now()?n.resumeAt:Date.now()+6e4,n.blockedUntil=Math.max(n.blockedUntil||0,n.resumeAt),new g(`rate`,f(`GitHub rate limit reached. Resume after {time}.`,{time:new Date(n.resumeAt)}),n.resumeAt);if(e.status===401)throw new g(`auth`,f(`GitHub rejected the Token (HTTP 401): invalid, expired or revoked. Replace or clear it in the Token configuration dialog.`));if(e.status===403)throw new g(`forbidden`,f(t.has(`x-github-sso`)?`Organization SSO authorization is required.`:`GitHub denied access. Check repository scope, organization approval and read-only permissions.`));if(e.status===404)throw new g(`not-found`,f(`Repository or object not found, or the current credential has no access.`));if(e.status===409)throw new g(`conflict`,f(`GitHub reported a repository conflict; this response alone does not prove it is empty.`));if(e.status<200||e.status>=300)throw new g(`network`,f(`GitHub API request failed (HTTP {status}).`,{status:String(e.status)}));if(!e.response||typeof e.response!=`object`||Array.isArray(e.response))throw new g(`invalid`,f(`Unrecognized GitHub API response.`));return e.response}catch(e){throw i.aborted?v():e instanceof g?e:new g(`network`,f(`GitHub API request failed. Check the network and userscript manager permissions.`))}finally{i.removeEventListener(`abort`,s)}}let i=(e,t)=>`/repos/`+encodeURIComponent(e)+`/`+encodeURIComponent(t),a=e=>{if(!_.test(e))throw new g(`invalid`,f(`GitHub returned an invalid object identifier.`));return e};return{quota:n,async getIdentity(e){let t=await r(`/user`,e);if(typeof t.id!=`number`||typeof t.login!=`string`)throw new g(`invalid`,f(`GitHub returned an invalid account identity.`));return{id:t.id,login:t.login}},async getRepository(e,t,n){let a=await r(i(e,t),n),o=a.visibility;if(typeof a.id!=`number`||o!==`public`&&o!==`private`&&o!==`internal`)throw new g(`invalid`,f(`GitHub returned invalid repository metadata.`));return{owner:e,repo:t,repoId:a.id,visibility:o}},async resolveTree(e,t,n){if(e.owner.toLowerCase()!==t.owner.toLowerCase()||e.repo.toLowerCase()!==t.repo.toLowerCase())throw new g(`invalid`,f(`Repository context changed.`));let o=await r(i(e.owner,e.repo)+`/git/commits/`+a(e.commitSha),n),s=o.tree;if(o.sha!==e.commitSha||!s||typeof s!=`object`||!(`sha`in s)||typeof s.sha!=`string`)throw new g(`invalid`,f(`GitHub returned a different commit or no root tree.`));return{...e,...t,rootTreeSha:a(s.sha)}},async getTree(e,t,n,o){let s=await r(i(e.owner,e.repo)+`/git/trees/`+a(t)+(n?`?recursive=1`:``),o);if(s.sha!==t||typeof s.truncated!=`boolean`||!Array.isArray(s.tree))throw new g(`invalid`,f(`GitHub returned invalid tree metadata.`));let c=s.tree.map(e=>{if(typeof e.path!=`string`||!e.path||e.path.startsWith(`/`)||e.path.split(`/`).some(e=>!e||e===`.`||e===`..`)||typeof e.sha!=`string`||typeof e.mode!=`string`||![`tree`,`blob`,`commit`].includes(String(e.type)))throw new g(`invalid`,f(`GitHub returned an invalid tree entry.`));return{path:e.path,name:e.path.slice(e.path.lastIndexOf(`/`)+1),sha:a(e.sha),mode:e.mode,type:e.type}});return{sha:t,truncated:s.truncated,tree:c}}}}var b=`ogt:credentials:v1`,x={id:`anonymous`,token:null,login:null};async function S(){return await e.getValue(b,x)}var C=e=>({id:e.id,login:e.login,authenticated:!!e.token});function w(e){return typeof e==`object`&&!!e&&`name`in e&&e.name===`AbortError`}async function T(){return C(await S())}async function ee(e){let t=await S();if(e.id!==t.id||e.authenticated!==!!t.token)throw new DOMException(`Authorization changed`,`AbortError`);return t.token}function E(e){let n=t(b,x);return e.id===n.id&&e.authenticated===!!n.token}function D(e){return navigator.locks.request(`opsgittrees:authorization`,e)}async function te(e){let t=await S();if(e.id!==t.id||e.authenticated!==!!t.token)throw new DOMException(`Authorization changed`,`AbortError`);return y(t.token)}function ne(t){let n=!1,r=Promise.resolve(e.addValueChangeListener(b,(e,r,i)=>{n||t(C(i||x))}));return()=>{n=!0,r.then(t=>e.removeValueChangeListener(t))}}var O=class extends Error{stage;detail;constructor(e,t){super(h(t)),this.stage=e,this.detail=t,this.name=`CredentialError`}};async function re(t,n=new AbortController().signal){let r=t.trim();if(!r)throw new O(`input`,f(`Enter a Token to verify and save.`));let i=await S(),a;try{a=await y(r).getIdentity(n)}catch(e){throw n.aborted||w(e)?new DOMException(`Token check cancelled`,`AbortError`):new O(`identity`,f(`{error} Existing credential kept.`,{error:e instanceof g?e.detail:f(`Identity request could not be completed.`)}))}return D(async()=>{let t=await S();if(n.aborted||t.id!==i.id)throw new DOMException(`Token check cancelled or authorization changed; candidate not saved`,`AbortError`);let o={id:crypto.randomUUID(),token:r,login:a.login};try{await e.setValue(b,o);let t=await S();if(n.aborted)throw await e.setValue(b,{...i,id:crypto.randomUUID()}),new DOMException(`Token save cancelled`,`AbortError`);if(t.id!==o.id)throw new O(`storage`,f(`Stored credential could not be confirmed. Check the userscript manager.`))}catch(e){throw w(e)||e instanceof O?e:new O(`storage`,f(`Could not confirm the credential write. Check the userscript manager storage before retrying.`))}return C(o)})}async function ie(){await D(async()=>{await e.setValue(b,{id:crypto.randomUUID(),token:null,login:null})})}var k=`react-app[app-name="code-view"] script[data-target="react-app.embeddedData"]`,ae=/^[a-f0-9]{40}$/i,oe=e=>decodeURIComponent(e).replace(/\/$/,``),A=new Set(`settings.orgs.organizations.users.search.marketplace.collections.topics.explore.login.logout.join.signup.features.enterprise.pricing.sponsors.notifications.account.customer-stories.solutions.security.about.site.readme.apps.codespaces.discussions.events.contact.education.resources`.split(`.`));function j(e,t){if(t.origin!==`https://github.com`)return{kind:`outside`};let n=t.pathname.split(`/`).filter(Boolean);if(n.length<2||n.length>2&&n[2]!==`tree`&&n[2]!==`blob`)return{kind:`outside`};let r,i;try{r=decodeURIComponent(n[0]),i=decodeURIComponent(n[1])}catch{return{kind:`unresolved`,message:f(`Invalid repository URL`)}}if(A.has(r.toLowerCase()))return{kind:`outside`};let a={kind:`unresolved`,message:f(`Waiting for GitHub repository context…`)},o=e.querySelector(k);try{let s=JSON.parse(o?.textContent||`{}`).payload,c=s?.codeViewLayoutRoute?.repo;if(c?.ownerLogin?.toLowerCase()!==r.toLowerCase()||c?.name?.toLowerCase()!==i.toLowerCase()){let t=e.querySelector(`meta[name="octolytics-dimension-repository_nwo"]`)?.getAttribute(`content`),o=[...e.querySelectorAll(`h3`)].some(e=>e.textContent?.trim()===`This repository is empty.`);return n.length===2&&o&&t?.toLowerCase()===(r+`/`+i).toLowerCase()?{kind:`empty`,owner:r,repo:i}:a}if(c.isEmpty===!0&&n.length===2)return{kind:`empty`,owner:r,repo:i};let l=n.length===2?`root`:n[2],u=l===`root`?s.codeViewRepoRoute:l===`tree`?s.codeViewTreeRoute:s.codeViewBlobLayoutRoute,d=u?.refInfo;if(typeof u?.path!=`string`||typeof d?.name!=`string`||!ae.test(d?.currentOid||``))return a;let f=u.path===`/`?``:u.path,p=d.refType===`branch`||d.refType===`tag`||d.refType===`commit`?d.refType:d.name===d.currentOid?`commit`:null;if(!p)return a;let m={owner:r,repo:i,refName:d.name,commitSha:d.currentOid,refKind:p,path:f,view:l},h=l===`root`?`/`+r+`/`+i:`/`+r+`/`+i+`/`+l+`/`+d.name+(f?`/`+f:``);return oe(t.pathname)===h.replace(/\/$/,``)?{kind:`code`,context:m}:a}catch{return a}}function M(e,t){return`https://github.com/`+encodeURIComponent(e.owner)+`/`+encodeURIComponent(e.repo)+`/blob/`+encodeURIComponent(e.refName)+`/`+t.split(`/`).map(encodeURIComponent).join(`/`)}function N(e,t){let n=t.slice(0,Math.max(0,t.lastIndexOf(`/`)));return`https://github.com/`+encodeURIComponent(e.owner)+`/`+encodeURIComponent(e.repo)+`/tree/`+encodeURIComponent(e.refName)+(n?`/`+n.split(`/`).map(encodeURIComponent).join(`/`):``)}function se(e){let t=0,n=()=>{t||=requestAnimationFrame(()=>{t=0,e()})},r=[`turbo:render`,`turbo:load`,`pjax:end`];r.forEach(e=>document.addEventListener(e,n)),window.addEventListener(`popstate`,n);let i=new MutationObserver(e=>{e.some(e=>[...e.removedNodes].some(e=>e instanceof Element)||[...e.addedNodes].some(e=>e instanceof Element&&e.id!==`opsgittrees`))&&n()});return i.observe(document.documentElement,{childList:!0,subtree:!0}),()=>{i.disconnect(),cancelAnimationFrame(t),r.forEach(e=>document.removeEventListener(e,n)),window.removeEventListener(`popstate`,n)}}function ce(e){let t=matchMedia(`(prefers-color-scheme: dark)`),n=()=>{let n=document.documentElement.getAttribute(`data-color-mode`);e(n===`dark`||n!==`light`&&t.matches)},r=new MutationObserver(n);return r.observe(document.documentElement,{attributes:!0,attributeFilter:[`data-color-mode`,`data-light-theme`,`data-dark-theme`]}),t.addEventListener(`change`,n),n(),()=>{r.disconnect(),t.removeEventListener(`change`,n)}}function le(e){let t=document.body,n=t.style.getPropertyValue(`margin-left`),r=t.style.getPropertyPriority(`margin-left`),i=getComputedStyle(t).marginLeft,a=e=>t.style.setProperty(`margin-left`,`calc(`+i+` + `+e+`px)`,`important`);return a(e),{setWidth:a,destroy:()=>{n?t.style.setProperty(`margin-left`,n,r):t.style.removeProperty(`margin-left`)}}}var P={xmlns:`http://www.w3.org/2000/svg`,width:24,height:24,viewBox:`0 0 24 24`,fill:`none`,stroke:`currentColor`,"stroke-width":2,"stroke-linecap":`round`,"stroke-linejoin":`round`},F=([e,t,n])=>{let r=document.createElementNS(`http://www.w3.org/2000/svg`,e);return Object.keys(t).forEach(e=>{r.setAttribute(e,String(t[e]))}),n?.length&&n.forEach(e=>{let t=F(e);r.appendChild(t)}),r},I=(e,t={})=>F([`svg`,{...P,...t},e]),ue={settings:[[`path`,{d:`M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915`}],[`circle`,{cx:`12`,cy:`12`,r:`3`}]],back:[[`path`,{d:`m15 18-6-6 6-6`}]],down:[[`path`,{d:`m6 9 6 6 6-6`}]],right:[[`path`,{d:`m9 18 6-6-6-6`}]],branch:[[`path`,{d:`M15 6a9 9 0 0 0-9 9V3`}],[`circle`,{cx:`18`,cy:`6`,r:`3`}],[`circle`,{cx:`6`,cy:`18`,r:`3`}]],folder:[[`path`,{d:`M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z`}]],file:[[`path`,{d:`M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z`}],[`path`,{d:`M14 2v5a1 1 0 0 0 1 1h5`}]],link:[[`path`,{d:`M15 3h6v6`}],[`path`,{d:`M10 14 21 3`}],[`path`,{d:`M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6`}]],search:[[`path`,{d:`m21 21-4.34-4.34`}],[`circle`,{cx:`11`,cy:`11`,r:`8`}]],locate:[[`line`,{x1:`2`,x2:`5`,y1:`12`,y2:`12`}],[`line`,{x1:`19`,x2:`22`,y1:`12`,y2:`12`}],[`line`,{x1:`12`,x2:`12`,y1:`2`,y2:`5`}],[`line`,{x1:`12`,x2:`12`,y1:`19`,y2:`22`}],[`circle`,{cx:`12`,cy:`12`,r:`7`}],[`circle`,{cx:`12`,cy:`12`,r:`3`}]],close:[[`path`,{d:`M18 6 6 18`}],[`path`,{d:`m6 6 12 12`}]],eye:[[`path`,{d:`M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0`}],[`circle`,{cx:`12`,cy:`12`,r:`3`}]],eyeOff:[[`path`,{d:`M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49`}],[`path`,{d:`M14.084 14.158a3 3 0 0 1-4.242-4.242`}],[`path`,{d:`M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143`}],[`path`,{d:`m2 2 20 20`}]],loading:[[`path`,{d:`M21 12a9 9 0 1 1-6.219-8.56`}]]};function L(e,t=``){return I(ue[e],{"aria-hidden":`true`,focusable:`false`,class:`lucide`+(t?` `+t:``)})}var R=`:host{--lightningcss-light:initial;--lightningcss-dark: ;color-scheme:light;--bg:var(--overlay-bgColor,var(--bgColor-default,var(--color-canvas-default,#fff)));--input:var(--bgColor-default,var(--color-canvas-default,#fff));--fg:var(--fgColor-default,var(--color-fg-default,#1f2328));--muted:var(--fgColor-muted,var(--color-fg-muted,#59636e));--border:var(--borderColor-default,var(--color-border-default,#d1d9e0));--subtle:var(--bgColor-muted,var(--color-canvas-subtle,#f6f8fa));--accent:var(--fgColor-accent,var(--color-accent-fg,#0969da));--primary-bg:var(--button-primary-bgColor-rest,var(--color-btn-primary-bg,#1f883d));--primary-hover:var(--button-primary-bgColor-hover,var(--color-btn-primary-hover-bg,#1c8139));--primary-fg:var(--button-primary-fgColor-rest,var(--color-btn-primary-text,#fff));--primary-border:var(--button-primary-borderColor-rest,var(--color-btn-primary-border,#1f232826));--button-bg:var(--button-default-bgColor-rest,var(--control-bgColor-rest,#f6f8fa));--button-hover:var(--button-default-bgColor-hover,var(--control-bgColor-hover,#eff2f5));--error:var(--fgColor-danger,var(--color-danger-fg,#d1242f));--success:var(--fgColor-success,var(--color-success-fg,#1a7f37));--mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;color:var(--fg);font:13px/1.5 -apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Microsoft YaHei,sans-serif}:host([data-theme=dark]){--lightningcss-light: ;--lightningcss-dark:initial;color-scheme:dark;--bg:var(--overlay-bgColor,var(--bgColor-default,var(--color-canvas-default,#0d1117)));--input:var(--bgColor-default,var(--color-canvas-default,#0d1117));--fg:var(--fgColor-default,var(--color-fg-default,#f0f6fc));--muted:var(--fgColor-muted,var(--color-fg-muted,#9198a1));--border:var(--borderColor-default,var(--color-border-default,#3d444d));--subtle:var(--bgColor-muted,var(--color-canvas-subtle,#151b23));--accent:var(--fgColor-accent,var(--color-accent-fg,#4493f8));--primary-bg:var(--button-primary-bgColor-rest,var(--color-btn-primary-bg,#238636));--primary-hover:var(--button-primary-bgColor-hover,var(--color-btn-primary-hover-bg,#29903b));--primary-border:var(--button-primary-borderColor-rest,var(--color-btn-primary-border,#ffffff1a));--button-bg:var(--button-default-bgColor-rest,var(--control-bgColor-rest,#212830));--button-hover:var(--button-default-bgColor-hover,var(--control-bgColor-hover,#262c36));--error:var(--fgColor-danger,var(--color-danger-fg,#f85149));--success:var(--fgColor-success,var(--color-success-fg,#3fb950))}*{box-sizing:border-box}[hidden]{display:none!important}dialog{border:1px solid var(--border);background:var(--bg);width:min(440px,100vw - 32px);max-width:none;max-height:calc(100dvh - 32px);color:var(--fg);font:inherit;box-shadow:var(--shadow-floating-large,var(--shadow-floating-small,0 12px 36px #0005));overscroll-behavior:contain;border-radius:2px;margin:auto;padding:0;overflow:auto}dialog::backdrop{background:var(--overlay-backdrop-bgColor,#0007)}main{padding:20px}header{justify-content:space-between;align-items:center;gap:12px;display:flex}button.close{width:26px;height:26px;color:var(--muted);background:0 0;border:0;place-items:center;margin:-4px -4px 0 0;padding:0;display:grid}h1{margin:0;font-size:16px;font-weight:600;line-height:1.4}.summary{color:var(--muted);overflow-wrap:anywhere;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 20px;font-size:12px;display:flex}.summary[data-authenticated=true] .stored{color:var(--success)}form>label{margin:0 0 7px;font-size:12px;font-weight:600;display:block}input,button{font:inherit;color:inherit}input[type=password],input[type=text]{border:1px solid var(--border);border-radius:var(--borderRadius-medium,6px);background:var(--input);width:100%;font:12px var(--mono);padding:8px 10px}.token-field{margin-bottom:12px;position:relative}.token-field input{padding-right:42px}button.reveal{width:28px;height:28px;color:var(--muted);background:0 0;border:0;place-items:center;padding:0;display:grid;position:absolute;top:50%;right:4px;transform:translateY(-50%)}button.reveal:hover{background:var(--subtle);color:var(--fg)}.close svg,.reveal svg{pointer-events:none;width:16px;height:16px}.privacy{color:var(--muted);margin:16px 0 0;font-size:11px}.actions{flex-wrap:wrap;gap:7px;display:flex}button{border:1px solid var(--border);border-radius:var(--borderRadius-medium,6px);background:var(--button-bg);cursor:pointer;padding:6px 10px;font-size:12px}button:hover{background:var(--button-hover)}button.primary{background:var(--primary-bg);border-color:var(--primary-border);color:var(--primary-fg);font-weight:500}button.primary:hover{background:var(--primary-hover)}button.danger{color:var(--error)}button:disabled{opacity:.5;cursor:not-allowed}button:focus-visible,input:focus-visible,a:focus-visible{outline:1px solid var(--accent);outline-offset:2px}.result{background:var(--subtle);border-left:2px solid var(--border);overflow-wrap:anywhere;margin:16px 0 12px;padding:8px 10px;font-size:12px}.result[hidden]+.actions{margin-top:16px}.result[data-kind=error]{border-left-color:var(--error)}.result[data-kind=success]{border-left-color:var(--success)}.guide{border-top:1px solid var(--border);color:var(--muted);margin-top:18px;padding-top:14px;font-size:11px}h2{color:var(--fg);margin:0 0 6px;font-size:12px;font-weight:500}.guide p{margin:6px 0}a{color:var(--accent);margin:7px 0;text-decoration:none;display:block}a:hover{text-decoration:underline}@media (max-width:420px){main{padding:16px}}`;function de(){let e=n;return e.scriptHandler===`Tampermonkey`&&e.sandboxMode===`dom`||e.scriptHandler===`Violentmonkey`&&e.injectInto===`content`||e.scriptHandler===`ScriptCat`&&/^\/\/\s*@inject-into\s+content\s*$/m.test(e.scriptMetaStr||``)?null:f(`Token input is unavailable in this execution context. Reinstall the current script with content / DOM isolation enabled, then reload GitHub. No Token was requested.`)}function z(e){return e instanceof O?f(`{stage} stage: {error}`,{stage:f(e.stage),error:e.detail}):e instanceof g?f(`API check: {error}`,{error:e.detail}):w(e)?f(`Cancelled or authorization changed. Candidate not saved.`):f(`Userscript storage could not be accessed. Check the manager before retrying.`)}function fe(e,t){let n=null,r=null,i=null,a=null;async function o(){i?.();try{await ie();let t=f(`Local Token cleared. Private cache is invalidated. Revoke the Token separately on GitHub if needed.`);a?.(t,`success`),e(t)}catch(t){let n=z(t);a?.(n,`error`),e(n)}}function s(){r?.()}function c(){if(n?.isConnected){n.querySelector(`input`)?.focus();return}r?.();let c=de();if(c){e(c);return}let u=document,g=u.createElement(`div`);g.id=`opsgittrees-credentials`;let _=g.attachShadow({mode:`open`}),v=m();g.lang=l();function y(e,t=``,n=``){let r=u.createElement(e);return typeof t==`string`?r.textContent=t:v.bind(r,t),r.className=n,r}function b(e){let t=y(`button`,e);return t.type=`button`,t}let x=y(`dialog`);x.setAttribute(`aria-labelledby`,`token-title`),n=x;let S=y(`main`),C=b(``);C.className=`close`,C.append(L(`close`)),v.bind(C,f(`Close Token configuration`),`aria-label`);let D=y(`h1`,f(`Token management`));D.id=`token-title`;let O=y(`header`);O.append(D,C);let ie=y(`div`,``,`summary`),k=y(`span`,``,`stored`),ae=y(`span`);ie.append(k,ae);let oe=y(`form`),A=y(`label`,`Token`);A.htmlFor=`token`;let j=y(`input`);j.id=`token`,j.type=`password`,j.required=!0,j.autocomplete=`off`,j.spellcheck=!1,j.autocapitalize=`none`;let M=y(`div`,``,`token-field`),N=b(``);N.className=`reveal`;let se=L(`eye`),le=L(`eyeOff`);N.append(se,le),M.append(j,N);function P(e){j.type=e?`text`:`password`,N.setAttribute(`aria-pressed`,String(e)),se.toggleAttribute(`hidden`,e),le.toggleAttribute(`hidden`,!e);let t=p(e?`Hide Token`:`Show Token`);N.setAttribute(`aria-label`,t),N.title=t}P(!1);let F=b(f(`Verify & save`));F.type=`submit`,F.className=`primary`;let I=b(f(`Cancel check`));I.hidden=!0;let ue=y(`div`,``,`actions`);ue.append(F,I),oe.append(A,M,ue);let fe=``,B=y(`p`,``,`result`);B.hidden=!0,B.setAttribute(`role`,`status`),B.setAttribute(`aria-live`,`polite`);let pe=b(f(`Check saved Token`)),me=b(f(`Check current repository`)),he=b(f(`Clear local Token`));he.className=`danger`;let ge=y(`div`,``,`actions`);ge.append(pe,me,he);let _e=y(`section`,``,`guide`),ve=y(`a`,f(`Create a fine-grained Token ↗`));ve.href=`https://github.com/settings/personal-access-tokens/new`,ve.target=`_blank`,ve.rel=`noopener noreferrer`;let V=y(`a`,f(`Manage / revoke on GitHub ↗`));V.href=`https://github.com/settings/personal-access-tokens`,V.target=`_blank`,V.rel=`noopener noreferrer`,_e.append(y(`h2`,f(`Minimum access`)),y(`p`,f(`Contents: Read-only · Metadata: Read-only`)),ve,V);let ye=y(`p`,f(`This page can read the Token. Clearing locally does not revoke it on GitHub.`),`privacy`);S.append(O,ie,oe,B,ge,_e,ye),x.append(S),_.append(y(`style`,R),x),u.body.append(g);let H=ce(e=>g.setAttribute(`data-theme`,e?`dark`:`light`)),U=null,W=null,be=!1,G=!1,K=!1,q=()=>!G&&n===x&&g.isConnected,J=(e,t=`info`)=>{q()&&(fe=e,B.textContent=h(e),B.hidden=!1,B.dataset.kind=t)};a=J;function Y(){let e=!!W||be;j.disabled=e,F.disabled=e,I.hidden=!W,pe.disabled=e||!U?.authenticated,me.disabled=e,he.disabled=be||!U?.authenticated&&!W}function xe(){k.textContent=p(U?.authenticated?`Token saved`:`Not configured`),ae.textContent=U?.authenticated?`@`+U.login:``,ie.dataset.authenticated=String(!!U?.authenticated),ie.title=p(U?.authenticated?`Token · public and private repositories`:`Anonymous`)}let Se=d(()=>{v.refresh(),g.lang=l(),xe(),B.textContent=h(fe),P(j.type===`text`)});async function Ce(){try{let e=await T(),t=e.authenticated?await ee(e):null;if(!q()||!E(e))return;U=e,K||(j.value=t||``),xe(),Y()}catch(e){w(e)||J(z(e),`error`)}}i=()=>{W?.abort(),j.value=``,K=!1,P(!1)};let X=ne(()=>{j.value=``,K=!1,P(!1),Ce()});r=()=>{G||(G=!0,W?.abort(),j.value=``,X(),H(),Se(),x.close(),g.remove(),a=null,i=null,r=null,n=null)},x.addEventListener(`cancel`,e=>{e.preventDefault(),s()}),x.addEventListener(`close`,()=>{q()&&s()}),x.addEventListener(`click`,e=>{if(e.target!==x)return;let t=x.getBoundingClientRect();(e.clientX<t.left||e.clientX>t.right||e.clientY<t.top||e.clientY>t.bottom)&&s()}),j.addEventListener(`input`,()=>{K=!0}),N.addEventListener(`click`,()=>P(j.type===`password`)),I.addEventListener(`click`,()=>{i?.(),J(f(`Cancelling the check…`))}),C.addEventListener(`click`,s),he.addEventListener(`click`,()=>{be=!0,Y(),o().finally(()=>{be=!1,q()&&(Y(),Ce())})}),oe.addEventListener(`submit`,t=>{if(t.preventDefault(),W||be)return;let n=j.value;j.value=``,K=!1,P(!1);let r=new AbortController;W=r,Y(),J(f(`Checking identity with GitHub. Candidate is not saved yet…`)),re(n,r.signal).then(t=>{q()&&!r.signal.aborted&&(J(f(`Saved and read back from userscript storage. API account: @{login}. Repository permissions are checked separately.`,{login:t.login||``}),`success`),e(f(`Token saved. API requests now use @{login}.`,{login:t.login||``})))}).catch(e=>J(z(e),`error`)).finally(()=>{W===r&&(W=null),q()&&(Y(),Ce())})}),pe.addEventListener(`click`,()=>{if(W||be||!U?.authenticated)return;let e=U,t=new AbortController;W=t,Y(),J(f(`Checking saved Token identity…`)),te(e).then(e=>e.getIdentity(t.signal)).then(n=>{q()&&!t.signal.aborted&&E(e)&&J(f(`Identity verified: @{login}.`,{login:n.login}),`success`)}).catch(e=>J(z(e),`error`)).finally(()=>{W===t&&(W=null),q()&&Y()})}),me.addEventListener(`click`,()=>{if(W||be)return;let e=new AbortController;W=e,Y(),J(f(`Checking identity and repository access…`)),t(e.signal).then(t=>{q()&&!e.signal.aborted&&J(t,`success`)}).catch(e=>J(z(e),`error`)).finally(()=>{W===e&&(W=null),q()&&Y()})}),Y(),Ce(),x.showModal(),j.focus()}return{open:c,close:s}}function B(e){let t=e.lastIndexOf(`/`);return t<0?``:e.slice(0,t)}function pe(e){let t=[];for(let n=B(e);n;n=B(n))t.push(n);return t}var me=class{entries=new Map;children=new Map([[``,[]]]);dirty=new Set;add(e,t=``){for(let n of e){let e=t?t+`/`+n.path:n.path;for(let t of pe(e).reverse())this.entries.has(t)||this.insert({path:t,name:t.slice(t.lastIndexOf(`/`)+1),sha:``,mode:`040000`,type:`tree`});this.insert({...n,path:e,name:e.slice(e.lastIndexOf(`/`)+1)})}}insert(e){let t=this.entries.get(e.path);this.entries.set(e.path,e),e.type===`tree`&&!this.children.has(e.path)&&this.children.set(e.path,[]);let n=B(e.path);this.children.has(n)||this.children.set(n,[]),t||this.children.get(n).push(e.path),this.dirty.add(n)}view(e,t=0,n){for(let e of this.dirty)this.children.get(e)?.sort((e,t)=>{let n=this.entries.get(e),r=this.entries.get(t);return n.type===`tree`==(r.type===`tree`)?n.name<r.name?-1:+(n.name>r.name):n.type===`tree`?-1:1});return this.dirty.clear(),{entries:this.entries,children:this.children,state:e,pending:t,reason:n}}};function he(e,t,n,r,i){let a=new me,o=[{sha:e.rootTreeSha,prefix:``,recursive:!0}],s=new Map,c=new Set,l=0,u=0,d,p=!1,m=!1,h=`loading`,_,v=!1,y,b=()=>{i.aborted||r({...a.view(h,o.length+l,_),canResume:v,resumeAt:y})},x=t=>!t.prefix||e.path===t.prefix||e.path.startsWith(t.prefix+`/`)?0:c.has(t.prefix)?1:2;function S(e,t,n,r){p=!0,y&&y>Date.now()&&!r&&n||(h=t,_=e,v=n,y=Math.max(y||0,r||0)||void 0),b()}function C(){if(i.aborted||p)return;let e=n.quota;if(e.resumeAt&&Date.now()>=e.resumeAt&&(e.remaining=null,e.resumeAt=null),o.length&&e.blockedUntil&&e.blockedUntil>Date.now())S(f(`GitHub rate limit remains active.`),`paused`,!0,e.blockedUntil);else if(o.length&&e.remaining!==null&&e.remaining<=5)S(f(`GitHub request quota is low. Loaded paths remain usable; continue after the quota resets.`),`paused`,!0,e.resumeAt||void 0);else if(!o.length&&!l)h=m?`partial`:`complete`,m&&(_=f(`GitHub truncated a non-recursive directory listing. Results remain incomplete; this API cannot enumerate all entries.`)),s.clear(),b();else if(u>=40)!l&&!d&&(d=setTimeout(()=>{d=void 0,u=0,C()},0));else for(o.sort((e,t)=>x(e)-x(t));l<2&&o.length&&u<40&&!p;){let e=o.shift();l++,w(e)}}async function w(r){let c=r.sha+`:`+r.recursive;try{let l=s.get(c);l||(u++,l=n.getTree(e,r.sha,r.recursive,i),s.set(c,l));let d=await l;if(i.aborted)return;if(e.visibility!==`public`&&!E(t)){a.entries.clear(),a.children.clear(),o.length=0,s.clear(),S(f(`Authorization changed; private index cleared.`),`failed`,!1);return}if(a.add(d.tree,r.prefix),r.recursive&&d.truncated)o.push({...r,recursive:!1});else if(!r.recursive){d.truncated&&(m=!0);for(let e of d.tree)e.type===`tree`&&o.push({sha:e.sha,prefix:r.prefix?r.prefix+`/`+e.path:e.path,recursive:!0})}p||(h=`partial`)}catch(e){if(i.aborted)return;s.delete(c),o.unshift(r);let t=e instanceof g?e:new g(`network`,f(`Directory request failed.`));S(t.detail,t.kind===`rate`?`paused`:`failed`,t.kind===`rate`||t.kind===`network`,t.resumeAt||void 0)}finally{l--,i.aborted||(b(),C())}}return i.addEventListener(`abort`,()=>{clearTimeout(d),o.length=0,s.clear()},{once:!0}),queueMicrotask(()=>{b(),C()}),{resume(){i.aborted||!p||!v||y&&Date.now()<y||n.quota.blockedUntil&&n.quota.blockedUntil>Date.now()||n.quota.remaining!==null&&n.quota.remaining<=5&&(!n.quota.resumeAt||Date.now()<n.quota.resumeAt)||(p=!1,h=`partial`,_=void 0,v=!1,y=void 0,u=0,C())},prioritize(e){c=new Set(e)}}}function ge(e,t){let n=t.trim().toLowerCase(),r=new Set,i=new Set,a=(e.children.get(``)||[]).map(e=>({path:e,inherited:!1}));for(;a.length;){let{path:t,inherited:o}=a.pop(),s=e.entries.get(t),c=!n||t.toLowerCase().includes(n);if((c||o)&&r.add(t),c&&!o)for(let e of pe(t))r.add(e),i.add(e);if(s.type===`tree`)for(let n of e.children.get(t)||[])a.push({path:n,inherited:o||c})}return{included:r,autoExpanded:i}}function _e(e,t,n){let r=[],i=[...e.children.get(``)||[]].reverse();for(;i.length;){let a=i.pop();if((!t||t.has(a))&&(r.push(a),n.has(a))){let t=e.children.get(a)||[];for(let e=t.length-1;e>=0;e--)i.push(t[e])}}return r}var ve=`:host{--bg:var(--bgColor-default,var(--color-canvas-default,#fff));--input:var(--bgColor-default,var(--color-canvas-default,#fff));--fg:var(--fgColor-default,var(--color-fg-default,#1f2328));--muted:var(--fgColor-muted,var(--color-fg-muted,#59636e));--border:var(--borderColor-default,var(--color-border-default,#d1d9e0));--accent:var(--fgColor-accent,var(--color-accent-fg,#0969da));--hover:var(--control-transparent-bgColor-hover,var(--color-neutral-muted,#818b981a));--selection:var(--control-transparent-bgColor-selected,var(--bgColor-neutral-muted,#818b9826));--folder:var(--treeViewItem-leadingVisual-iconColor-rest,var(--color-accent-fg,#54aeff));--guide:var(--borderColor-muted,var(--color-border-muted,#d1d9e0b3));--checked:var(--control-checked-bgColor-rest,var(--color-accent-emphasis,#0969da));--on-accent:var(--control-checked-fgColor-rest,var(--color-fg-on-emphasis,#fff));--button-bg:var(--button-default-bgColor-rest,var(--control-bgColor-rest,#f6f8fa));--button-hover:var(--button-default-bgColor-hover,var(--control-bgColor-hover,#eff2f5));--mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;color:var(--fg);--lightningcss-light:initial;--lightningcss-dark: ;color-scheme:light;font:13px/1.5 -apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Microsoft YaHei,sans-serif}:host([data-theme=dark]){--bg:var(--bgColor-default,var(--color-canvas-default,#0d1117));--input:var(--bgColor-default,var(--color-canvas-default,#0d1117));--fg:var(--fgColor-default,var(--color-fg-default,#f0f6fc));--muted:var(--fgColor-muted,var(--color-fg-muted,#9198a1));--border:var(--borderColor-default,var(--color-border-default,#3d444d));--accent:var(--fgColor-accent,var(--color-accent-fg,#4493f8));--hover:var(--control-transparent-bgColor-hover,var(--color-neutral-muted,#656c7633));--selection:var(--control-transparent-bgColor-selected,var(--bgColor-neutral-muted,#656c7633));--folder:var(--treeViewItem-leadingVisual-iconColor-rest,var(--color-accent-fg,#54aeff));--guide:var(--borderColor-muted,var(--color-border-muted,#3d444db3));--checked:var(--control-checked-bgColor-rest,var(--color-accent-emphasis,#1f6feb));--button-bg:var(--button-default-bgColor-rest,var(--control-bgColor-rest,#212830));--button-hover:var(--button-default-bgColor-hover,var(--control-bgColor-hover,#262c36));--lightningcss-light: ;--lightningcss-dark:initial;color-scheme:dark}*{box-sizing:border-box}[hidden]{display:none!important}button,input,select{font:inherit;color:inherit}button{cursor:pointer;background:0 0;border:0}button:disabled{cursor:not-allowed;opacity:.5}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,.resize:focus-visible,.viewport:focus-visible{outline:1px solid var(--accent);outline-offset:-1px}svg{pointer-events:none;flex-shrink:0;width:16px;height:16px}button:hover{background:var(--hover)}.shell{background:var(--bg);border-right:1px solid var(--border);width:100%;height:100%;display:flex}.panel{flex-direction:column;flex:1;min-width:0;height:100%;display:flex}.header{flex-shrink:0}.repository-row,.ref-row{border-bottom:1px solid var(--border);align-items:center;gap:4px;min-height:30px;padding:2px 6px;display:flex}.icon-button{width:24px;height:24px;color:var(--muted);border-radius:var(--borderRadius-medium,6px);flex-shrink:0;place-items:center;padding:0;display:grid}.icon-button[aria-pressed=true],.search-toggle[aria-expanded=true]{background:var(--selection);color:var(--fg)}.repository-bar{flex:1;align-items:center;gap:4px;min-width:0;font-size:12px;display:flex}.repository-bar a{color:var(--accent);text-decoration:none}.repository-bar a:hover{text-decoration:underline}.owner,.repository{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.owner{max-width:40%}.repository{flex:1;font-weight:600}.repository-separator{color:var(--muted)}.ref-icon{width:14px;height:14px;color:var(--muted)}.ref-label{text-overflow:ellipsis;white-space:nowrap;min-width:0;font:11px var(--mono);color:var(--muted);flex:1;overflow:hidden}.search-bar{border:1px solid var(--border);border-radius:var(--borderRadius-medium,6px);background:var(--input);flex-shrink:0;align-items:center;gap:4px;margin:0 6px 6px;padding:0 4px 0 8px;display:flex}.search-bar:focus-within{border-color:var(--accent)}.search-bar input{background:0 0;border:0;outline:none;flex:1;min-width:0;padding:5px 0;font-size:12px}.search-bar input::-webkit-search-cancel-button{display:none}.search-bar input:placeholder-shown+.clear{display:none}.footer{border-top:1px solid var(--border);flex-shrink:0;align-items:center;display:flex}.footer .icon-button{margin:0 6px}.footer-info{flex:1;align-items:center;gap:8px;min-width:0;padding:5px 8px;display:flex}.brand{flex-shrink:0;font-size:11px;font-weight:600;line-height:16px}.status{min-width:0;color:var(--muted);white-space:nowrap;text-overflow:ellipsis;flex:1;font-size:10px;line-height:16px;overflow:hidden}.resume{border:1px solid var(--border);border-radius:var(--borderRadius-medium,6px);color:var(--accent);flex-shrink:0;margin:6px 8px;padding:5px;font-size:12px}.viewport{overscroll-behavior:contain;scrollbar-width:thin;flex:1;min-height:0;position:relative;overflow:auto}.tree-loading{color:var(--muted);text-align:center;flex-direction:column;justify-content:center;align-items:center;gap:8px;padding:16px;font-size:12px;display:flex;position:absolute;inset:0}.tree-loading svg{width:20px;height:20px;color:var(--accent);animation:1s linear infinite ogt-spin}@keyframes ogt-spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.tree-loading svg{animation:none}}.canvas{min-width:100%;position:relative}.tree-row{border-radius:var(--borderRadius-medium,6px);width:100%;height:24px;font:12px var(--mono);color:var(--fg);text-align:left;background:0 0;border:0;align-items:center;gap:4px;padding-right:8px;text-decoration:none;display:flex;position:absolute;left:0}.tree-row:hover{background:var(--hover);text-decoration:none}.tree-row.current{background:var(--selection);color:var(--fg)}.indent-guides{background:repeating-linear-gradient(to right,var(--guide) 0 1px,transparent 1px 12px);pointer-events:none;position:absolute;top:0;bottom:0;left:14px}.expander{flex-shrink:0;place-items:center;width:12px;display:grid}.expander svg{width:12px;height:12px}.file-icon{width:14px;height:14px;color:var(--muted)}.folder-icon{color:var(--folder)}.file-name{white-space:nowrap;text-overflow:ellipsis;position:relative;overflow:hidden}.tree-row[aria-expanded] .file-name{font-weight:500}.no-results{color:var(--muted);flex:1;padding:16px 10px;font-size:12px}.settings{flex:1;min-height:0;padding:0 10px 16px;font-size:12px;overflow:auto}.settings h2{margin:22px 0 10px;font-size:12px;font-weight:600}.option{border-bottom:1px solid var(--border);justify-content:space-between;align-items:center;gap:8px;margin:16px 0;padding-bottom:16px;display:flex}.option input{appearance:none;border:1px solid var(--muted);background:var(--input);cursor:pointer;border-radius:9px;flex-shrink:0;width:28px;height:16px;margin:0;position:relative}.option input:before{content:"";background:var(--muted);border-radius:50%;width:10px;height:10px;position:absolute;top:2px;left:2px}.option input:checked{background:var(--checked);border-color:var(--checked)}.option input:checked:before{background:var(--on-accent);transform:translate(12px)}.language-option{gap:7px;margin:8px 0 16px;display:grid}.language-option select{border:1px solid var(--border);border-radius:var(--borderRadius-medium,6px);background:var(--input);width:100%;min-width:0;padding:5px 7px}.settings button{border:1px solid var(--border);border-radius:var(--borderRadius-medium,6px);background:var(--button-bg);margin:6px 0;padding:6px 8px}.settings button:hover{background:var(--button-hover)}.identity{color:var(--muted);overflow-wrap:anywhere;margin:8px 0}.connection-status{overflow-wrap:anywhere;color:var(--muted)}.connection-status:empty{display:none}.rail{writing-mode:vertical-rl;width:24px;height:100%;color:var(--muted);text-align:start;padding:12px 4px;font-size:11px;display:none}.collapsed .panel,.collapsed .resize{display:none}.collapsed .rail{display:block}.resize{cursor:col-resize;touch-action:none;width:6px;position:absolute;top:0;bottom:0;right:-3px}.resize:hover,.resize:focus-visible{background:var(--accent);opacity:.5}`,V=24,ye=()=>({expanded:[],scrollTop:0,anchorPath:null,anchorOffset:0});function H(e,t=``,n){let r=document.createElement(e);return r.className=t,n!==void 0&&(r.textContent=n),r}function U(e,t,n=``){let r=H(`button`,n,e);return r.type=`button`,r.setAttribute(`aria-label`,t),r.title=t,r}function W(e,t){return e.add(t),()=>e.delete(t)}function be(e){let t={...e},n=m();function r(e,t,r){return n.bind(H(e,t),f(r))}function i(e,t,r=``){let i=U(``,``,r);return e&&n.bind(i,f(e)),n.bind(i,f(t),`aria-label`),n.bind(i,f(t),`title`),i}function a(e,t,n=`icon-button`){let r=i(null,t,n);return r.append(L(e)),r}let o=H(`aside`);o.id=`opsgittrees`,n.bind(o,f(`OpsGitTrees repository navigation`),`aria-label`),o.lang=l(),o.style.cssText=`position:fixed;left:0;top:0;bottom:0;z-index:100;`;let s=o.attachShadow({mode:`open`}),c=H(`style`);c.textContent=ve;let u=H(`div`,`shell`),g=H(`div`,`panel`),_=H(`header`,`header`),v=a(`back`,`Collapse file navigation`),y=H(`a`,`owner`);y.hidden=!0;let b=H(`span`,`repository-separator`,`/`);b.hidden=!0;let x=H(`a`,`repository`,p(`Repository`)),S=H(`div`,`ref-label`),C=H(`div`,`repository-bar`);C.append(y,b,x);let w=H(`div`,`search-bar`);w.id=`ogt-search`,w.hidden=!0;let T=H(`input`);T.type=`search`,n.bind(T,f(`Find a file or path…`),`placeholder`),n.bind(T,f(`Find a file or path`),`aria-label`),T.autocomplete=`off`,T.spellcheck=!1;let ee=a(`close`,`Clear search`,`clear icon-button`),E=a(`locate`,`Locate current file`);w.append(T,ee);let D=a(`search`,`Find a file or path`,`icon-button search-toggle`);D.setAttribute(`aria-controls`,w.id),D.setAttribute(`aria-expanded`,`false`);let te=L(`settings`),ne=L(`close`),O=U(``,``,`icon-button settings-toggle`);O.append(te);let re=H(`div`,`repository-row`);re.append(C,O);let ie=H(`div`,`ref-row`);ie.append(L(`branch`,`ref-icon`),S,D,E),_.append(re,ie);let k=H(`div`,`status`);k.setAttribute(`role`,`status`),k.setAttribute(`aria-live`,`polite`);let ae=H(`div`,`footer-info`);ae.append(H(`div`,`brand`,`OpsGitTrees`),k);let oe=H(`footer`,`footer`);oe.append(ae,v);let A=i(`Continue loading`,`Continue directory loading`,`resume`);A.hidden=!0;let j=H(`div`,`viewport`);j.setAttribute(`role`,`tree`),n.bind(j,f(`Repository files`),`aria-label`),j.tabIndex=0;let se=H(`div`,`canvas`),P=H(`div`,`tree-loading`);P.setAttribute(`aria-hidden`,`true`),P.append(L(`loading`),r(`span`,``,`Loading repository index…`)),j.append(se,P);let F=H(`div`,`no-results`),I=H(`section`,`settings`);I.hidden=!0;let ue=H(`label`,`language-option`);ue.append(r(`span`,``,`Language`));let R=H(`select`);n.bind(R,f(`Interface language`),`aria-label`);for(let[e,t]of[[`auto`,``],[`zh-CN`,`简体中文`],[`en`,`English`]]){let r=H(`option`,``,t);r.value=e,e===`auto`&&n.bind(r,f(`Follow browser`)),R.append(r)}R.value=t.language,ue.append(R),I.append(ue);let de=H(`label`,`option`),z=H(`input`);z.type=`checkbox`,z.checked=t.shortcutsEnabled,n.bind(z,f(`Keyboard shortcuts`),`aria-label`),n.bind(z,f(`Enable Alt+Shift+O / Alt+Shift+F`),`title`),z.setAttribute(`role`,`switch`),de.append(n.bind(document.createTextNode(``),f(`Keyboard shortcuts`)),z),I.append(de);let fe=r(`h2`,``,`GitHub API authentication`),B=H(`p`,`identity`),me=i(`Manage Token…`,`Open Token configuration dialog`),he=H(`p`,`connection-status`);he.setAttribute(`role`,`status`),I.append(fe,B,me,he),g.append(_,w,j,F,I,A,oe);let be=i(`FILES ›`,`Open file navigation`,`rail`),G=H(`div`,`resize`);G.tabIndex=0,G.setAttribute(`role`,`separator`),n.bind(G,f(`Resize file navigation`),`aria-label`),G.setAttribute(`aria-orientation`,`vertical`),G.setAttribute(`aria-valuemin`,`200`),G.setAttribute(`aria-valuemax`,`480`),u.append(g,be,G),s.append(c,u),document.body.append(o);let K=le(t.collapsed?24:t.width),q=ce(e=>o.setAttribute(`data-theme`,e?`dark`:`light`)),J=new Set,Y=new Set,xe=new Set,Se=new Set,Ce=new Set,X={browsing:ye(),search:null},Z=!1,Q={entries:new Map,children:new Map,state:`loading`,pending:0},we=null,Te=``,Ee=``,De=``,Oe=``,ke={id:`anonymous`,login:null,authenticated:!1};function Ae(){B.textContent=ke.authenticated?p(`Token saved · @{login}`,{login:ke.login||``}):p(`No Token configured.`)}function je(){let e=Q.state===`complete`?p(`Complete`):p(`Index incomplete — {state}`,{state:f(Q.state)});k.textContent=De&&Q.state===`loading`?h(De):Q.state===`empty`?p(`This repository is empty.`):Q.state===`loading`?p(`Loading repository index…`):p(`{count} paths · {state}`,{count:Q.entries.size,state:e})+(Q.pending?` · `+p(`{count} pending`,{count:Q.pending}):``)+(Q.reason?`
-`+h(Q.reason):``),k.title=k.textContent||``;let t=Q.state===`loading`&&Q.entries.size===0;P.hidden=!t,se.hidden=t,j.setAttribute(`aria-busy`,String(t))}let Me=null,$=[],Ne=new Set,Pe=!1,Fe=0,Ie=-1,Le=-1,Re,ze,Be=()=>X.search?.view||X.browsing;function Ve(){if(!o.isConnected||t.collapsed||j.hidden||!I.hidden)return;let e=Be();if(e.anchorPath&&!Q.entries.has(e.anchorPath)&&Q.state!==`complete`)return;let n=Math.floor(j.scrollTop/V);e.scrollTop=j.scrollTop,e.anchorPath=$[n]||null,e.anchorOffset=j.scrollTop%V}function He(){for(let e of J)e(X)}function Ue(){let e=!I.hidden,t=p(e?`Close navigation settings`:`Open navigation settings`);O.setAttribute(`aria-label`,t),O.title=t,O.setAttribute(`aria-pressed`,String(e)),O.replaceChildren(e?ne:te)}function We(){w.hidden=!I.hidden||!Z,D.setAttribute(`aria-expanded`,String(!w.hidden))}function Ge(e){Z!==e&&(Ve(),Z=e,We(),Ze(),Xe(!0))}function Ke(){Ye(!1),it(!1),Ge(!0),T.focus()}function qe(){o.style.width=(t.collapsed?24:t.width)+`px`,u.classList.toggle(`collapsed`,t.collapsed),G.setAttribute(`aria-valuenow`,String(t.width)),K.setWidth(t.collapsed?24:t.width),t.collapsed||(Ze(),Xe(!0))}function Je(){for(let e of Y)e({...t})}function Ye(e){t.collapsed!==e&&(e&&Ve(),t.collapsed=e,qe(),Je())}function Xe(e=!1){if(t.collapsed)return;let n=Math.max(0,Math.floor(j.scrollTop/V)-8),r=Math.min($.length,Math.ceil((j.scrollTop+(j.clientHeight||480))/V)+8);if(!e&&n===Ie&&r===Le)return;Ie=n,Le=r;let i=s.activeElement?.dataset.path,a=document.createDocumentFragment();for(let e=n;e<r;e++){let t=$[e],n=Q.entries.get(t),r=n.type===`tree`?U(``,n.name):H(`a`);r.className=`tree-row`+(t===Ee?` current`:``),r.dataset.path=t;let i=t.split(`/`).length;r.style.top=e*V+`px`,r.style.paddingLeft=8+(i-1)*12+`px`,r.setAttribute(`role`,`treeitem`),r.setAttribute(`aria-level`,String(i)),r.setAttribute(`aria-selected`,String(t===Ee)),r.title=t;let o=H(`span`,`indent-guides`);o.setAttribute(`aria-hidden`,`true`),o.style.width=(i-1)*12+`px`,r.append(o);let s=H(`span`,`expander`);n.type===`tree`&&s.append(L(Ne.has(t)?`down`:`right`));let c=L(n.type===`tree`?`folder`:n.type===`commit`||n.mode===`120000`?`link`:`file`,`file-icon`+(n.type===`tree`?` folder-icon`:``)),l=H(`span`,`file-name`,n.name);r.append(s,c,l),n.type===`tree`?(r.setAttribute(`aria-expanded`,String(Ne.has(t))),r.addEventListener(`click`,()=>$e(t))):(r.href=we?n.type===`commit`?N(we,t):M(we,t):`#`,n.type===`commit`&&r.setAttribute(`aria-label`,p(`{name} (submodule; open parent directory on GitHub)`,{name:n.name})),r.addEventListener(`click`,()=>{Ve(),He()})),a.append(r)}se.replaceChildren(a),i&&[...se.querySelectorAll(`[data-path]`)].find(e=>e.dataset.path===i)?.focus({preventScroll:!0});let o=$.slice(n,r);for(let e of Ce)e(o)}function Ze(){let e=Be(),t=e.anchorPath?$.indexOf(e.anchorPath):-1;j.scrollTop=t>=0?t*V+e.anchorOffset:e.scrollTop}function Qe(e=!1){if(e&&(Me=X.search?ge(Q,X.search.query):null),Ne=new Set(X.browsing.expanded),X.search){for(let e of Me?.autoExpanded||[])Ne.add(e);for(let e of X.search.view.expanded)Ne.add(e);for(let e of X.search.collapsed)Ne.delete(e)}$=_e(Q,Me?.included||null,Ne),se.style.height=$.length*V+`px`,F.textContent=$.length?``:X.search?Q.state===`complete`?p(`No matching paths.`):p(`No loaded paths match. The index is incomplete.`):Q.state===`complete`?p(`No files in this version.`):``,F.hidden=!F.textContent||!I.hidden,Ze(),Xe(!0)}function $e(e){if(Ve(),X.search){let t=new Set(X.search.view.expanded),n=new Set(X.search.collapsed);Ne.has(e)?(t.delete(e),n.add(e)):(t.add(e),n.delete(e)),X.search.view.expanded=[...t],X.search.collapsed=[...n]}else{let t=new Set(X.browsing.expanded);t.has(e)?t.delete(e):t.add(e),X.browsing.expanded=[...t]}Qe(),He()}function et(){Ve();let e=T.value.trim();e?X.search?X.search.query=e:X.search={query:e,view:ye(),collapsed:[]}:X.search=null,e&&(Z=!0),We(),Qe(!0),He()}function tt(e){e&&(Ye(!1),it(!1)),Ve(),clearTimeout(Re),X.search=null,T.value=``,e&&(Z=!1),We(),X.browsing.expanded=[...new Set([...X.browsing.expanded,...pe(Ee)])],Qe(!0);let t=$.indexOf(Ee);if(t>=0){let e=Math.max(0,t*V-(j.clientHeight||480)/3);X.browsing.scrollTop=e,X.browsing.anchorPath=$[Math.floor(e/V)]||null,X.browsing.anchorOffset=e%V,Ze()}Xe(!0),Pe=!0,He()}function nt(){tt(!0)}function rt(e){if(Q=e,e.state===`complete`){let e=e=>e.filter(e=>Q.entries.has(e));X.browsing.expanded=e(X.browsing.expanded),X.search&&(X.search.view.expanded=e(X.search.view.expanded),X.search.collapsed=e(X.search.collapsed))}je(),clearTimeout(ze),A.hidden=!e.canResume,A.disabled=!!e.resumeAt&&e.resumeAt>Date.now(),A.disabled&&e.resumeAt&&(ze=setTimeout(()=>{A.disabled=!1},Math.min(2147483647,Math.max(0,e.resumeAt-Date.now())))),Qe(!0),!Pe&&!X.search&&Ee&&Q.entries.has(Ee)&&tt(!1)}T.addEventListener(`input`,()=>{clearTimeout(Re),Re=setTimeout(et,80)}),ee.addEventListener(`click`,()=>{clearTimeout(Re),T.value=``,et(),T.focus()}),T.addEventListener(`keydown`,e=>{e.key===`Escape`&&(e.preventDefault(),e.stopPropagation(),clearTimeout(Re),T.value||X.search?(T.value=``,et()):(Ge(!1),D.focus()))}),D.addEventListener(`click`,()=>{I.hidden&&Z&&!T.value.trim()?(clearTimeout(Re),T.value=``,X.search&&et(),Ge(!1),D.focus()):Ke()}),E.addEventListener(`click`,nt),v.addEventListener(`click`,()=>Ye(!0)),be.addEventListener(`click`,()=>Ye(!1));function it(e){e&&Ve(),I.hidden=!e,j.hidden=e,F.hidden=e||!F.textContent,Ue(),We(),e||(Ze(),Xe(!0))}O.addEventListener(`click`,()=>it(I.hidden!==!1)),z.addEventListener(`change`,()=>{t.shortcutsEnabled=z.checked,Je()}),R.addEventListener(`change`,()=>{t.language=R.value,Je()}),A.addEventListener(`click`,()=>{for(let e of xe)e()}),me.addEventListener(`click`,()=>{for(let e of Se)e()}),j.addEventListener(`scroll`,()=>{Fe||=requestAnimationFrame(()=>{Fe=0,Ve(),Xe(),He()})},{passive:!0});let at=new ResizeObserver(()=>Xe(!0));at.observe(j);let ot=!1,st=e=>{t.width=Math.round(Math.max(200,Math.min(480,e))),qe(),Je()};G.addEventListener(`pointerdown`,e=>{e.button===0&&(ot=!0,G.setPointerCapture(e.pointerId),e.preventDefault())}),G.addEventListener(`pointermove`,e=>{ot&&st(e.clientX)}),G.addEventListener(`pointerup`,()=>{ot=!1}),G.addEventListener(`lostpointercapture`,()=>{ot=!1}),G.addEventListener(`keydown`,e=>{(e.key===`ArrowLeft`||e.key===`ArrowRight`)&&(st(t.width+(e.key===`ArrowLeft`?-20:20)),e.preventDefault())});let ct=d(()=>{n.refresh(),o.lang=l(),x.hasAttribute(`href`)||(x.textContent=p(`Repository`),C.title=p(`Repository`)),Ue(),je(),Ae(),he.textContent=h(Oe),Qe()});return Ue(),Ae(),je(),qe(),{reconnect(){o.isConnected||(K.destroy(),document.body.append(o),K=le(t.collapsed?24:t.width),Ze(),Xe(!0))},setContext(e){if(De=e.kind===`unresolved`?e.message:``,e.kind===`code`){let t=e.context.owner+`/`+e.context.repo+`:`+e.context.refKind+`:`+e.context.refName;t!==Te&&(clearTimeout(Re),Te=t,X={browsing:ye(),search:null},T.value=``,Z=!1,We(),Me=null,Pe=!1),we=e.context,Ee=we.path}else we=null;let t=e.kind===`code`?e.context:e.kind===`empty`?e:null;if(y.hidden=b.hidden=!t,y.textContent=t?.owner||``,x.textContent=t?.repo||p(`Repository`),t){let e=`/`+encodeURIComponent(t.owner);y.href=e,x.href=e+`/`+encodeURIComponent(t.repo)}else y.removeAttribute(`href`),x.removeAttribute(`href`);C.title=t?t.owner+` / `+t.repo:p(`Repository`),S.textContent=e.kind===`code`?e.context.refName:``,S.title=S.textContent,je()},setSettings(e){let n=t.collapsed!==e.collapsed||t.width!==e.width;e.collapsed&&!t.collapsed&&Ve(),t={...e},z.checked=t.shortcutsEnabled,R.value=t.language,n&&qe()},setCollapsed:Ye,setIndex:rt,setCurrentPath(e){Ee=e,X.search?Xe(!0):(X.browsing.expanded=[...new Set([...X.browsing.expanded,...pe(e)])],Qe())},focusSearch:Ke,locateCurrent:nt,getView(){return Ve(),structuredClone(X)},restoreView(e){X=structuredClone(e),T.value=X.search?.query||``,Z=!!X.search,We(),Pe=!0,Qe(!0)},onViewChange:e=>W(J,e),onSettingsChange:e=>W(Y,e),onResumePreload:e=>W(xe,e),onManageToken:e=>W(Se,e),onVisiblePaths:e=>W(Ce,e),setAuth(e){ke=e,Ae()},setConnectionStatus(e){Oe=e,he.textContent=h(e)},destroy(){clearTimeout(Re),clearTimeout(ze),cancelAnimationFrame(Fe),at.disconnect(),q(),ct(),K.destroy(),o.remove(),J.clear(),Y.clear(),xe.clear(),Se.clear(),Ce.clear()}}}var G=`ogt:settings:v1`,K=`ogt:data:v1:`,q=new TextEncoder,J=16777216,Y=4194304,xe=class extends Error{detail=f(`Snapshot exceeds the 4 MiB persistent-cache limit; the complete index remains available in memory.`);constructor(){super(),this.message=h(this.detail)}},Se=(e,t)=>e.visibility===`public`?`public`:t.id,Ce=(e,t)=>K+JSON.stringify([`tree`,e.repoId,e.rootTreeSha,Se(e,t)]),X=(e,t)=>K+JSON.stringify([`view`,e.repoId,e.refKind,e.refName,Se(e,t)]);async function Z(e,t){if(e.visibility===`public`)return!0;let n=await T();return t.authenticated&&n.authenticated&&n.id===t.id}function Q(e){if(typeof e!=`string`)return null;try{let t=JSON.parse(e);return t.schema===1&&typeof t.scope==`string`&&typeof t.private==`boolean`&&typeof t.usedAt==`number`?t:null}catch{return null}}async function we(t,n,r){if(!await Z(n,r))return null;let i=Q(await e.getValue(t));return!i||i.scope!==Se(n,r)||i.private!==(n.visibility!==`public`)||!await Z(n,r)?null:i}async function Te(){let t=await T(),n=[];for(let r of await e.listValues()){if(!r.startsWith(K))continue;let i=await e.getValue(r);if(!E(t))return;let a=Q(i);!a||a.private&&(!t.authenticated||a.scope!==t.id)?await D(async()=>{E(t)&&await e.getValue(r)===i&&await e.deleteValue(r)}):n.push({key:r,raw:i,bytes:q.encode(i).byteLength,usedAt:a.usedAt})}let r=n.reduce((e,t)=>e+t.bytes,0);n.sort((e,t)=>e.usedAt-t.usedAt);for(let i of n){if(r<=J||!E(t))break;await D(async()=>{E(t)&&await e.getValue(i.key)===i.raw&&(await e.deleteValue(i.key),r-=i.bytes)})}}function Ee(e,t,n){let r=JSON.stringify({schema:1,scope:Se(e,t),private:e.visibility!==`public`,usedAt:Date.now(),...n});if(q.encode(r).byteLength>Y)throw new xe;return r}async function De(t,n,r,i){if(!await Z(n,r))throw new DOMException(`Authorization changed`,`AbortError`);let a=Ee(n,r,i);if(await e.setValue(t,a),!await Z(n,r))throw await e.deleteValue(t),new DOMException(`Authorization changed`,`AbortError`);await Te()}function Oe(e){return{collapsed:typeof e?.collapsed==`boolean`&&e.collapsed,width:typeof e?.width==`number`&&Number.isFinite(e.width)?Math.max(200,Math.min(480,e.width)):280,shortcutsEnabled:e?.shortcutsEnabled!==!1,language:e?.language===`en`||e?.language===`zh-CN`?e.language:`auto`}}async function ke(){return Oe(await e.getValue(G,{}))}async function Ae(t){await navigator.locks.request(`opsgittrees:settings`,async()=>{await e.setValue(G,{...await ke(),...t})})}function je(t){let n=!1,r=Promise.resolve(e.addValueChangeListener(G,(e,r,i)=>{n||t(Oe(i))}));return()=>{n=!0,r.then(t=>e.removeValueChangeListener(t))}}async function Me(e,t){let n=await we(Ce(e,t),e,t);return!n?.entries||!Array.isArray(n.entries)?null:(De(Ce(e,t),e,t,{entries:n.entries}).catch(()=>void 0),n.entries)}async function $(e,t,n){await De(Ce(e,t),e,t,{entries:n})}async function Ne(e,t){return(await we(X(e,t),e,t))?.view||null}async function Pe(t,n,i){if(t.visibility!==`public`&&!E(n))throw new DOMException(`Authorization changed`,`AbortError`);let a=X(t,n);if(r(a,Ee(t,n,{view:i})),!await Z(t,n))throw await e.deleteValue(a),new DOMException(`Authorization changed`,`AbortError`);await Te()}async function Fe(){await Te()}var Ie=e=>e instanceof g||e instanceof xe?e.detail:f(`The operation failed. Check the network and userscript manager storage permissions.`);async function Le(){let t=await ke();u(t.language);let n=await T(),r=null,i=null,a=0,o=``,s=``,c=!1,l=new AbortController,m,_,v={},b=!1,x=null,S=y(null),C=new Map,ee=(e,t)=>e.repoId+`:`+e.rootTreeSha+`:`+(e.visibility===`public`?`public`:t.id);function D(t){r?r.setConnectionStatus(t):e.notification({title:`OpsGitTrees`,text:h(t),timeout:8e3})}let O=fe(D,ce);function re(){if(clearTimeout(_),b||!Object.keys(v).length)return;let e={...v};b=!0,Ae(e).catch(()=>{c||D(f(`Settings could not be saved.`))}).finally(()=>{for(let t of Object.keys(e))v[t]===e[t]&&delete v[t];b=!1,re()})}function ie(e){t=e,u(e.language),r?.setSettings(e)}function k(){if(clearTimeout(m),!i||!r)return;let e=i,t=r.getView();Pe(e.context,e.scope,t).catch(t=>{!w(t)&&i===e&&r?.setConnectionStatus(f(`Reading position could not be saved. Check manager storage.`))})}function ae(e=!0){e?k():clearTimeout(m),i?.controller.abort(),i=null,r?.destroy(),r=null}function oe(){if(r)return r.reconnect(),r;let e=be(t);return r=e,e.setAuth(n),e.onViewChange(()=>{clearTimeout(m),m=setTimeout(k,300)}),e.onSettingsChange(e=>{let n=t.shortcutsEnabled!==e.shortcutsEnabled||t.language!==e.language;t.collapsed!==e.collapsed&&(v.collapsed=e.collapsed),t.width!==e.width&&(v.width=e.width),t.shortcutsEnabled!==e.shortcutsEnabled&&(v.shortcutsEnabled=e.shortcutsEnabled),t.language!==e.language&&(v.language=e.language),ie(e),clearTimeout(_),n?re():_=setTimeout(re,300)}),e.onResumePreload(()=>{i?.preload?i.preload.resume():N(!0)}),e.onVisiblePaths(e=>i?.preload?.prioritize(e)),e.onManageToken(O.open),e}async function A(e){if(x?.id===e.id)return x.client;let t=await te(e);return x={id:e.id,client:t},t}function M(e){return!c&&e===a}async function N(e=!1){let t=new URL(location.href);if(!e&&t.href===o){r?.reconnect();return}o=t.href;let u=++a;l.abort(),l=new AbortController;let d=l.signal;s=``;let p=j(document,t);if(p.kind===`outside`){ae();return}let m=oe(),h=i?m.getView():null;p.kind===`unresolved`&&(k(),m.setContext(p),m.setIndex({entries:new Map,children:new Map,state:`loading`,pending:0}));try{if(p.kind===`unresolved`){let e=await fetch(t.href,{signal:d,credentials:`same-origin`,headers:{Accept:`text/html`}});if(!M(u))return;if(!e.ok||new URL(e.url).origin!==t.origin)throw new g(`invalid`,f(`Could not read the current GitHub page context.`));if(p=j(new DOMParser().parseFromString(await e.text(),`text/html`),t),p.kind===`unresolved`||p.kind===`outside`)throw new g(`invalid`,f(`GitHub page context is not recognized. No branch or commit was guessed.`));if(!M(u))return}if(s=t.href,p.kind===`code`&&i&&(i.preload||i.index)&&i.context.owner===p.context.owner&&i.context.repo===p.context.repo&&i.context.refKind===p.context.refKind&&i.context.refName===p.context.refName&&i.context.commitSha===p.context.commitSha&&!e){i.context={...i.context,...p.context},m.setContext(p),h&&m.restoreView(h),i.index&&m.setIndex(i.index),m.setCurrentPath(p.context.path);return}h&&m.restoreView(h),ae(),m=oe(),m.setContext(p);let r=await T();if(!M(u))return;n=r,m.setAuth(r);let a=p.kind===`code`?p.context.owner:p.owner,o=p.kind===`code`?p.context.repo:p.repo,l=r.authenticated?await A(r):S,_=await l.getRepository(a,o,d);if(!M(u))return;if(_.visibility!==`public`&&!r.authenticated)throw new g(`auth`,f(`Configure a fine-grained read-only PAT in Settings → API authentication to read this repository.`));if(p.kind===`empty`){m.setContext(p),m.setIndex({entries:new Map,children:new Map,state:`empty`,pending:0});return}let v=await l.resolveTree(p.context,_,d);if(!M(u)||_.visibility!==`public`&&(await T()).id!==r.id)return;let y=new AbortController,b={context:v,scope:r,client:l,controller:y};i=b;let x=await Ne(v,r);if(!M(u)||i!==b)return;x&&m.restoreView(x);let D=ee(v,r),te=C.get(D);if(!te){let e=await Me(v,r);if(!M(u)||i!==b)return;if(e){let t=new me;t.add(e),te=t.view(`complete`)}}if(v.visibility!==`public`&&!E(r)){y.abort();return}if(!M(u)||i!==b)return;if(te){for(b.index=te,C.delete(D),C.set(D,te);C.size>2;)C.delete(C.keys().next().value);m.setIndex(te),m.setCurrentPath(v.path);return}m.setCurrentPath(v.path),b.preload=he(v,r,l,e=>{if(!(y.signal.aborted||i!==b||c)){if(b.index=e,s===location.href&&m.setIndex(e),e.state===`complete`){for(C.delete(D),C.set(D,e);C.size>2;)C.delete(C.keys().next().value);$(v,r,[...e.entries.values()]).catch(t=>{i===b&&s===location.href&&!y.signal.aborted&&!w(t)&&m.setIndex({...e,reason:t instanceof xe?t.detail:f(`Persistent cache unavailable; index remains usable in memory.`)})})}else e.state===`failed`&&!e.canResume&&v.visibility!==`public`&&(y.abort(),b.index=void 0,m.setIndex({entries:new Map,children:new Map,state:`failed`,pending:0,reason:e.reason}),C.delete(D))}},y.signal)}catch(e){if(!M(u)||w(e))return;i?.controller.abort(),i=null;let t=e instanceof g&&(e.kind===`network`||e.kind===`rate`);m.setIndex({entries:new Map,children:new Map,state:e instanceof g&&e.kind===`rate`?`paused`:`failed`,pending:0,reason:Ie(e),canResume:t,resumeAt:e instanceof g&&e.resumeAt||void 0})}}async function ce(e){let t=j(document,new URL(location.href));if(t.kind!==`code`&&t.kind!==`empty`)throw new g(`invalid`,f(`Current GitHub context is unresolved. Reload the page and try again.`));let n=a,r=AbortSignal.any([e,l.signal]),i=await T(),o=i.authenticated?await A(i):S;i.authenticated&&await o.getIdentity(r);let s=await o.getRepository(t.kind===`code`?t.context.owner:t.owner,t.kind===`code`?t.context.repo:t.repo,r);if(t.kind===`code`){let e=await o.resolveTree(t.context,s,r);await o.getTree(e,e.rootTreeSha,!1,r)}if(!M(n)||r.aborted||!E(i))throw new DOMException(`Repository check cancelled`,`AbortError`);return f(t.kind===`empty`?`Repository metadata access verified. Empty repository: Contents permission was not exercised.`:`Repository read access verified.`)}async function le(e){if(e.id!==n.id||e.authenticated!==n.authenticated){n=e,a++,l.abort(),ae(!1),x=null;for(let e of C.keys())e.endsWith(`:public`)||C.delete(e);await Fe(),c||await N(!0)}}let P=ne(e=>{le(e).catch(()=>D(f(`Authorization changed; private data stopped. Storage cleanup failed.`)))}),F=je(e=>ie({...e,...v})),I=[[`OpsGitTrees: Manage Token…`,O.open],[`OpsGitTrees: Open file navigation`,()=>{r?r.setCollapsed(!1):N(!0)}]],ue=[],L=Promise.resolve();function R(){L=L.then(async()=>{for(let t of ue)await e.unregisterMenuCommand(t);if(ue=[],!c)for(let[t,n]of I)ue.push(await e.registerMenuCommand(p(t),n))}).catch(()=>{c||D(f(`Script menu could not be updated.`))})}let de=d(R);R();let z=e=>{r&&t.shortcutsEnabled&&e.altKey&&e.shiftKey&&!e.ctrlKey&&!e.metaKey&&!e.repeat&&(e.composedPath().some(e=>e instanceof HTMLElement&&(e.matches(`input,textarea,select,[role="textbox"]`)||e.isContentEditable))||(e.code===`KeyO`&&(r.setCollapsed(!t.collapsed),e.preventDefault()),e.code===`KeyF`&&(r.focusSearch(),e.preventDefault())))},B=()=>{O.close(),k(),re()};window.addEventListener(`keydown`,z),window.addEventListener(`pagehide`,B);let pe=se(()=>{N()});return Fe().catch(()=>D(f(`Cache cleanup failed. Check manager storage.`))),ie({...await ke(),...v}),await N(),{stop(){c=!0,a++,l.abort(),O.close(),ae(),pe(),P(),F(),de(),R(),re(),window.removeEventListener(`keydown`,z),window.removeEventListener(`pagehide`,B)}}}window.top===window.self?Le().catch(()=>(e.notification({title:`OpsGitTrees`,text:p(`Could not start. Check userscript manager permissions and storage.`),timeout:8e3}),null)):Promise.resolve(null)})();
+(function() {
+	"use strict";
+	var _GM = (() => typeof GM != "undefined" ? GM : void 0)();
+	var _GM_getValue = (() => typeof GM_getValue != "undefined" ? GM_getValue : void 0)();
+	var _GM_info = (() => typeof GM_info != "undefined" ? GM_info : void 0)();
+	var _GM_setValue = (() => typeof GM_setValue != "undefined" ? GM_setValue : void 0)();
+	var zhCN = {
+		"Keyboard shortcuts": "键盘快捷键",
+		"Token management": "Token 管理",
+		"Token saved": "Token 已保存",
+		"Token input is unavailable in this execution context. Reinstall the current script with content / DOM isolation enabled, then reload GitHub. No Token was requested.": "当前执行环境无法输入 Token。请以 content／DOM 隔离模式重新安装脚本并刷新 GitHub；尚未读取 Token。",
+		"{stage} stage: {error}": "{stage}阶段：{error}",
+		"input": "输入",
+		"identity": "身份验证",
+		"storage": "存储",
+		"API check: {error}": "API 检查：{error}",
+		"Cancelled or authorization changed. Candidate not saved.": "已取消或授权已变更，未保存候选 Token。",
+		"Userscript storage could not be accessed. Check the manager before retrying.": "无法访问脚本存储，请检查脚本管理器后重试。",
+		"Local Token cleared. Private cache is invalidated. Revoke the Token separately on GitHub if needed.": "已清除本地 Token，私有缓存已失效。如需撤销 Token，请另行前往 GitHub 操作。",
+		"Close Token configuration": "关闭 Token 配置",
+		"Show Token": "显示 Token",
+		"Hide Token": "隐藏 Token",
+		"Verify & save": "验证并保存",
+		"Cancel check": "取消检查",
+		"Check saved Token": "检查已保存的 Token",
+		"Create a fine-grained Token ↗": "创建细粒度 Token ↗",
+		"Manage / revoke on GitHub ↗": "在 GitHub 管理／撤销 ↗",
+		"Minimum access": "最小权限",
+		"Contents: Read-only · Metadata: Read-only": "Contents、Metadata：只读",
+		"This page can read the Token. Clearing locally does not revoke it on GitHub.": "此页面可读取 Token。本地清除不会在 GitHub 撤销它。",
+		"Not configured": "未配置",
+		"Token · public and private repositories": "Token · 公开和私有仓库",
+		"Anonymous": "匿名",
+		"Cancelling the check…": "正在取消检查…",
+		"Checking identity with GitHub. Candidate is not saved yet…": "正在向 GitHub 验证身份，候选 Token 尚未保存…",
+		"Saved and read back from userscript storage. API account: @{login}. Repository permissions are checked separately.": "已写入脚本存储并读回确认。API 账户：@{login}。仓库权限需单独检查。",
+		"Token saved. API requests now use @{login}.": "Token 已保存，API 请求现在使用 @{login}。",
+		"Checking saved Token identity…": "正在检查已存 Token 的身份…",
+		"Identity verified: @{login}.": "身份已验证：@{login}。",
+		"Enter a Token to verify and save.": "请输入要验证并保存的 Token。",
+		"{error} Existing credential kept.": "{error} 原有凭据已保留。",
+		"Identity request could not be completed.": "无法完成身份请求。",
+		"Stored credential could not be confirmed. Check the userscript manager.": "无法确认已存凭据，请检查脚本管理器。",
+		"Could not confirm the credential write. Check the userscript manager storage before retrying.": "无法确认凭据写入，请检查脚本管理器的存储后重试。",
+		"GitHub rate limit remains active. Resume after {time}.": "GitHub 限流仍在生效，请在 {time} 后继续。",
+		"GitHub API redirected outside the allowed origin.": "GitHub API 重定向到了未获准的源。",
+		"GitHub rate limit reached. Resume after {time}.": "已触发 GitHub 限流，请在 {time} 后继续。",
+		"GitHub rejected the Token (HTTP 401): invalid, expired or revoked. Replace or clear it in the Token configuration dialog.": "GitHub 拒绝了此 Token（HTTP 401）：可能无效、已过期或已被撤销。请在 Token 配置弹窗中替换或清除。",
+		"Organization SSO authorization is required.": "需要组织的 SSO 授权。",
+		"GitHub denied access. Check repository scope, organization approval and read-only permissions.": "GitHub 拒绝访问，请检查仓库范围、组织审批和只读权限。",
+		"Repository or object not found, or the current credential has no access.": "仓库或对象不存在，或当前凭据无权访问。",
+		"GitHub reported a repository conflict; this response alone does not prove it is empty.": "GitHub 报告仓库冲突，仅凭此响应不能认定仓库为空。",
+		"GitHub API request failed (HTTP {status}).": "GitHub API 请求失败（HTTP {status}）。",
+		"Unrecognized GitHub API response.": "无法识别 GitHub API 响应。",
+		"GitHub API request failed. Check the network and userscript manager permissions.": "GitHub API 请求失败，请检查网络和脚本管理器权限。",
+		"GitHub returned an invalid object identifier.": "GitHub 返回了无效的对象标识符。",
+		"GitHub returned an invalid account identity.": "GitHub 返回了无效的账户身份。",
+		"GitHub returned invalid repository metadata.": "GitHub 返回了无效的仓库元数据。",
+		"Repository context changed.": "仓库上下文已变更。",
+		"GitHub returned a different commit or no root tree.": "GitHub 返回了不同的提交或缺少根目录树。",
+		"GitHub returned invalid tree metadata.": "GitHub 返回了无效的目录树元数据。",
+		"GitHub returned an invalid tree entry.": "GitHub 返回了无效的目录树条目。",
+		"GitHub rate limit remains active.": "GitHub 限流仍在生效。",
+		"GitHub request quota is low. Loaded paths remain usable; continue after the quota resets.": "GitHub 请求额度不足，已加载的路径仍可使用；请在额度重置后继续。",
+		"GitHub truncated a non-recursive directory listing. Results remain incomplete; this API cannot enumerate all entries.": "GitHub 截断了非递归目录列表，结果仍不完整；此 API 无法枚举全部条目。",
+		"Authorization changed; private index cleared.": "授权已变更，已清除私有索引。",
+		"Directory request failed.": "目录请求失败。",
+		"Invalid repository URL": "仓库 URL 无效",
+		"Waiting for GitHub repository context…": "正在等待 GitHub 仓库上下文…",
+		"Script menu could not be updated.": "无法更新脚本菜单。",
+		"Language": "语言",
+		"Interface language": "界面语言",
+		"Follow browser": "跟随浏览器",
+		"OpsGitTrees repository navigation": "OpsGitTrees 仓库文件导航",
+		"Collapse file navigation": "收起文件导航",
+		"Repository": "仓库",
+		"Find a file or path…": "查找文件或路径…",
+		"Find a file or path": "查找文件或路径",
+		"Clear search": "清空搜索",
+		"Locate current file": "定位当前文件",
+		"Open navigation settings": "打开导航设置",
+		"Close navigation settings": "关闭导航设置",
+		"Continue loading": "继续加载",
+		"Continue directory loading": "继续加载目录",
+		"Repository files": "仓库文件",
+		"Enable Alt+Shift+O / Alt+Shift+F": "启用 Alt+Shift+O / Alt+Shift+F 快捷键",
+		"GitHub API authentication": "GitHub API 认证",
+		"Manage Token…": "管理 Token…",
+		"Open Token configuration dialog": "打开 Token 配置弹窗",
+		"Clear local Token": "清除本地 Token",
+		"Check current repository": "检查当前仓库",
+		"FILES ›": "文件 ›",
+		"Open file navigation": "打开文件导航",
+		"Resize file navigation": "调整文件导航宽度",
+		"{name} (submodule; open parent directory on GitHub)": "{name}（子模块；在 GitHub 打开父目录）",
+		"No matching paths.": "没有匹配的路径。",
+		"No loaded paths match. The index is incomplete.": "已加载的路径中没有匹配项，索引尚不完整。",
+		"No files in this version.": "此版本没有文件。",
+		"This repository is empty.": "此仓库为空。",
+		"Loading repository index…": "正在加载仓库索引…",
+		"{count} paths · {state}": "{count} 个路径 · {state}",
+		"Complete": "完整",
+		"Index incomplete — {state}": "索引不完整 — {state}",
+		"{count} pending": "{count} 项待加载",
+		"loading": "加载中",
+		"partial": "部分完成",
+		"complete": "完整",
+		"paused": "已暂停",
+		"failed": "失败",
+		"empty": "空仓库",
+		"Token saved · @{login}": "Token 已保存 · @{login}",
+		"No Token configured.": "未配置 Token。",
+		"The operation failed. Check the network and userscript manager storage permissions.": "操作失败，请检查网络和脚本管理器的存储权限。",
+		"Settings could not be saved.": "无法保存设置。",
+		"Reading position could not be saved. Check manager storage.": "无法保存阅读位置，请检查脚本管理器的存储。",
+		"Could not read the current GitHub page context.": "无法读取当前 GitHub 页面上下文。",
+		"GitHub page context is not recognized. No branch or commit was guessed.": "无法识别 GitHub 页面上下文，未猜测分支或提交。",
+		"Configure a fine-grained read-only PAT in Settings → API authentication to read this repository.": "请在“设置 → API 认证”中配置细粒度只读 PAT，以读取此仓库。",
+		"Persistent cache unavailable; index remains usable in memory.": "持久化缓存不可用，仍可使用内存中的索引。",
+		"Current GitHub context is unresolved. Reload the page and try again.": "尚未识别当前 GitHub 上下文，请刷新页面后重试。",
+		"Checking identity and repository access…": "正在检查身份和仓库访问权限…",
+		"Repository metadata access verified. Empty repository: Contents permission was not exercised.": "已验证仓库元数据访问权限。仓库为空，未检验 Contents 权限。",
+		"Repository read access verified.": "已验证仓库读取权限。",
+		"Authorization changed; private data stopped. Storage cleanup failed.": "授权已变更，已停止使用私有数据；存储清理失败。",
+		"Cache cleanup failed. Check manager storage.": "缓存清理失败，请检查脚本管理器的存储。",
+		"Could not start. Check userscript manager permissions and storage.": "启动失败，请检查脚本管理器的权限和存储。",
+		"OpsGitTrees: Manage Token…": "OpsGitTrees：管理 Token…",
+		"OpsGitTrees: Open file navigation": "OpsGitTrees：打开文件导航",
+		"Snapshot exceeds the 4 MiB persistent-cache limit; the complete index remains available in memory.": "快照超过 4 MiB 的持久化缓存上限，完整索引仍可在内存中使用。"
+	};
+	var preference = "auto";
+	var listeners = new Set();
+	function resolveLanguage(value) {
+		if (value !== "auto") return value;
+		for (const language of navigator.languages?.length ? navigator.languages : [navigator.language]) {
+			if (/^zh(?:-|$)/i.test(language)) return "zh-CN";
+			if (/^en(?:-|$)/i.test(language)) return "en";
+		}
+		return "en";
+	}
+	var locale = resolveLanguage(preference);
+	function getLanguage() {
+		return locale;
+	}
+	function setLanguage(value) {
+		preference = value;
+		const next = resolveLanguage(value);
+		if (next === locale) return;
+		locale = next;
+		for (const listener of listeners) listener();
+	}
+	function observeLanguage(listener) {
+		listeners.add(listener);
+		return () => {
+			listeners.delete(listener);
+		};
+	}
+	function msg(key, values) {
+		return values ? {
+			key,
+			values
+		} : { key };
+	}
+	function t(key, values) {
+		const text = locale === "zh-CN" ? zhCN[key] : key;
+		if (!values) return text;
+		return text.replace(/\{(\w+)\}/g, (_match, name) => {
+			const value = values[name];
+			if (typeof value === "number") return value.toLocaleString(locale);
+			if (value instanceof Date) return value.toLocaleTimeString(locale);
+			return typeof value === "string" ? value : renderText(value);
+		});
+	}
+	function createTranslations() {
+		const updates = [];
+		return {
+			bind(node, text, attribute) {
+				const update = () => {
+					if (attribute && node instanceof Element) node.setAttribute(attribute, renderText(text));
+					else node.textContent = renderText(text);
+				};
+				updates.push(update);
+				update();
+				return node;
+			},
+			refresh() {
+				for (const update of updates) update();
+			}
+		};
+	}
+	function renderText(text) {
+		return typeof text === "string" ? text : t(text.key, text.values);
+	}
+	window.addEventListener("languagechange", () => {
+		if (preference === "auto") setLanguage("auto");
+	});
+	var ApiError = class extends Error {
+		kind;
+		detail;
+		resumeAt;
+		constructor(kind, detail, resumeAt = null) {
+			super(renderText(detail));
+			this.kind = kind;
+			this.detail = detail;
+			this.resumeAt = resumeAt;
+			this.name = "ApiError";
+		}
+	};
+	var shaPattern$1 = /^[a-f0-9]{40}$/i;
+	var abortError = () => new DOMException("Request cancelled", "AbortError");
+	function createGitHubClient(token) {
+		const quota = {
+			remaining: null,
+			resumeAt: null,
+			blockedUntil: null
+		};
+		async function request(path, signal) {
+			if (signal.aborted) throw abortError();
+			if (quota.blockedUntil && quota.blockedUntil > Date.now()) throw new ApiError("rate", msg("GitHub rate limit remains active. Resume after {time}.", { time: new Date(quota.blockedUntil) }), quota.blockedUntil);
+			const headers = {
+				Accept: "application/vnd.github+json",
+				"X-GitHub-Api-Version": "2026-03-10"
+			};
+			if (token) headers.Authorization = "Bearer " + token;
+			const pending = _GM.xmlHttpRequest({
+				method: "GET",
+				url: "https://api.github.com" + path,
+				headers,
+				responseType: "json",
+				anonymous: true,
+				redirect: "error",
+				timeout: 3e4
+			});
+			const abort = () => pending.abort();
+			signal.addEventListener("abort", abort, { once: true });
+			try {
+				const response = await pending;
+				if (signal.aborted) throw abortError();
+				if (new URL(response.finalUrl).origin !== "https://api.github.com") throw new ApiError("invalid", msg("GitHub API redirected outside the allowed origin."));
+				const values = new Map(response.responseHeaders.split(/\r?\n/).filter((l) => l.includes(":")).map((l) => {
+					const i = l.indexOf(":");
+					return [l.slice(0, i).toLowerCase().trim(), l.slice(i + 1).trim()];
+				}));
+				const remaining = values.get("x-ratelimit-remaining");
+				if (remaining !== void 0 && /^\d+$/.test(remaining)) quota.remaining = Number(remaining);
+				const reset = Number(values.get("x-ratelimit-reset")) * 1e3;
+				const retry = values.get("retry-after");
+				let retryAt = retry ? /^\d+$/.test(retry) ? Date.now() + Number(retry) * 1e3 : Date.parse(retry) : 0;
+				if (!Number.isFinite(retryAt)) retryAt = 0;
+				quota.resumeAt = Math.max(Number.isFinite(reset) ? reset : 0, retryAt) || null;
+				if (response.status === 429 || response.status === 403 && (quota.remaining === 0 || !!retry)) {
+					quota.resumeAt = quota.resumeAt && quota.resumeAt > Date.now() ? quota.resumeAt : Date.now() + 6e4;
+					quota.blockedUntil = Math.max(quota.blockedUntil || 0, quota.resumeAt);
+					throw new ApiError("rate", msg("GitHub rate limit reached. Resume after {time}.", { time: new Date(quota.resumeAt) }), quota.resumeAt);
+				}
+				if (response.status === 401) throw new ApiError("auth", msg("GitHub rejected the Token (HTTP 401): invalid, expired or revoked. Replace or clear it in the Token configuration dialog."));
+				if (response.status === 403) throw new ApiError("forbidden", msg(values.has("x-github-sso") ? "Organization SSO authorization is required." : "GitHub denied access. Check repository scope, organization approval and read-only permissions."));
+				if (response.status === 404) throw new ApiError("not-found", msg("Repository or object not found, or the current credential has no access."));
+				if (response.status === 409) throw new ApiError("conflict", msg("GitHub reported a repository conflict; this response alone does not prove it is empty."));
+				if (response.status < 200 || response.status >= 300) throw new ApiError("network", msg("GitHub API request failed (HTTP {status}).", { status: String(response.status) }));
+				if (!response.response || typeof response.response !== "object" || Array.isArray(response.response)) throw new ApiError("invalid", msg("Unrecognized GitHub API response."));
+				return response.response;
+			} catch (error) {
+				if (signal.aborted) throw abortError();
+				if (error instanceof ApiError) throw error;
+				throw new ApiError("network", msg("GitHub API request failed. Check the network and userscript manager permissions."));
+			} finally {
+				signal.removeEventListener("abort", abort);
+			}
+		}
+		const repoPath = (owner, repo) => "/repos/" + encodeURIComponent(owner) + "/" + encodeURIComponent(repo);
+		const checkedSha = (sha) => {
+			if (!shaPattern$1.test(sha)) throw new ApiError("invalid", msg("GitHub returned an invalid object identifier."));
+			return sha;
+		};
+		return {
+			quota,
+			async getIdentity(signal) {
+				const data = await request("/user", signal);
+				if (typeof data.id !== "number" || typeof data.login !== "string") throw new ApiError("invalid", msg("GitHub returned an invalid account identity."));
+				return {
+					id: data.id,
+					login: data.login
+				};
+			},
+			async getRepository(owner, repo, signal) {
+				const data = await request(repoPath(owner, repo), signal);
+				const visibility = data.visibility;
+				if (typeof data.id !== "number" || visibility !== "public" && visibility !== "private" && visibility !== "internal") throw new ApiError("invalid", msg("GitHub returned invalid repository metadata."));
+				return {
+					owner,
+					repo,
+					repoId: data.id,
+					visibility
+				};
+			},
+			async resolveTree(page, repository, signal) {
+				if (page.owner.toLowerCase() !== repository.owner.toLowerCase() || page.repo.toLowerCase() !== repository.repo.toLowerCase()) throw new ApiError("invalid", msg("Repository context changed."));
+				const data = await request(repoPath(page.owner, page.repo) + "/git/commits/" + checkedSha(page.commitSha), signal);
+				const tree = data.tree;
+				if (data.sha !== page.commitSha || !tree || typeof tree !== "object" || !("sha" in tree) || typeof tree.sha !== "string") throw new ApiError("invalid", msg("GitHub returned a different commit or no root tree."));
+				return {
+					...page,
+					...repository,
+					rootTreeSha: checkedSha(tree.sha)
+				};
+			},
+			async getTree(context, sha, recursive, signal) {
+				const data = await request(repoPath(context.owner, context.repo) + "/git/trees/" + checkedSha(sha) + (recursive ? "?recursive=1" : ""), signal);
+				if (data.sha !== sha || typeof data.truncated !== "boolean" || !Array.isArray(data.tree)) throw new ApiError("invalid", msg("GitHub returned invalid tree metadata."));
+				const tree = data.tree.map((value) => {
+					if (typeof value.path !== "string" || !value.path || value.path.startsWith("/") || value.path.split("/").some((p) => !p || p === "." || p === "..") || typeof value.sha !== "string" || typeof value.mode !== "string" || ![
+						"tree",
+						"blob",
+						"commit"
+					].includes(String(value.type))) throw new ApiError("invalid", msg("GitHub returned an invalid tree entry."));
+					return {
+						path: value.path,
+						name: value.path.slice(value.path.lastIndexOf("/") + 1),
+						sha: checkedSha(value.sha),
+						mode: value.mode,
+						type: value.type
+					};
+				});
+				return {
+					sha,
+					truncated: data.truncated,
+					tree
+				};
+			}
+		};
+	}
+	var key = "ogt:credentials:v1";
+	var empty = {
+		id: "anonymous",
+		token: null,
+		login: null
+	};
+	async function current() {
+		return await _GM.getValue(key, empty);
+	}
+	var scopeOf = (value) => ({
+		id: value.id,
+		login: value.login,
+		authenticated: !!value.token
+	});
+	function isAbortError(error) {
+		return error !== null && typeof error === "object" && "name" in error && error.name === "AbortError";
+	}
+	async function readAuthScope() {
+		return scopeOf(await current());
+	}
+	async function readSavedToken(scope) {
+		const value = await current();
+		if (scope.id !== value.id || scope.authenticated !== !!value.token) throw new DOMException("Authorization changed", "AbortError");
+		return value.token;
+	}
+	function isAuthScopeCurrent(scope) {
+		const value = _GM_getValue(key, empty);
+		return scope.id === value.id && scope.authenticated === !!value.token;
+	}
+	function withAuthLock(operation) {
+		return navigator.locks.request("opsgittrees:authorization", operation);
+	}
+	async function getGitHubClient(scope) {
+		const value = await current();
+		if (scope.id !== value.id || scope.authenticated !== !!value.token) throw new DOMException("Authorization changed", "AbortError");
+		return createGitHubClient(value.token);
+	}
+	function observeAuthScope(listener) {
+		let stopped = false;
+		const registration = Promise.resolve(_GM.addValueChangeListener(key, (_name, _old, value) => {
+			if (!stopped) listener(scopeOf(value || empty));
+		}));
+		return () => {
+			stopped = true;
+			registration.then((id) => _GM.removeValueChangeListener(id));
+		};
+	}
+	var CredentialError = class extends Error {
+		stage;
+		detail;
+		constructor(stage, detail) {
+			super(renderText(detail));
+			this.stage = stage;
+			this.detail = detail;
+			this.name = "CredentialError";
+		}
+	};
+	async function configureToken(input, signal = new AbortController().signal) {
+		const token = input.trim();
+		if (!token) throw new CredentialError("input", msg("Enter a Token to verify and save."));
+		const before = await current();
+		let identity;
+		try {
+			identity = await createGitHubClient(token).getIdentity(signal);
+		} catch (error) {
+			if (signal.aborted || isAbortError(error)) throw new DOMException("Token check cancelled", "AbortError");
+			throw new CredentialError("identity", msg("{error} Existing credential kept.", { error: error instanceof ApiError ? error.detail : msg("Identity request could not be completed.") }));
+		}
+		return withAuthLock(async () => {
+			const latest = await current();
+			if (signal.aborted || latest.id !== before.id) throw new DOMException("Token check cancelled or authorization changed; candidate not saved", "AbortError");
+			const value = {
+				id: crypto.randomUUID(),
+				token,
+				login: identity.login
+			};
+			try {
+				await _GM.setValue(key, value);
+				const stored = await current();
+				if (signal.aborted) {
+					await _GM.setValue(key, {
+						...before,
+						id: crypto.randomUUID()
+					});
+					throw new DOMException("Token save cancelled", "AbortError");
+				}
+				if (stored.id !== value.id) throw new CredentialError("storage", msg("Stored credential could not be confirmed. Check the userscript manager."));
+			} catch (error) {
+				if (isAbortError(error) || error instanceof CredentialError) throw error;
+				throw new CredentialError("storage", msg("Could not confirm the credential write. Check the userscript manager storage before retrying."));
+			}
+			return scopeOf(value);
+		});
+	}
+	async function clearToken() {
+		await withAuthLock(async () => {
+			await _GM.setValue(key, {
+				id: crypto.randomUUID(),
+				token: null,
+				login: null
+			});
+		});
+	}
+	var embeddedSelector = "react-app[app-name=\"code-view\"] script[data-target=\"react-app.embeddedData\"]";
+	var shaPattern = /^[a-f0-9]{40}$/i;
+	var normalPath = (path) => decodeURIComponent(path).replace(/\/$/, "");
+	var reservedRoots = new Set([
+		"settings",
+		"orgs",
+		"organizations",
+		"users",
+		"search",
+		"marketplace",
+		"collections",
+		"topics",
+		"explore",
+		"login",
+		"logout",
+		"join",
+		"signup",
+		"features",
+		"enterprise",
+		"pricing",
+		"sponsors",
+		"notifications",
+		"account",
+		"customer-stories",
+		"solutions",
+		"security",
+		"about",
+		"site",
+		"readme",
+		"apps",
+		"codespaces",
+		"discussions",
+		"events",
+		"contact",
+		"education",
+		"resources"
+	]);
+	function readPage(doc, url) {
+		if (url.origin !== "https://github.com") return { kind: "outside" };
+		const parts = url.pathname.split("/").filter(Boolean);
+		if (parts.length < 2 || parts.length > 2 && parts[2] !== "tree" && parts[2] !== "blob") return { kind: "outside" };
+		let owner, repo;
+		try {
+			owner = decodeURIComponent(parts[0]);
+			repo = decodeURIComponent(parts[1]);
+		} catch {
+			return {
+				kind: "unresolved",
+				message: msg("Invalid repository URL")
+			};
+		}
+		if (reservedRoots.has(owner.toLowerCase())) return { kind: "outside" };
+		const unresolved = {
+			kind: "unresolved",
+			message: msg("Waiting for GitHub repository context…")
+		};
+		const script = doc.querySelector(embeddedSelector);
+		try {
+			const payload = JSON.parse(script?.textContent || "{}").payload;
+			const repository = (payload?.codeViewLayoutRoute)?.repo;
+			if (repository?.ownerLogin?.toLowerCase() !== owner.toLowerCase() || repository?.name?.toLowerCase() !== repo.toLowerCase()) {
+				const nwo = doc.querySelector("meta[name=\"octolytics-dimension-repository_nwo\"]")?.getAttribute("content");
+				const empty = [...doc.querySelectorAll("h3")].some((el) => el.textContent?.trim() === "This repository is empty.");
+				return parts.length === 2 && empty && nwo?.toLowerCase() === (owner + "/" + repo).toLowerCase() ? {
+					kind: "empty",
+					owner,
+					repo
+				} : unresolved;
+			}
+			if (repository.isEmpty === true && parts.length === 2) return {
+				kind: "empty",
+				owner,
+				repo
+			};
+			const view = parts.length === 2 ? "root" : parts[2];
+			const route = view === "root" ? payload.codeViewRepoRoute : view === "tree" ? payload.codeViewTreeRoute : payload.codeViewBlobLayoutRoute;
+			const ref = route?.refInfo;
+			if (typeof route?.path !== "string" || typeof ref?.name !== "string" || !shaPattern.test(ref?.currentOid || "")) return unresolved;
+			const path = route.path === "/" ? "" : route.path;
+			const refKind = ref.refType === "branch" || ref.refType === "tag" || ref.refType === "commit" ? ref.refType : ref.name === ref.currentOid ? "commit" : null;
+			if (!refKind) return unresolved;
+			const context = {
+				owner,
+				repo,
+				refName: ref.name,
+				commitSha: ref.currentOid,
+				refKind,
+				path,
+				view
+			};
+			const expected = view === "root" ? "/" + owner + "/" + repo : "/" + owner + "/" + repo + "/" + view + "/" + ref.name + (path ? "/" + path : "");
+			if (normalPath(url.pathname) !== expected.replace(/\/$/, "")) return unresolved;
+			return {
+				kind: "code",
+				context
+			};
+		} catch {
+			return unresolved;
+		}
+	}
+	function fileUrl(context, path) {
+		return "https://github.com/" + encodeURIComponent(context.owner) + "/" + encodeURIComponent(context.repo) + "/blob/" + encodeURIComponent(context.refName) + "/" + path.split("/").map(encodeURIComponent).join("/");
+	}
+	function parentDirectoryUrl(context, path) {
+		const parent = path.slice(0, Math.max(0, path.lastIndexOf("/")));
+		return "https://github.com/" + encodeURIComponent(context.owner) + "/" + encodeURIComponent(context.repo) + "/tree/" + encodeURIComponent(context.refName) + (parent ? "/" + parent.split("/").map(encodeURIComponent).join("/") : "");
+	}
+	function observePage(onChange) {
+		let frame = 0;
+		const schedule = () => {
+			if (!frame) frame = requestAnimationFrame(() => {
+				frame = 0;
+				onChange();
+			});
+		};
+		const events = [
+			"turbo:render",
+			"turbo:load",
+			"pjax:end"
+		];
+		events.forEach((event) => document.addEventListener(event, schedule));
+		window.addEventListener("popstate", schedule);
+		const observer = new MutationObserver((records) => {
+			if (records.some((r) => [...r.removedNodes].some((n) => n instanceof Element) || [...r.addedNodes].some((n) => n instanceof Element && n.id !== "opsgittrees"))) schedule();
+		});
+		observer.observe(document.documentElement, {
+			childList: true,
+			subtree: true
+		});
+		return () => {
+			observer.disconnect();
+			cancelAnimationFrame(frame);
+			events.forEach((e) => document.removeEventListener(e, schedule));
+			window.removeEventListener("popstate", schedule);
+		};
+	}
+	function observeTheme(listener) {
+		const media = matchMedia("(prefers-color-scheme: dark)");
+		const update = () => {
+			const mode = document.documentElement.getAttribute("data-color-mode");
+			listener(mode === "dark" || mode !== "light" && media.matches);
+		};
+		const observer = new MutationObserver(update);
+		observer.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: [
+				"data-color-mode",
+				"data-light-theme",
+				"data-dark-theme"
+			]
+		});
+		media.addEventListener("change", update);
+		update();
+		return () => {
+			observer.disconnect();
+			media.removeEventListener("change", update);
+		};
+	}
+	function reservePageSpace(width) {
+		const body = document.body;
+		const value = body.style.getPropertyValue("margin-left");
+		const priority = body.style.getPropertyPriority("margin-left");
+		const originalMargin = getComputedStyle(body).marginLeft;
+		const setWidth = (next) => body.style.setProperty("margin-left", "calc(" + originalMargin + " + " + next + "px)", "important");
+		setWidth(width);
+		return {
+			setWidth,
+			destroy: () => {
+				if (value) body.style.setProperty("margin-left", value, priority);
+				else body.style.removeProperty("margin-left");
+			}
+		};
+	}
+	var defaultAttributes = {
+		xmlns: "http://www.w3.org/2000/svg",
+		width: 24,
+		height: 24,
+		viewBox: "0 0 24 24",
+		fill: "none",
+		stroke: "currentColor",
+		"stroke-width": 2,
+		"stroke-linecap": "round",
+		"stroke-linejoin": "round"
+	};
+	var createSVGElement = ([tag, attrs, children]) => {
+		const element = document.createElementNS("http://www.w3.org/2000/svg", tag);
+		Object.keys(attrs).forEach((name) => {
+			element.setAttribute(name, String(attrs[name]));
+		});
+		if (children?.length) children.forEach((child) => {
+			const childElement = createSVGElement(child);
+			element.appendChild(childElement);
+		});
+		return element;
+	};
+	var createElement = (iconNode, customAttrs = {}) => {
+		return createSVGElement([
+			"svg",
+			{
+				...defaultAttributes,
+				...customAttrs
+			},
+			iconNode
+		]);
+	};
+	var icons = {
+		settings: [["path", { d: "M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" }], ["circle", {
+			cx: "12",
+			cy: "12",
+			r: "3"
+		}]],
+		back: [["path", { d: "m15 18-6-6 6-6" }]],
+		down: [["path", { d: "m6 9 6 6 6-6" }]],
+		right: [["path", { d: "m9 18 6-6-6-6" }]],
+		branch: [
+			["path", { d: "M15 6a9 9 0 0 0-9 9V3" }],
+			["circle", {
+				cx: "18",
+				cy: "6",
+				r: "3"
+			}],
+			["circle", {
+				cx: "6",
+				cy: "18",
+				r: "3"
+			}]
+		],
+		folder: [["path", { d: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" }]],
+		file: [["path", { d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" }], ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5" }]],
+		link: [
+			["path", { d: "M15 3h6v6" }],
+			["path", { d: "M10 14 21 3" }],
+			["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" }]
+		],
+		search: [["path", { d: "m21 21-4.34-4.34" }], ["circle", {
+			cx: "11",
+			cy: "11",
+			r: "8"
+		}]],
+		locate: [
+			["line", {
+				x1: "2",
+				x2: "5",
+				y1: "12",
+				y2: "12"
+			}],
+			["line", {
+				x1: "19",
+				x2: "22",
+				y1: "12",
+				y2: "12"
+			}],
+			["line", {
+				x1: "12",
+				x2: "12",
+				y1: "2",
+				y2: "5"
+			}],
+			["line", {
+				x1: "12",
+				x2: "12",
+				y1: "19",
+				y2: "22"
+			}],
+			["circle", {
+				cx: "12",
+				cy: "12",
+				r: "7"
+			}],
+			["circle", {
+				cx: "12",
+				cy: "12",
+				r: "3"
+			}]
+		],
+		close: [["path", { d: "M18 6 6 18" }], ["path", { d: "m6 6 12 12" }]],
+		eye: [["path", { d: "M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" }], ["circle", {
+			cx: "12",
+			cy: "12",
+			r: "3"
+		}]],
+		eyeOff: [
+			["path", { d: "M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" }],
+			["path", { d: "M14.084 14.158a3 3 0 0 1-4.242-4.242" }],
+			["path", { d: "M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" }],
+			["path", { d: "m2 2 20 20" }]
+		],
+		loading: [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56" }]]
+	};
+	function svgIcon(name, className = "") {
+		return createElement(icons[name], {
+			"aria-hidden": "true",
+			focusable: "false",
+			class: "lucide" + (className ? " " + className : "")
+		});
+	}
+	var credential_window_default = ":host{--lightningcss-light:initial;--lightningcss-dark: ;color-scheme:light;--bg:var(--overlay-bgColor,var(--bgColor-default,var(--color-canvas-default,#fff)));--input:var(--bgColor-default,var(--color-canvas-default,#fff));--fg:var(--fgColor-default,var(--color-fg-default,#1f2328));--muted:var(--fgColor-muted,var(--color-fg-muted,#59636e));--border:var(--borderColor-default,var(--color-border-default,#d1d9e0));--subtle:var(--bgColor-muted,var(--color-canvas-subtle,#f6f8fa));--accent:var(--fgColor-accent,var(--color-accent-fg,#0969da));--primary-bg:var(--button-primary-bgColor-rest,var(--color-btn-primary-bg,#1f883d));--primary-hover:var(--button-primary-bgColor-hover,var(--color-btn-primary-hover-bg,#1c8139));--primary-fg:var(--button-primary-fgColor-rest,var(--color-btn-primary-text,#fff));--primary-border:var(--button-primary-borderColor-rest,var(--color-btn-primary-border,#1f232826));--button-bg:var(--button-default-bgColor-rest,var(--control-bgColor-rest,#f6f8fa));--button-hover:var(--button-default-bgColor-hover,var(--control-bgColor-hover,#eff2f5));--error:var(--fgColor-danger,var(--color-danger-fg,#d1242f));--success:var(--fgColor-success,var(--color-success-fg,#1a7f37));--mono:\"SFMono-Regular\",Consolas,\"Liberation Mono\",monospace;color:var(--fg);font:13px/1.5 -apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Microsoft YaHei,sans-serif}:host([data-theme=dark]){--lightningcss-light: ;--lightningcss-dark:initial;color-scheme:dark;--bg:var(--overlay-bgColor,var(--bgColor-default,var(--color-canvas-default,#0d1117)));--input:var(--bgColor-default,var(--color-canvas-default,#0d1117));--fg:var(--fgColor-default,var(--color-fg-default,#f0f6fc));--muted:var(--fgColor-muted,var(--color-fg-muted,#9198a1));--border:var(--borderColor-default,var(--color-border-default,#3d444d));--subtle:var(--bgColor-muted,var(--color-canvas-subtle,#151b23));--accent:var(--fgColor-accent,var(--color-accent-fg,#4493f8));--primary-bg:var(--button-primary-bgColor-rest,var(--color-btn-primary-bg,#238636));--primary-hover:var(--button-primary-bgColor-hover,var(--color-btn-primary-hover-bg,#29903b));--primary-border:var(--button-primary-borderColor-rest,var(--color-btn-primary-border,#ffffff1a));--button-bg:var(--button-default-bgColor-rest,var(--control-bgColor-rest,#212830));--button-hover:var(--button-default-bgColor-hover,var(--control-bgColor-hover,#262c36));--error:var(--fgColor-danger,var(--color-danger-fg,#f85149));--success:var(--fgColor-success,var(--color-success-fg,#3fb950))}*{box-sizing:border-box}[hidden]{display:none!important}dialog{border:1px solid var(--border);background:var(--bg);width:min(440px,100vw - 32px);max-width:none;max-height:calc(100dvh - 32px);color:var(--fg);font:inherit;box-shadow:var(--shadow-floating-large,var(--shadow-floating-small,0 12px 36px #0005));overscroll-behavior:contain;border-radius:2px;margin:auto;padding:0;overflow:auto}dialog::backdrop{background:var(--overlay-backdrop-bgColor,#0007)}main{padding:20px}header{justify-content:space-between;align-items:center;gap:12px;display:flex}button.close{width:26px;height:26px;color:var(--muted);background:0 0;border:0;place-items:center;margin:-4px -4px 0 0;padding:0;display:grid}h1{margin:0;font-size:16px;font-weight:600;line-height:1.4}.summary{color:var(--muted);overflow-wrap:anywhere;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 20px;font-size:12px;display:flex}.summary[data-authenticated=true] .stored{color:var(--success)}form>label{margin:0 0 7px;font-size:12px;font-weight:600;display:block}input,button{font:inherit;color:inherit}input[type=password],input[type=text]{border:1px solid var(--border);border-radius:var(--borderRadius-medium,6px);background:var(--input);width:100%;font:12px var(--mono);padding:8px 10px}.token-field{margin-bottom:12px;position:relative}.token-field input{padding-right:42px}button.reveal{width:28px;height:28px;color:var(--muted);background:0 0;border:0;place-items:center;padding:0;display:grid;position:absolute;top:50%;right:4px;transform:translateY(-50%)}button.reveal:hover{background:var(--subtle);color:var(--fg)}.close svg,.reveal svg{pointer-events:none;width:16px;height:16px}.privacy{color:var(--muted);margin:16px 0 0;font-size:11px}.actions{flex-wrap:wrap;gap:7px;display:flex}button{border:1px solid var(--border);border-radius:var(--borderRadius-medium,6px);background:var(--button-bg);cursor:pointer;padding:6px 10px;font-size:12px}button:hover{background:var(--button-hover)}button.primary{background:var(--primary-bg);border-color:var(--primary-border);color:var(--primary-fg);font-weight:500}button.primary:hover{background:var(--primary-hover)}button.danger{color:var(--error)}button:disabled{opacity:.5;cursor:not-allowed}button:focus-visible,input:focus-visible,a:focus-visible{outline:1px solid var(--accent);outline-offset:2px}.result{background:var(--subtle);border-left:2px solid var(--border);overflow-wrap:anywhere;margin:16px 0 12px;padding:8px 10px;font-size:12px}.result[hidden]+.actions{margin-top:16px}.result[data-kind=error]{border-left-color:var(--error)}.result[data-kind=success]{border-left-color:var(--success)}.guide{border-top:1px solid var(--border);color:var(--muted);margin-top:18px;padding-top:14px;font-size:11px}h2{color:var(--fg);margin:0 0 6px;font-size:12px;font-weight:500}.guide p{margin:6px 0}a{color:var(--accent);margin:7px 0;text-decoration:none;display:block}a:hover{text-decoration:underline}@media (max-width:420px){main{padding:16px}}";
+	function isolationRestriction() {
+		const info = _GM_info;
+		if (info.scriptHandler === "Tampermonkey" && info.sandboxMode === "dom") return null;
+		if (info.scriptHandler === "Violentmonkey" && info.injectInto === "content") return null;
+		if (info.scriptHandler === "ScriptCat" && /^\/\/\s*@inject-into\s+content\s*$/m.test(info.scriptMetaStr || "")) return null;
+		return msg("Token input is unavailable in this execution context. Reinstall the current script with content / DOM isolation enabled, then reload GitHub. No Token was requested.");
+	}
+	function failure(error) {
+		if (error instanceof CredentialError) return msg("{stage} stage: {error}", {
+			stage: msg(error.stage),
+			error: error.detail
+		});
+		if (error instanceof ApiError) return msg("API check: {error}", { error: error.detail });
+		if (isAbortError(error)) return msg("Cancelled or authorization changed. Candidate not saved.");
+		return msg("Userscript storage could not be accessed. Check the manager before retrying.");
+	}
+	function createCredentialManager(notice, checkRepository) {
+		let dialog = null;
+		let dispose = null;
+		let cancel = null;
+		let result = null;
+		async function clear() {
+			cancel?.();
+			try {
+				await clearToken();
+				const message = msg("Local Token cleared. Private cache is invalidated. Revoke the Token separately on GitHub if needed.");
+				result?.(message, "success");
+				notice(message);
+			} catch (error) {
+				const message = failure(error);
+				result?.(message, "error");
+				notice(message);
+			}
+		}
+		function close() {
+			dispose?.();
+		}
+		function open() {
+			if (dialog?.isConnected) {
+				dialog.querySelector("input")?.focus();
+				return;
+			}
+			dispose?.();
+			const restriction = isolationRestriction();
+			if (restriction) {
+				notice(restriction);
+				return;
+			}
+			const doc = document;
+			const host = doc.createElement("div");
+			host.id = "opsgittrees-credentials";
+			const shadow = host.attachShadow({ mode: "open" });
+			const translations = createTranslations();
+			host.lang = getLanguage();
+			function node(tag, text = "", className = "") {
+				const element = doc.createElement(tag);
+				if (typeof text === "string") element.textContent = text;
+				else translations.bind(element, text);
+				element.className = className;
+				return element;
+			}
+			function button(text) {
+				const element = node("button", text);
+				element.type = "button";
+				return element;
+			}
+			const modal = node("dialog");
+			modal.setAttribute("aria-labelledby", "token-title");
+			dialog = modal;
+			const main = node("main");
+			const done = button("");
+			done.className = "close";
+			done.append(svgIcon("close"));
+			translations.bind(done, msg("Close Token configuration"), "aria-label");
+			const title = node("h1", msg("Token management"));
+			title.id = "token-title";
+			const header = node("header");
+			header.append(title, done);
+			const summary = node("div", "", "summary");
+			const stored = node("span", "", "stored"), account = node("span");
+			summary.append(stored, account);
+			const form = node("form");
+			const label = node("label", "Token");
+			label.htmlFor = "token";
+			const input = node("input");
+			input.id = "token";
+			input.type = "password";
+			input.required = true;
+			input.autocomplete = "off";
+			input.spellcheck = false;
+			input.autocapitalize = "none";
+			const field = node("div", "", "token-field");
+			const reveal = button("");
+			reveal.className = "reveal";
+			const eye = svgIcon("eye"), eyeOff = svgIcon("eyeOff");
+			reveal.append(eye, eyeOff);
+			field.append(input, reveal);
+			function setRevealed(show) {
+				input.type = show ? "text" : "password";
+				reveal.setAttribute("aria-pressed", String(show));
+				eye.toggleAttribute("hidden", show);
+				eyeOff.toggleAttribute("hidden", !show);
+				const text = t(show ? "Hide Token" : "Show Token");
+				reveal.setAttribute("aria-label", text);
+				reveal.title = text;
+			}
+			setRevealed(false);
+			const save = button(msg("Verify & save"));
+			save.type = "submit";
+			save.className = "primary";
+			const stop = button(msg("Cancel check"));
+			stop.hidden = true;
+			const actions = node("div", "", "actions");
+			actions.append(save, stop);
+			form.append(label, field, actions);
+			let lastResult = "";
+			const status = node("p", "", "result");
+			status.hidden = true;
+			status.setAttribute("role", "status");
+			status.setAttribute("aria-live", "polite");
+			const check = button(msg("Check saved Token")), repository = button(msg("Check current repository")), remove = button(msg("Clear local Token"));
+			remove.className = "danger";
+			const secondary = node("div", "", "actions");
+			secondary.append(check, repository, remove);
+			const guide = node("section", "", "guide");
+			const create = node("a", msg("Create a fine-grained Token ↗"));
+			create.href = "https://github.com/settings/personal-access-tokens/new";
+			create.target = "_blank";
+			create.rel = "noopener noreferrer";
+			const revoke = node("a", msg("Manage / revoke on GitHub ↗"));
+			revoke.href = "https://github.com/settings/personal-access-tokens";
+			revoke.target = "_blank";
+			revoke.rel = "noopener noreferrer";
+			guide.append(node("h2", msg("Minimum access")), node("p", msg("Contents: Read-only · Metadata: Read-only")), create, revoke);
+			const privacy = node("p", msg("This page can read the Token. Clearing locally does not revoke it on GitHub."), "privacy");
+			main.append(header, summary, form, status, secondary, guide, privacy);
+			modal.append(main);
+			shadow.append(node("style", credential_window_default), modal);
+			doc.body.append(host);
+			const stopTheme = observeTheme((dark) => host.setAttribute("data-theme", dark ? "dark" : "light"));
+			let scope = null, operation = null, clearing = false, disposed = false, edited = false;
+			const live = () => !disposed && dialog === modal && host.isConnected;
+			const report = (message, kind = "info") => {
+				if (live()) {
+					lastResult = message;
+					status.textContent = renderText(message);
+					status.hidden = false;
+					status.dataset.kind = kind;
+				}
+			};
+			result = report;
+			function controls() {
+				const busy = !!operation || clearing;
+				input.disabled = busy;
+				save.disabled = busy;
+				stop.hidden = !operation;
+				check.disabled = busy || !scope?.authenticated;
+				repository.disabled = busy;
+				remove.disabled = clearing || !scope?.authenticated && !operation;
+			}
+			function renderSummary() {
+				stored.textContent = t(scope?.authenticated ? "Token saved" : "Not configured");
+				account.textContent = scope?.authenticated ? "@" + scope.login : "";
+				summary.dataset.authenticated = String(!!scope?.authenticated);
+				summary.title = t(scope?.authenticated ? "Token · public and private repositories" : "Anonymous");
+			}
+			const stopLanguage = observeLanguage(() => {
+				translations.refresh();
+				host.lang = getLanguage();
+				renderSummary();
+				status.textContent = renderText(lastResult);
+				setRevealed(input.type === "text");
+			});
+			async function refresh() {
+				try {
+					const next = await readAuthScope();
+					const token = next.authenticated ? await readSavedToken(next) : null;
+					if (!live() || !isAuthScopeCurrent(next)) return;
+					scope = next;
+					if (!edited) input.value = token || "";
+					renderSummary();
+					controls();
+				} catch (error) {
+					if (!isAbortError(error)) report(failure(error), "error");
+				}
+			}
+			cancel = () => {
+				operation?.abort();
+				input.value = "";
+				edited = false;
+				setRevealed(false);
+			};
+			const stopObserve = observeAuthScope(() => {
+				input.value = "";
+				edited = false;
+				setRevealed(false);
+				refresh();
+			});
+			dispose = () => {
+				if (disposed) return;
+				disposed = true;
+				operation?.abort();
+				input.value = "";
+				stopObserve();
+				stopTheme();
+				stopLanguage();
+				modal.close();
+				host.remove();
+				result = null;
+				cancel = null;
+				dispose = null;
+				dialog = null;
+			};
+			modal.addEventListener("cancel", (event) => {
+				event.preventDefault();
+				close();
+			});
+			modal.addEventListener("close", () => {
+				if (live()) close();
+			});
+			modal.addEventListener("click", (event) => {
+				if (event.target !== modal) return;
+				const box = modal.getBoundingClientRect();
+				if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) close();
+			});
+			input.addEventListener("input", () => {
+				edited = true;
+			});
+			reveal.addEventListener("click", () => setRevealed(input.type === "password"));
+			stop.addEventListener("click", () => {
+				cancel?.();
+				report(msg("Cancelling the check…"));
+			});
+			done.addEventListener("click", close);
+			remove.addEventListener("click", () => {
+				clearing = true;
+				controls();
+				clear().finally(() => {
+					clearing = false;
+					if (live()) {
+						controls();
+						refresh();
+					}
+				});
+			});
+			form.addEventListener("submit", (event) => {
+				event.preventDefault();
+				if (operation || clearing) return;
+				const candidate = input.value;
+				input.value = "";
+				edited = false;
+				setRevealed(false);
+				const controller = new AbortController();
+				operation = controller;
+				controls();
+				report(msg("Checking identity with GitHub. Candidate is not saved yet…"));
+				configureToken(candidate, controller.signal).then((next) => {
+					if (!live() || controller.signal.aborted) return;
+					report(msg("Saved and read back from userscript storage. API account: @{login}. Repository permissions are checked separately.", { login: next.login || "" }), "success");
+					notice(msg("Token saved. API requests now use @{login}.", { login: next.login || "" }));
+				}).catch((error) => report(failure(error), "error")).finally(() => {
+					if (operation === controller) operation = null;
+					if (live()) {
+						controls();
+						refresh();
+					}
+				});
+			});
+			check.addEventListener("click", () => {
+				if (operation || clearing || !scope?.authenticated) return;
+				const checked = scope, controller = new AbortController();
+				operation = controller;
+				controls();
+				report(msg("Checking saved Token identity…"));
+				getGitHubClient(checked).then((client) => client.getIdentity(controller.signal)).then((identity) => {
+					if (live() && !controller.signal.aborted && isAuthScopeCurrent(checked)) report(msg("Identity verified: @{login}.", { login: identity.login }), "success");
+				}).catch((error) => report(failure(error), "error")).finally(() => {
+					if (operation === controller) operation = null;
+					if (live()) controls();
+				});
+			});
+			repository.addEventListener("click", () => {
+				if (operation || clearing) return;
+				const controller = new AbortController();
+				operation = controller;
+				controls();
+				report(msg("Checking identity and repository access…"));
+				checkRepository(controller.signal).then((message) => {
+					if (live() && !controller.signal.aborted) report(message, "success");
+				}).catch((error) => report(failure(error), "error")).finally(() => {
+					if (operation === controller) operation = null;
+					if (live()) controls();
+				});
+			});
+			controls();
+			refresh();
+			modal.showModal();
+			input.focus();
+		}
+		return {
+			open,
+			close
+		};
+	}
+	function parentPath(path) {
+		const slash = path.lastIndexOf("/");
+		return slash < 0 ? "" : path.slice(0, slash);
+	}
+	function ancestors(path) {
+		const result = [];
+		for (let parent = parentPath(path); parent; parent = parentPath(parent)) result.push(parent);
+		return result;
+	}
+	var TreeIndex = class {
+		entries = new Map();
+		children = new Map([["", []]]);
+		dirty = new Set();
+		add(entries, prefix = "") {
+			for (const entry of entries) {
+				const path = prefix ? prefix + "/" + entry.path : entry.path;
+				for (const ancestor of ancestors(path).reverse()) if (!this.entries.has(ancestor)) this.insert({
+					path: ancestor,
+					name: ancestor.slice(ancestor.lastIndexOf("/") + 1),
+					sha: "",
+					mode: "040000",
+					type: "tree"
+				});
+				this.insert({
+					...entry,
+					path,
+					name: path.slice(path.lastIndexOf("/") + 1)
+				});
+			}
+		}
+		insert(entry) {
+			const old = this.entries.get(entry.path);
+			this.entries.set(entry.path, entry);
+			if (entry.type === "tree" && !this.children.has(entry.path)) this.children.set(entry.path, []);
+			const parent = parentPath(entry.path);
+			if (!this.children.has(parent)) this.children.set(parent, []);
+			if (!old) this.children.get(parent).push(entry.path);
+			this.dirty.add(parent);
+		}
+		view(state, pending = 0, reason) {
+			for (const parent of this.dirty) this.children.get(parent)?.sort((a, b) => {
+				const left = this.entries.get(a), right = this.entries.get(b);
+				if (left.type === "tree" !== (right.type === "tree")) return left.type === "tree" ? -1 : 1;
+				return left.name < right.name ? -1 : left.name > right.name ? 1 : 0;
+			});
+			this.dirty.clear();
+			return {
+				entries: this.entries,
+				children: this.children,
+				state,
+				pending,
+				reason
+			};
+		}
+	};
+	function startPreload(context, scope, client, onChange, signal) {
+		const index = new TreeIndex();
+		const queue = [{
+			sha: context.rootTreeSha,
+			prefix: "",
+			recursive: true
+		}];
+		const responses = new Map();
+		let visible = new Set();
+		let active = 0, batchRequests = 0, timer;
+		let stopped = false, terminalIncomplete = false;
+		let state = "loading";
+		let reason;
+		let canResume = false;
+		let resumeAt;
+		const emit = () => {
+			if (!signal.aborted) onChange({
+				...index.view(state, queue.length + active, reason),
+				canResume,
+				resumeAt
+			});
+		};
+		const priority = (task) => !task.prefix || context.path === task.prefix || context.path.startsWith(task.prefix + "/") ? 0 : visible.has(task.prefix) ? 1 : 2;
+		function pause(message, nextState, retry, at) {
+			stopped = true;
+			if (resumeAt && resumeAt > Date.now() && !at && retry) {
+				emit();
+				return;
+			}
+			state = nextState;
+			reason = message;
+			canResume = retry;
+			resumeAt = Math.max(resumeAt || 0, at || 0) || void 0;
+			emit();
+		}
+		function schedule() {
+			if (signal.aborted || stopped) return;
+			const quota = client.quota;
+			if (quota.resumeAt && Date.now() >= quota.resumeAt) {
+				quota.remaining = null;
+				quota.resumeAt = null;
+			}
+			if (queue.length && quota.blockedUntil && quota.blockedUntil > Date.now()) {
+				pause(msg("GitHub rate limit remains active."), "paused", true, quota.blockedUntil);
+				return;
+			}
+			if (queue.length && quota.remaining !== null && quota.remaining <= 5) {
+				pause(msg("GitHub request quota is low. Loaded paths remain usable; continue after the quota resets."), "paused", true, quota.resumeAt || void 0);
+				return;
+			}
+			if (!queue.length && !active) {
+				state = terminalIncomplete ? "partial" : "complete";
+				if (terminalIncomplete) reason = msg("GitHub truncated a non-recursive directory listing. Results remain incomplete; this API cannot enumerate all entries.");
+				responses.clear();
+				emit();
+				return;
+			}
+			if (batchRequests >= 40) {
+				if (!active && !timer) timer = setTimeout(() => {
+					timer = void 0;
+					batchRequests = 0;
+					schedule();
+				}, 0);
+				return;
+			}
+			queue.sort((a, b) => priority(a) - priority(b));
+			while (active < 2 && queue.length && batchRequests < 40 && !stopped) {
+				const task = queue.shift();
+				active++;
+				run(task);
+			}
+		}
+		async function run(task) {
+			const key = task.sha + ":" + task.recursive;
+			try {
+				let response = responses.get(key);
+				if (!response) {
+					batchRequests++;
+					response = client.getTree(context, task.sha, task.recursive, signal);
+					responses.set(key, response);
+				}
+				const data = await response;
+				if (signal.aborted) return;
+				if (context.visibility !== "public" && !isAuthScopeCurrent(scope)) {
+					index.entries.clear();
+					index.children.clear();
+					queue.length = 0;
+					responses.clear();
+					pause(msg("Authorization changed; private index cleared."), "failed", false);
+					return;
+				}
+				index.add(data.tree, task.prefix);
+				if (task.recursive && data.truncated) queue.push({
+					...task,
+					recursive: false
+				});
+				else if (!task.recursive) {
+					if (data.truncated) terminalIncomplete = true;
+					for (const entry of data.tree) if (entry.type === "tree") queue.push({
+						sha: entry.sha,
+						prefix: task.prefix ? task.prefix + "/" + entry.path : entry.path,
+						recursive: true
+					});
+				}
+				if (!stopped) state = "partial";
+			} catch (error) {
+				if (signal.aborted) return;
+				responses.delete(key);
+				queue.unshift(task);
+				const failure = error instanceof ApiError ? error : new ApiError("network", msg("Directory request failed."));
+				pause(failure.detail, failure.kind === "rate" ? "paused" : "failed", failure.kind === "rate" || failure.kind === "network", failure.resumeAt || void 0);
+			} finally {
+				active--;
+				if (!signal.aborted) {
+					emit();
+					schedule();
+				}
+			}
+		}
+		signal.addEventListener("abort", () => {
+			clearTimeout(timer);
+			queue.length = 0;
+			responses.clear();
+		}, { once: true });
+		queueMicrotask(() => {
+			emit();
+			schedule();
+		});
+		return {
+			resume() {
+				if (signal.aborted || !stopped || !canResume || resumeAt && Date.now() < resumeAt) return;
+				if (client.quota.blockedUntil && client.quota.blockedUntil > Date.now()) return;
+				if (client.quota.remaining !== null && client.quota.remaining <= 5 && (!client.quota.resumeAt || Date.now() < client.quota.resumeAt)) return;
+				stopped = false;
+				state = "partial";
+				reason = void 0;
+				canResume = false;
+				resumeAt = void 0;
+				batchRequests = 0;
+				schedule();
+			},
+			prioritize(paths) {
+				visible = new Set(paths);
+			}
+		};
+	}
+	function filterTree(index, query) {
+		const needle = query.trim().toLowerCase();
+		const included = new Set();
+		const autoExpanded = new Set();
+		const stack = (index.children.get("") || []).map((path) => ({
+			path,
+			inherited: false
+		}));
+		while (stack.length) {
+			const { path, inherited } = stack.pop();
+			const entry = index.entries.get(path);
+			const hit = !needle || path.toLowerCase().includes(needle);
+			if (hit || inherited) included.add(path);
+			if (hit && !inherited) for (const parent of ancestors(path)) {
+				included.add(parent);
+				autoExpanded.add(parent);
+			}
+			if (entry.type === "tree") for (const child of index.children.get(path) || []) stack.push({
+				path: child,
+				inherited: inherited || hit
+			});
+		}
+		return {
+			included,
+			autoExpanded
+		};
+	}
+	function visiblePaths(index, included, expanded) {
+		const result = [];
+		const stack = [...index.children.get("") || []].reverse();
+		while (stack.length) {
+			const path = stack.pop();
+			if (included && !included.has(path)) continue;
+			result.push(path);
+			if (expanded.has(path)) {
+				const children = index.children.get(path) || [];
+				for (let i = children.length - 1; i >= 0; i--) stack.push(children[i]);
+			}
+		}
+		return result;
+	}
+	var style_default = ":host{--bg:var(--bgColor-default,var(--color-canvas-default,#fff));--input:var(--bgColor-default,var(--color-canvas-default,#fff));--fg:var(--fgColor-default,var(--color-fg-default,#1f2328));--muted:var(--fgColor-muted,var(--color-fg-muted,#59636e));--border:var(--borderColor-default,var(--color-border-default,#d1d9e0));--accent:var(--fgColor-accent,var(--color-accent-fg,#0969da));--hover:var(--control-transparent-bgColor-hover,var(--color-neutral-muted,#818b981a));--selection:var(--control-transparent-bgColor-selected,var(--bgColor-neutral-muted,#818b9826));--folder:var(--treeViewItem-leadingVisual-iconColor-rest,var(--color-accent-fg,#54aeff));--guide:var(--borderColor-muted,var(--color-border-muted,#d1d9e0b3));--checked:var(--control-checked-bgColor-rest,var(--color-accent-emphasis,#0969da));--on-accent:var(--control-checked-fgColor-rest,var(--color-fg-on-emphasis,#fff));--button-bg:var(--button-default-bgColor-rest,var(--control-bgColor-rest,#f6f8fa));--button-hover:var(--button-default-bgColor-hover,var(--control-bgColor-hover,#eff2f5));--mono:\"SFMono-Regular\",Consolas,\"Liberation Mono\",monospace;color:var(--fg);--lightningcss-light:initial;--lightningcss-dark: ;color-scheme:light;font:13px/1.5 -apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Microsoft YaHei,sans-serif}:host([data-theme=dark]){--bg:var(--bgColor-default,var(--color-canvas-default,#0d1117));--input:var(--bgColor-default,var(--color-canvas-default,#0d1117));--fg:var(--fgColor-default,var(--color-fg-default,#f0f6fc));--muted:var(--fgColor-muted,var(--color-fg-muted,#9198a1));--border:var(--borderColor-default,var(--color-border-default,#3d444d));--accent:var(--fgColor-accent,var(--color-accent-fg,#4493f8));--hover:var(--control-transparent-bgColor-hover,var(--color-neutral-muted,#656c7633));--selection:var(--control-transparent-bgColor-selected,var(--bgColor-neutral-muted,#656c7633));--folder:var(--treeViewItem-leadingVisual-iconColor-rest,var(--color-accent-fg,#54aeff));--guide:var(--borderColor-muted,var(--color-border-muted,#3d444db3));--checked:var(--control-checked-bgColor-rest,var(--color-accent-emphasis,#1f6feb));--button-bg:var(--button-default-bgColor-rest,var(--control-bgColor-rest,#212830));--button-hover:var(--button-default-bgColor-hover,var(--control-bgColor-hover,#262c36));--lightningcss-light: ;--lightningcss-dark:initial;color-scheme:dark}*{box-sizing:border-box}[hidden]{display:none!important}button,input,select{font:inherit;color:inherit}button{cursor:pointer;background:0 0;border:0}button:disabled{cursor:not-allowed;opacity:.5}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,.resize:focus-visible,.viewport:focus-visible{outline:1px solid var(--accent);outline-offset:-1px}svg{pointer-events:none;flex-shrink:0;width:16px;height:16px}button:hover{background:var(--hover)}.shell{background:var(--bg);border-right:1px solid var(--border);width:100%;height:100%;display:flex}.panel{flex-direction:column;flex:1;min-width:0;height:100%;display:flex}.header{flex-shrink:0}.repository-row,.ref-row{border-bottom:1px solid var(--border);align-items:center;gap:4px;min-height:30px;padding:2px 6px;display:flex}.icon-button{width:24px;height:24px;color:var(--muted);border-radius:var(--borderRadius-medium,6px);flex-shrink:0;place-items:center;padding:0;display:grid}.icon-button[aria-pressed=true],.search-toggle[aria-expanded=true]{background:var(--selection);color:var(--fg)}.repository-bar{flex:1;align-items:center;gap:4px;min-width:0;font-size:12px;display:flex}.repository-bar a{color:var(--accent);text-decoration:none}.repository-bar a:hover{text-decoration:underline}.owner,.repository{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.owner{max-width:40%}.repository{flex:1;font-weight:600}.repository-separator{color:var(--muted)}.ref-icon{width:14px;height:14px;color:var(--muted)}.ref-label{text-overflow:ellipsis;white-space:nowrap;min-width:0;font:11px var(--mono);color:var(--muted);flex:1;overflow:hidden}.search-bar{border:1px solid var(--border);border-radius:var(--borderRadius-medium,6px);background:var(--input);flex-shrink:0;align-items:center;gap:4px;margin:0 6px 6px;padding:0 4px 0 8px;display:flex}.search-bar:focus-within{border-color:var(--accent)}.search-bar input{background:0 0;border:0;outline:none;flex:1;min-width:0;padding:5px 0;font-size:12px}.search-bar input::-webkit-search-cancel-button{display:none}.search-bar input:placeholder-shown+.clear{display:none}.footer{border-top:1px solid var(--border);flex-shrink:0;align-items:center;display:flex}.footer .icon-button{margin:0 6px}.footer-info{flex:1;align-items:center;gap:8px;min-width:0;padding:5px 8px;display:flex}.brand{flex-shrink:0;font-size:11px;font-weight:600;line-height:16px}.status{min-width:0;color:var(--muted);white-space:nowrap;text-overflow:ellipsis;flex:1;font-size:10px;line-height:16px;overflow:hidden}.resume{border:1px solid var(--border);border-radius:var(--borderRadius-medium,6px);color:var(--accent);flex-shrink:0;margin:6px 8px;padding:5px;font-size:12px}.viewport{overscroll-behavior:contain;scrollbar-width:thin;flex:1;min-height:0;position:relative;overflow:auto}.tree-loading{color:var(--muted);text-align:center;flex-direction:column;justify-content:center;align-items:center;gap:8px;padding:16px;font-size:12px;display:flex;position:absolute;inset:0}.tree-loading svg{width:20px;height:20px;color:var(--accent);animation:1s linear infinite ogt-spin}@keyframes ogt-spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.tree-loading svg{animation:none}}.canvas{min-width:100%;position:relative}.tree-row{border-radius:var(--borderRadius-medium,6px);width:100%;height:24px;font:12px var(--mono);color:var(--fg);text-align:left;background:0 0;border:0;align-items:center;gap:4px;padding-right:8px;text-decoration:none;display:flex;position:absolute;left:0}.tree-row:hover{background:var(--hover);text-decoration:none}.tree-row.current{background:var(--selection);color:var(--fg)}.indent-guides{background:repeating-linear-gradient(to right,var(--guide) 0 1px,transparent 1px 12px);pointer-events:none;position:absolute;top:0;bottom:0;left:14px}.expander{flex-shrink:0;place-items:center;width:12px;display:grid}.expander svg{width:12px;height:12px}.file-icon{width:14px;height:14px;color:var(--muted)}.folder-icon{color:var(--folder)}.file-name{white-space:nowrap;text-overflow:ellipsis;position:relative;overflow:hidden}.tree-row[aria-expanded] .file-name{font-weight:500}.no-results{color:var(--muted);flex:1;padding:16px 10px;font-size:12px}.settings{flex:1;min-height:0;padding:0 10px 16px;font-size:12px;overflow:auto}.settings h2{margin:22px 0 10px;font-size:12px;font-weight:600}.option{border-bottom:1px solid var(--border);justify-content:space-between;align-items:center;gap:8px;margin:16px 0;padding-bottom:16px;display:flex}.option input{appearance:none;border:1px solid var(--muted);background:var(--input);cursor:pointer;border-radius:9px;flex-shrink:0;width:28px;height:16px;margin:0;position:relative}.option input:before{content:\"\";background:var(--muted);border-radius:50%;width:10px;height:10px;position:absolute;top:2px;left:2px}.option input:checked{background:var(--checked);border-color:var(--checked)}.option input:checked:before{background:var(--on-accent);transform:translate(12px)}.language-option{gap:7px;margin:8px 0 16px;display:grid}.language-option select{border:1px solid var(--border);border-radius:var(--borderRadius-medium,6px);background:var(--input);width:100%;min-width:0;padding:5px 7px}.settings button{border:1px solid var(--border);border-radius:var(--borderRadius-medium,6px);background:var(--button-bg);margin:6px 0;padding:6px 8px}.settings button:hover{background:var(--button-hover)}.identity{color:var(--muted);overflow-wrap:anywhere;margin:8px 0}.connection-status{overflow-wrap:anywhere;color:var(--muted)}.connection-status:empty{display:none}.rail{writing-mode:vertical-rl;width:24px;height:100%;color:var(--muted);text-align:start;padding:12px 4px;font-size:11px;display:none}.collapsed .panel,.collapsed .resize{display:none}.collapsed .rail{display:block}.resize{cursor:col-resize;touch-action:none;width:6px;position:absolute;top:0;bottom:0;right:-3px}.resize:hover,.resize:focus-visible{background:var(--accent);opacity:.5}";
+	var rowHeight = 24;
+	var emptySnapshot = () => ({
+		expanded: [],
+		scrollTop: 0,
+		anchorPath: null,
+		anchorOffset: 0
+	});
+	function element(tag, className = "", text) {
+		const node = document.createElement(tag);
+		node.className = className;
+		if (text !== void 0) node.textContent = text;
+		return node;
+	}
+	function button(text, label, className = "") {
+		const node = element("button", className, text);
+		node.type = "button";
+		node.setAttribute("aria-label", label);
+		node.title = label;
+		return node;
+	}
+	function subscribe(listeners, listener) {
+		listeners.add(listener);
+		return () => listeners.delete(listener);
+	}
+	function mountSidebar(initialSettings) {
+		let settings = { ...initialSettings };
+		const translations = createTranslations();
+		function text(tag, className, key) {
+			return translations.bind(element(tag, className), msg(key));
+		}
+		function action(text, label, className = "") {
+			const node = button("", "", className);
+			if (text) translations.bind(node, msg(text));
+			translations.bind(node, msg(label), "aria-label");
+			translations.bind(node, msg(label), "title");
+			return node;
+		}
+		function iconButton(icon, label, className = "icon-button") {
+			const node = action(null, label, className);
+			node.append(svgIcon(icon));
+			return node;
+		}
+		const host = element("aside");
+		host.id = "opsgittrees";
+		translations.bind(host, msg("OpsGitTrees repository navigation"), "aria-label");
+		host.lang = getLanguage();
+		host.style.cssText = "position:fixed;left:0;top:0;bottom:0;z-index:100;";
+		const shadow = host.attachShadow({ mode: "open" });
+		const style = element("style");
+		style.textContent = style_default;
+		const shell = element("div", "shell");
+		const panel = element("div", "panel");
+		const header = element("header", "header");
+		const collapse = iconButton("back", "Collapse file navigation");
+		const owner = element("a", "owner");
+		owner.hidden = true;
+		const separator = element("span", "repository-separator", "/");
+		separator.hidden = true;
+		const repository = element("a", "repository", t("Repository"));
+		const refLabel = element("div", "ref-label");
+		const repositoryBar = element("div", "repository-bar");
+		repositoryBar.append(owner, separator, repository);
+		const searchBar = element("div", "search-bar");
+		searchBar.id = "ogt-search";
+		searchBar.hidden = true;
+		const search = element("input");
+		search.type = "search";
+		translations.bind(search, msg("Find a file or path…"), "placeholder");
+		translations.bind(search, msg("Find a file or path"), "aria-label");
+		search.autocomplete = "off";
+		search.spellcheck = false;
+		const clear = iconButton("close", "Clear search", "clear icon-button");
+		const locate = iconButton("locate", "Locate current file");
+		searchBar.append(search, clear);
+		const openSearch = iconButton("search", "Find a file or path", "icon-button search-toggle");
+		openSearch.setAttribute("aria-controls", searchBar.id);
+		openSearch.setAttribute("aria-expanded", "false");
+		const settingsIcon = svgIcon("settings"), closeSettingsIcon = svgIcon("close");
+		const openSettings = button("", "", "icon-button settings-toggle");
+		openSettings.append(settingsIcon);
+		const repositoryRow = element("div", "repository-row");
+		repositoryRow.append(repositoryBar, openSettings);
+		const refRow = element("div", "ref-row");
+		refRow.append(svgIcon("branch", "ref-icon"), refLabel, openSearch, locate);
+		header.append(repositoryRow, refRow);
+		const status = element("div", "status");
+		status.setAttribute("role", "status");
+		status.setAttribute("aria-live", "polite");
+		const footerInfo = element("div", "footer-info");
+		footerInfo.append(element("div", "brand", "OpsGitTrees"), status);
+		const footer = element("footer", "footer");
+		footer.append(footerInfo, collapse);
+		const resume = action("Continue loading", "Continue directory loading", "resume");
+		resume.hidden = true;
+		const viewport = element("div", "viewport");
+		viewport.setAttribute("role", "tree");
+		translations.bind(viewport, msg("Repository files"), "aria-label");
+		viewport.tabIndex = 0;
+		const canvas = element("div", "canvas");
+		const loading = element("div", "tree-loading");
+		loading.setAttribute("aria-hidden", "true");
+		loading.append(svgIcon("loading"), text("span", "", "Loading repository index…"));
+		viewport.append(canvas, loading);
+		const noResults = element("div", "no-results");
+		const settingsPanel = element("section", "settings");
+		settingsPanel.hidden = true;
+		const languageLabel = element("label", "language-option");
+		languageLabel.append(text("span", "", "Language"));
+		const language = element("select");
+		translations.bind(language, msg("Interface language"), "aria-label");
+		for (const [value, label] of [
+			["auto", ""],
+			["zh-CN", "简体中文"],
+			["en", "English"]
+		]) {
+			const option = element("option", "", label);
+			option.value = value;
+			if (value === "auto") translations.bind(option, msg("Follow browser"));
+			language.append(option);
+		}
+		language.value = settings.language;
+		languageLabel.append(language);
+		settingsPanel.append(languageLabel);
+		const shortcutsLabel = element("label", "option"), shortcuts = element("input");
+		shortcuts.type = "checkbox";
+		shortcuts.checked = settings.shortcutsEnabled;
+		translations.bind(shortcuts, msg("Keyboard shortcuts"), "aria-label");
+		translations.bind(shortcuts, msg("Enable Alt+Shift+O / Alt+Shift+F"), "title");
+		shortcuts.setAttribute("role", "switch");
+		shortcutsLabel.append(translations.bind(document.createTextNode(""), msg("Keyboard shortcuts")), shortcuts);
+		settingsPanel.append(shortcutsLabel);
+		const authHeading = text("h2", "", "GitHub API authentication");
+		const identity = element("p", "identity");
+		const manageToken = action("Manage Token…", "Open Token configuration dialog");
+		const connectionStatus = element("p", "connection-status");
+		connectionStatus.setAttribute("role", "status");
+		settingsPanel.append(authHeading, identity, manageToken, connectionStatus);
+		panel.append(header, searchBar, viewport, noResults, settingsPanel, resume, footer);
+		const rail = action("FILES ›", "Open file navigation", "rail");
+		const resize = element("div", "resize");
+		resize.tabIndex = 0;
+		resize.setAttribute("role", "separator");
+		translations.bind(resize, msg("Resize file navigation"), "aria-label");
+		resize.setAttribute("aria-orientation", "vertical");
+		resize.setAttribute("aria-valuemin", "200");
+		resize.setAttribute("aria-valuemax", "480");
+		shell.append(panel, rail, resize);
+		shadow.append(style, shell);
+		document.body.append(host);
+		let space = reservePageSpace(settings.collapsed ? 24 : settings.width);
+		const stopTheme = observeTheme((dark) => host.setAttribute("data-theme", dark ? "dark" : "light"));
+		const viewListeners = new Set();
+		const settingsListeners = new Set();
+		const resumeListeners = new Set();
+		const manageListeners = new Set();
+		const visibleListeners = new Set();
+		let view = {
+			browsing: emptySnapshot(),
+			search: null
+		};
+		let searchOpen = false;
+		let index = {
+			entries: new Map(),
+			children: new Map(),
+			state: "loading",
+			pending: 0
+		};
+		let context = null, contextKey = "", currentPath = "";
+		let contextMessage = "", connectionMessage = "";
+		let auth = {
+			id: "anonymous",
+			login: null,
+			authenticated: false
+		};
+		function renderAuth() {
+			identity.textContent = auth.authenticated ? t("Token saved · @{login}", { login: auth.login || "" }) : t("No Token configured.");
+		}
+		function renderStatus() {
+			const state = index.state === "complete" ? t("Complete") : t("Index incomplete — {state}", { state: msg(index.state) });
+			status.textContent = contextMessage && index.state === "loading" ? renderText(contextMessage) : index.state === "empty" ? t("This repository is empty.") : index.state === "loading" ? t("Loading repository index…") : t("{count} paths · {state}", {
+				count: index.entries.size,
+				state
+			}) + (index.pending ? " · " + t("{count} pending", { count: index.pending }) : "") + (index.reason ? "\n" + renderText(index.reason) : "");
+			status.title = status.textContent || "";
+			const isLoading = index.state === "loading" && index.entries.size === 0;
+			loading.hidden = !isLoading;
+			canvas.hidden = isLoading;
+			viewport.setAttribute("aria-busy", String(isLoading));
+		}
+		let filtered = null;
+		let paths = [], expanded = new Set();
+		let positionEstablished = false;
+		let scrollFrame = 0, lastStart = -1, lastEnd = -1;
+		let searchTimer, resumeTimer;
+		const snapshot = () => view.search?.view || view.browsing;
+		function capture() {
+			if (!host.isConnected || settings.collapsed || viewport.hidden || !settingsPanel.hidden) return;
+			const current = snapshot();
+			if (current.anchorPath && !index.entries.has(current.anchorPath) && index.state !== "complete") return;
+			const row = Math.floor(viewport.scrollTop / rowHeight);
+			current.scrollTop = viewport.scrollTop;
+			current.anchorPath = paths[row] || null;
+			current.anchorOffset = viewport.scrollTop % rowHeight;
+		}
+		function changed() {
+			for (const listener of viewListeners) listener(view);
+		}
+		function renderSettingsToggle() {
+			const open = !settingsPanel.hidden, label = t(open ? "Close navigation settings" : "Open navigation settings");
+			openSettings.setAttribute("aria-label", label);
+			openSettings.title = label;
+			openSettings.setAttribute("aria-pressed", String(open));
+			openSettings.replaceChildren(open ? closeSettingsIcon : settingsIcon);
+		}
+		function renderSearch() {
+			searchBar.hidden = !settingsPanel.hidden || !searchOpen;
+			openSearch.setAttribute("aria-expanded", String(!searchBar.hidden));
+		}
+		function setSearchOpen(open) {
+			if (searchOpen === open) return;
+			capture();
+			searchOpen = open;
+			renderSearch();
+			restorePosition();
+			renderWindow(true);
+		}
+		function focusSearch() {
+			setCollapsed(false);
+			showSettings(false);
+			setSearchOpen(true);
+			search.focus();
+		}
+		function updateLayout() {
+			host.style.width = (settings.collapsed ? 24 : settings.width) + "px";
+			shell.classList.toggle("collapsed", settings.collapsed);
+			resize.setAttribute("aria-valuenow", String(settings.width));
+			space.setWidth(settings.collapsed ? 24 : settings.width);
+			if (!settings.collapsed) {
+				restorePosition();
+				renderWindow(true);
+			}
+		}
+		function settingsChanged() {
+			for (const listener of settingsListeners) listener({ ...settings });
+		}
+		function setCollapsed(collapsed) {
+			if (settings.collapsed === collapsed) return;
+			if (collapsed) capture();
+			settings.collapsed = collapsed;
+			updateLayout();
+			settingsChanged();
+		}
+		function renderWindow(force = false) {
+			if (settings.collapsed) return;
+			const start = Math.max(0, Math.floor(viewport.scrollTop / rowHeight) - 8);
+			const end = Math.min(paths.length, Math.ceil((viewport.scrollTop + (viewport.clientHeight || 480)) / rowHeight) + 8);
+			if (!force && start === lastStart && end === lastEnd) return;
+			lastStart = start;
+			lastEnd = end;
+			const focused = shadow.activeElement?.dataset.path;
+			const fragment = document.createDocumentFragment();
+			for (let i = start; i < end; i++) {
+				const path = paths[i], entry = index.entries.get(path);
+				const row = entry.type === "tree" ? button("", entry.name) : element("a");
+				row.className = "tree-row" + (path === currentPath ? " current" : "");
+				row.dataset.path = path;
+				const depth = path.split("/").length;
+				row.style.top = i * rowHeight + "px";
+				row.style.paddingLeft = 8 + (depth - 1) * 12 + "px";
+				row.setAttribute("role", "treeitem");
+				row.setAttribute("aria-level", String(depth));
+				row.setAttribute("aria-selected", String(path === currentPath));
+				row.title = path;
+				const guides = element("span", "indent-guides");
+				guides.setAttribute("aria-hidden", "true");
+				guides.style.width = (depth - 1) * 12 + "px";
+				row.append(guides);
+				const expander = element("span", "expander");
+				if (entry.type === "tree") expander.append(svgIcon(expanded.has(path) ? "down" : "right"));
+				const icon = svgIcon(entry.type === "tree" ? "folder" : entry.type === "commit" || entry.mode === "120000" ? "link" : "file", "file-icon" + (entry.type === "tree" ? " folder-icon" : ""));
+				const name = element("span", "file-name", entry.name);
+				row.append(expander, icon, name);
+				if (entry.type === "tree") {
+					row.setAttribute("aria-expanded", String(expanded.has(path)));
+					row.addEventListener("click", () => toggle(path));
+				} else {
+					row.href = context ? entry.type === "commit" ? parentDirectoryUrl(context, path) : fileUrl(context, path) : "#";
+					if (entry.type === "commit") row.setAttribute("aria-label", t("{name} (submodule; open parent directory on GitHub)", { name: entry.name }));
+					row.addEventListener("click", () => {
+						capture();
+						changed();
+					});
+				}
+				fragment.append(row);
+			}
+			canvas.replaceChildren(fragment);
+			if (focused) [...canvas.querySelectorAll("[data-path]")].find((el) => el.dataset.path === focused)?.focus({ preventScroll: true });
+			const visible = paths.slice(start, end);
+			for (const listener of visibleListeners) listener(visible);
+		}
+		function restorePosition() {
+			const state = snapshot();
+			const anchor = state.anchorPath ? paths.indexOf(state.anchorPath) : -1;
+			viewport.scrollTop = anchor >= 0 ? anchor * rowHeight + state.anchorOffset : state.scrollTop;
+		}
+		function rebuild(recompute = false) {
+			if (recompute) filtered = view.search ? filterTree(index, view.search.query) : null;
+			expanded = new Set(view.browsing.expanded);
+			if (view.search) {
+				for (const path of filtered?.autoExpanded || []) expanded.add(path);
+				for (const path of view.search.view.expanded) expanded.add(path);
+				for (const path of view.search.collapsed) expanded.delete(path);
+			}
+			paths = visiblePaths(index, filtered?.included || null, expanded);
+			canvas.style.height = paths.length * rowHeight + "px";
+			noResults.textContent = paths.length ? "" : view.search ? index.state === "complete" ? t("No matching paths.") : t("No loaded paths match. The index is incomplete.") : index.state === "complete" ? t("No files in this version.") : "";
+			noResults.hidden = !noResults.textContent || !settingsPanel.hidden;
+			restorePosition();
+			renderWindow(true);
+		}
+		function toggle(path) {
+			capture();
+			if (view.search) {
+				const manual = new Set(view.search.view.expanded), closed = new Set(view.search.collapsed);
+				if (expanded.has(path)) {
+					manual.delete(path);
+					closed.add(path);
+				} else {
+					manual.add(path);
+					closed.delete(path);
+				}
+				view.search.view.expanded = [...manual];
+				view.search.collapsed = [...closed];
+			} else {
+				const open = new Set(view.browsing.expanded);
+				if (open.has(path)) open.delete(path);
+				else open.add(path);
+				view.browsing.expanded = [...open];
+			}
+			rebuild();
+			changed();
+		}
+		function queryChanged() {
+			capture();
+			const query = search.value.trim();
+			if (!query) view.search = null;
+			else if (view.search) view.search.query = query;
+			else view.search = {
+				query,
+				view: emptySnapshot(),
+				collapsed: []
+			};
+			if (query) searchOpen = true;
+			renderSearch();
+			rebuild(true);
+			changed();
+		}
+		function positionCurrent(reveal) {
+			if (reveal) {
+				setCollapsed(false);
+				showSettings(false);
+			}
+			capture();
+			clearTimeout(searchTimer);
+			view.search = null;
+			search.value = "";
+			if (reveal) searchOpen = false;
+			renderSearch();
+			view.browsing.expanded = [...new Set([...view.browsing.expanded, ...ancestors(currentPath)])];
+			rebuild(true);
+			const i = paths.indexOf(currentPath);
+			if (i >= 0) {
+				const top = Math.max(0, i * rowHeight - (viewport.clientHeight || 480) / 3);
+				view.browsing.scrollTop = top;
+				view.browsing.anchorPath = paths[Math.floor(top / rowHeight)] || null;
+				view.browsing.anchorOffset = top % rowHeight;
+				restorePosition();
+			}
+			renderWindow(true);
+			positionEstablished = true;
+			changed();
+		}
+		function locateCurrent() {
+			positionCurrent(true);
+		}
+		function setIndex(next) {
+			index = next;
+			if (next.state === "complete") {
+				const keep = (values) => values.filter((p) => index.entries.has(p));
+				view.browsing.expanded = keep(view.browsing.expanded);
+				if (view.search) {
+					view.search.view.expanded = keep(view.search.view.expanded);
+					view.search.collapsed = keep(view.search.collapsed);
+				}
+			}
+			renderStatus();
+			clearTimeout(resumeTimer);
+			resume.hidden = !next.canResume;
+			resume.disabled = !!next.resumeAt && next.resumeAt > Date.now();
+			if (resume.disabled && next.resumeAt) resumeTimer = setTimeout(() => {
+				resume.disabled = false;
+			}, Math.min(2147483647, Math.max(0, next.resumeAt - Date.now())));
+			rebuild(true);
+			if (!positionEstablished && !view.search && currentPath && index.entries.has(currentPath)) positionCurrent(false);
+		}
+		search.addEventListener("input", () => {
+			clearTimeout(searchTimer);
+			searchTimer = setTimeout(queryChanged, 80);
+		});
+		clear.addEventListener("click", () => {
+			clearTimeout(searchTimer);
+			search.value = "";
+			queryChanged();
+			search.focus();
+		});
+		search.addEventListener("keydown", (event) => {
+			if (event.key !== "Escape") return;
+			event.preventDefault();
+			event.stopPropagation();
+			clearTimeout(searchTimer);
+			if (search.value || view.search) {
+				search.value = "";
+				queryChanged();
+			} else {
+				setSearchOpen(false);
+				openSearch.focus();
+			}
+		});
+		openSearch.addEventListener("click", () => {
+			if (settingsPanel.hidden && searchOpen && !search.value.trim()) {
+				clearTimeout(searchTimer);
+				search.value = "";
+				if (view.search) queryChanged();
+				setSearchOpen(false);
+				openSearch.focus();
+			} else focusSearch();
+		});
+		locate.addEventListener("click", locateCurrent);
+		collapse.addEventListener("click", () => setCollapsed(true));
+		rail.addEventListener("click", () => setCollapsed(false));
+		function showSettings(open) {
+			if (open) capture();
+			settingsPanel.hidden = !open;
+			viewport.hidden = open;
+			noResults.hidden = open || !noResults.textContent;
+			renderSettingsToggle();
+			renderSearch();
+			if (!open) {
+				restorePosition();
+				renderWindow(true);
+			}
+		}
+		openSettings.addEventListener("click", () => showSettings(settingsPanel.hidden !== false));
+		shortcuts.addEventListener("change", () => {
+			settings.shortcutsEnabled = shortcuts.checked;
+			settingsChanged();
+		});
+		language.addEventListener("change", () => {
+			settings.language = language.value;
+			settingsChanged();
+		});
+		resume.addEventListener("click", () => {
+			for (const listener of resumeListeners) listener();
+		});
+		manageToken.addEventListener("click", () => {
+			for (const listener of manageListeners) listener();
+		});
+		viewport.addEventListener("scroll", () => {
+			if (!scrollFrame) scrollFrame = requestAnimationFrame(() => {
+				scrollFrame = 0;
+				capture();
+				renderWindow();
+				changed();
+			});
+		}, { passive: true });
+		const resizeObserver = new ResizeObserver(() => renderWindow(true));
+		resizeObserver.observe(viewport);
+		let dragging = false;
+		const setWidth = (width) => {
+			settings.width = Math.round(Math.max(200, Math.min(480, width)));
+			updateLayout();
+			settingsChanged();
+		};
+		resize.addEventListener("pointerdown", (event) => {
+			if (event.button !== 0) return;
+			dragging = true;
+			resize.setPointerCapture(event.pointerId);
+			event.preventDefault();
+		});
+		resize.addEventListener("pointermove", (event) => {
+			if (dragging) setWidth(event.clientX);
+		});
+		resize.addEventListener("pointerup", () => {
+			dragging = false;
+		});
+		resize.addEventListener("lostpointercapture", () => {
+			dragging = false;
+		});
+		resize.addEventListener("keydown", (event) => {
+			if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+				setWidth(settings.width + (event.key === "ArrowLeft" ? -20 : 20));
+				event.preventDefault();
+			}
+		});
+		const stopLanguage = observeLanguage(() => {
+			translations.refresh();
+			host.lang = getLanguage();
+			if (!repository.hasAttribute("href")) {
+				repository.textContent = t("Repository");
+				repositoryBar.title = t("Repository");
+			}
+			renderSettingsToggle();
+			renderStatus();
+			renderAuth();
+			connectionStatus.textContent = renderText(connectionMessage);
+			rebuild();
+		});
+		renderSettingsToggle();
+		renderAuth();
+		renderStatus();
+		updateLayout();
+		return {
+			reconnect() {
+				if (host.isConnected) return;
+				space.destroy();
+				document.body.append(host);
+				space = reservePageSpace(settings.collapsed ? 24 : settings.width);
+				restorePosition();
+				renderWindow(true);
+			},
+			setContext(state) {
+				contextMessage = state.kind === "unresolved" ? state.message : "";
+				if (state.kind === "code") {
+					const key = state.context.owner + "/" + state.context.repo + ":" + state.context.refKind + ":" + state.context.refName;
+					if (key !== contextKey) {
+						clearTimeout(searchTimer);
+						contextKey = key;
+						view = {
+							browsing: emptySnapshot(),
+							search: null
+						};
+						search.value = "";
+						searchOpen = false;
+						renderSearch();
+						filtered = null;
+						positionEstablished = false;
+					}
+					context = state.context;
+					currentPath = context.path;
+				} else context = null;
+				const repo = state.kind === "code" ? state.context : state.kind === "empty" ? state : null;
+				owner.hidden = separator.hidden = !repo;
+				owner.textContent = repo?.owner || "";
+				repository.textContent = repo?.repo || t("Repository");
+				if (repo) {
+					const ownerPath = "/" + encodeURIComponent(repo.owner);
+					owner.href = ownerPath;
+					repository.href = ownerPath + "/" + encodeURIComponent(repo.repo);
+				} else {
+					owner.removeAttribute("href");
+					repository.removeAttribute("href");
+				}
+				repositoryBar.title = repo ? repo.owner + " / " + repo.repo : t("Repository");
+				refLabel.textContent = state.kind === "code" ? state.context.refName : "";
+				refLabel.title = refLabel.textContent;
+				renderStatus();
+			},
+			setSettings(next) {
+				const layoutChanged = settings.collapsed !== next.collapsed || settings.width !== next.width;
+				if (next.collapsed && !settings.collapsed) capture();
+				settings = { ...next };
+				shortcuts.checked = settings.shortcutsEnabled;
+				language.value = settings.language;
+				if (layoutChanged) updateLayout();
+			},
+			setCollapsed,
+			setIndex,
+			setCurrentPath(path) {
+				currentPath = path;
+				if (!view.search) {
+					view.browsing.expanded = [...new Set([...view.browsing.expanded, ...ancestors(path)])];
+					rebuild();
+				} else renderWindow(true);
+			},
+			focusSearch,
+			locateCurrent,
+			getView() {
+				capture();
+				return structuredClone(view);
+			},
+			restoreView(state) {
+				view = structuredClone(state);
+				search.value = view.search?.query || "";
+				searchOpen = !!view.search;
+				renderSearch();
+				positionEstablished = true;
+				rebuild(true);
+			},
+			onViewChange: (listener) => subscribe(viewListeners, listener),
+			onSettingsChange: (listener) => subscribe(settingsListeners, listener),
+			onResumePreload: (listener) => subscribe(resumeListeners, listener),
+			onManageToken: (listener) => subscribe(manageListeners, listener),
+			onVisiblePaths: (listener) => subscribe(visibleListeners, listener),
+			setAuth(scope) {
+				auth = scope;
+				renderAuth();
+			},
+			setConnectionStatus(message) {
+				connectionMessage = message;
+				connectionStatus.textContent = renderText(message);
+			},
+			destroy() {
+				clearTimeout(searchTimer);
+				clearTimeout(resumeTimer);
+				cancelAnimationFrame(scrollFrame);
+				resizeObserver.disconnect();
+				stopTheme();
+				stopLanguage();
+				space.destroy();
+				host.remove();
+				viewListeners.clear();
+				settingsListeners.clear();
+				resumeListeners.clear();
+				manageListeners.clear();
+				visibleListeners.clear();
+			}
+		};
+	}
+	var settingsKey = "ogt:settings:v1";
+	var prefix = "ogt:data:v1:";
+	var encoder = new TextEncoder();
+	var totalLimit = 16777216;
+	var snapshotLimit = 4194304;
+	var StorageLimitError = class extends Error {
+		detail = msg("Snapshot exceeds the 4 MiB persistent-cache limit; the complete index remains available in memory.");
+		constructor() {
+			super();
+			this.message = renderText(this.detail);
+		}
+	};
+	var cacheScope = (context, scope) => context.visibility === "public" ? "public" : scope.id;
+	var treeKey = (context, scope) => prefix + JSON.stringify([
+		"tree",
+		context.repoId,
+		context.rootTreeSha,
+		cacheScope(context, scope)
+	]);
+	var viewKey = (context, scope) => prefix + JSON.stringify([
+		"view",
+		context.repoId,
+		context.refKind,
+		context.refName,
+		cacheScope(context, scope)
+	]);
+	async function allowed(context, scope) {
+		if (context.visibility === "public") return true;
+		const now = await readAuthScope();
+		return scope.authenticated && now.authenticated && now.id === scope.id;
+	}
+	function parse(value) {
+		if (typeof value !== "string") return null;
+		try {
+			const record = JSON.parse(value);
+			return record.schema === 1 && typeof record.scope === "string" && typeof record.private === "boolean" && typeof record.usedAt === "number" ? record : null;
+		} catch {
+			return null;
+		}
+	}
+	async function readRecord(key, context, scope) {
+		if (!await allowed(context, scope)) return null;
+		const record = parse(await _GM.getValue(key));
+		if (!record || record.scope !== cacheScope(context, scope) || record.private !== (context.visibility !== "public") || !await allowed(context, scope)) return null;
+		return record;
+	}
+	async function trim() {
+		const scope = await readAuthScope();
+		const records = [];
+		for (const key of await _GM.listValues()) {
+			if (!key.startsWith(prefix)) continue;
+			const raw = await _GM.getValue(key);
+			if (!isAuthScopeCurrent(scope)) return;
+			const record = parse(raw);
+			if (!record || record.private && (!scope.authenticated || record.scope !== scope.id)) {
+				await withAuthLock(async () => {
+					if (!isAuthScopeCurrent(scope) || await _GM.getValue(key) !== raw) return;
+					await _GM.deleteValue(key);
+				});
+				continue;
+			}
+			records.push({
+				key,
+				raw,
+				bytes: encoder.encode(raw).byteLength,
+				usedAt: record.usedAt
+			});
+		}
+		let size = records.reduce((n, r) => n + r.bytes, 0);
+		records.sort((a, b) => a.usedAt - b.usedAt);
+		for (const record of records) {
+			if (size <= totalLimit || !isAuthScopeCurrent(scope)) break;
+			await withAuthLock(async () => {
+				if (!isAuthScopeCurrent(scope) || await _GM.getValue(record.key) !== record.raw) return;
+				await _GM.deleteValue(record.key);
+				size -= record.bytes;
+			});
+		}
+	}
+	function serialize(context, scope, content) {
+		const value = JSON.stringify({
+			schema: 1,
+			scope: cacheScope(context, scope),
+			private: context.visibility !== "public",
+			usedAt: Date.now(),
+			...content
+		});
+		if (encoder.encode(value).byteLength > snapshotLimit) throw new StorageLimitError();
+		return value;
+	}
+	async function writeRecord(key, context, scope, content) {
+		if (!await allowed(context, scope)) throw new DOMException("Authorization changed", "AbortError");
+		const serialized = serialize(context, scope, content);
+		await _GM.setValue(key, serialized);
+		if (!await allowed(context, scope)) {
+			await _GM.deleteValue(key);
+			throw new DOMException("Authorization changed", "AbortError");
+		}
+		await trim();
+	}
+	function normalizeSettings(value) {
+		return {
+			collapsed: typeof value?.collapsed === "boolean" ? value.collapsed : false,
+			width: typeof value?.width === "number" && Number.isFinite(value.width) ? Math.max(200, Math.min(480, value.width)) : 280,
+			shortcutsEnabled: value?.shortcutsEnabled !== false,
+			language: value?.language === "en" || value?.language === "zh-CN" ? value.language : "auto"
+		};
+	}
+	async function readSettings() {
+		return normalizeSettings(await _GM.getValue(settingsKey, {}));
+	}
+	async function writeSettings(changes) {
+		await navigator.locks.request("opsgittrees:settings", async () => {
+			await _GM.setValue(settingsKey, {
+				...await readSettings(),
+				...changes
+			});
+		});
+	}
+	function observeSettings(listener) {
+		let stopped = false;
+		const registration = Promise.resolve(_GM.addValueChangeListener(settingsKey, (_name, _old, value) => {
+			if (!stopped) listener(normalizeSettings(value));
+		}));
+		return () => {
+			stopped = true;
+			registration.then((id) => _GM.removeValueChangeListener(id));
+		};
+	}
+	async function readTree(context, scope) {
+		const record = await readRecord(treeKey(context, scope), context, scope);
+		if (!record?.entries || !Array.isArray(record.entries)) return null;
+		writeRecord(treeKey(context, scope), context, scope, { entries: record.entries }).catch(() => void 0);
+		return record.entries;
+	}
+	async function writeTree(context, scope, entries) {
+		await writeRecord(treeKey(context, scope), context, scope, { entries });
+	}
+	async function readView(context, scope) {
+		return (await readRecord(viewKey(context, scope), context, scope))?.view || null;
+	}
+	async function writeView(context, scope, view) {
+		if (context.visibility !== "public" && !isAuthScopeCurrent(scope)) throw new DOMException("Authorization changed", "AbortError");
+		const key = viewKey(context, scope);
+		_GM_setValue(key, serialize(context, scope, { view }));
+		if (!await allowed(context, scope)) {
+			await _GM.deleteValue(key);
+			throw new DOMException("Authorization changed", "AbortError");
+		}
+		await trim();
+	}
+	async function purgePrivateData() {
+		await trim();
+	}
+	var safeMessage = (error) => error instanceof ApiError || error instanceof StorageLimitError ? error.detail : msg("The operation failed. Check the network and userscript manager storage permissions.");
+	async function startApplication() {
+		let settings = await readSettings();
+		setLanguage(settings.language);
+		let auth = await readAuthScope();
+		let sidebar = null, active = null;
+		let generation = 0, lastUrl = "", verifiedUrl = "", stopped = false;
+		let resolving = new AbortController();
+		let saveTimer, settingsTimer;
+		let pendingSettings = {};
+		let writingSettings = false;
+		let authenticatedClient = null;
+		const anonymousClient = createGitHubClient(null);
+		const memory = new Map();
+		const memoryKey = (context, scope) => context.repoId + ":" + context.rootTreeSha + ":" + (context.visibility === "public" ? "public" : scope.id);
+		function notice(message) {
+			if (sidebar) sidebar.setConnectionStatus(message);
+			else _GM.notification({
+				title: "OpsGitTrees",
+				text: renderText(message),
+				timeout: 8e3
+			});
+		}
+		const credentials = createCredentialManager(notice, checkConnection);
+		function flushSettings() {
+			clearTimeout(settingsTimer);
+			if (writingSettings || !Object.keys(pendingSettings).length) return;
+			const changes = { ...pendingSettings };
+			writingSettings = true;
+			writeSettings(changes).catch(() => {
+				if (!stopped) notice(msg("Settings could not be saved."));
+			}).finally(() => {
+				for (const key of Object.keys(changes)) if (pendingSettings[key] === changes[key]) delete pendingSettings[key];
+				writingSettings = false;
+				flushSettings();
+			});
+		}
+		function applySettings(next) {
+			settings = next;
+			setLanguage(next.language);
+			sidebar?.setSettings(next);
+		}
+		function flushView() {
+			clearTimeout(saveTimer);
+			if (!active || !sidebar) return;
+			const current = active, view = sidebar.getView();
+			writeView(current.context, current.scope, view).catch((error) => {
+				if (!isAbortError(error) && active === current) sidebar?.setConnectionStatus(msg("Reading position could not be saved. Check manager storage."));
+			});
+		}
+		function detach(save = true) {
+			if (save) flushView();
+			else clearTimeout(saveTimer);
+			active?.controller.abort();
+			active = null;
+			sidebar?.destroy();
+			sidebar = null;
+		}
+		function ensureSidebar() {
+			if (sidebar) {
+				sidebar.reconnect();
+				return sidebar;
+			}
+			const handle = mountSidebar(settings);
+			sidebar = handle;
+			handle.setAuth(auth);
+			handle.onViewChange(() => {
+				clearTimeout(saveTimer);
+				saveTimer = setTimeout(flushView, 300);
+			});
+			handle.onSettingsChange((next) => {
+				const immediate = settings.shortcutsEnabled !== next.shortcutsEnabled || settings.language !== next.language;
+				if (settings.collapsed !== next.collapsed) pendingSettings.collapsed = next.collapsed;
+				if (settings.width !== next.width) pendingSettings.width = next.width;
+				if (settings.shortcutsEnabled !== next.shortcutsEnabled) pendingSettings.shortcutsEnabled = next.shortcutsEnabled;
+				if (settings.language !== next.language) pendingSettings.language = next.language;
+				applySettings(next);
+				clearTimeout(settingsTimer);
+				if (immediate) flushSettings();
+				else settingsTimer = setTimeout(flushSettings, 300);
+			});
+			handle.onResumePreload(() => {
+				if (active?.preload) active.preload.resume();
+				else navigate(true);
+			});
+			handle.onVisiblePaths((paths) => active?.preload?.prioritize(paths));
+			handle.onManageToken(credentials.open);
+			return handle;
+		}
+		async function authClient(scope) {
+			if (authenticatedClient?.id === scope.id) return authenticatedClient.client;
+			const client = await getGitHubClient(scope);
+			authenticatedClient = {
+				id: scope.id,
+				client
+			};
+			return client;
+		}
+		function live(ticket) {
+			return !stopped && ticket === generation;
+		}
+		async function navigate(force = false) {
+			const url = new URL(location.href);
+			if (!force && url.href === lastUrl) {
+				sidebar?.reconnect();
+				return;
+			}
+			lastUrl = url.href;
+			const ticket = ++generation;
+			resolving.abort();
+			resolving = new AbortController();
+			const signal = resolving.signal;
+			verifiedUrl = "";
+			let page = readPage(document, url);
+			if (page.kind === "outside") {
+				detach();
+				return;
+			}
+			let handle = ensureSidebar();
+			const retainedView = active ? handle.getView() : null;
+			if (page.kind === "unresolved") {
+				flushView();
+				handle.setContext(page);
+				handle.setIndex({
+					entries: new Map(),
+					children: new Map(),
+					state: "loading",
+					pending: 0
+				});
+			}
+			try {
+				if (page.kind === "unresolved") {
+					const response = await fetch(url.href, {
+						signal,
+						credentials: "same-origin",
+						headers: { Accept: "text/html" }
+					});
+					if (!live(ticket)) return;
+					if (!response.ok || new URL(response.url).origin !== url.origin) throw new ApiError("invalid", msg("Could not read the current GitHub page context."));
+					page = readPage(new DOMParser().parseFromString(await response.text(), "text/html"), url);
+					if (page.kind === "unresolved" || page.kind === "outside") throw new ApiError("invalid", msg("GitHub page context is not recognized. No branch or commit was guessed."));
+					if (!live(ticket)) return;
+				}
+				verifiedUrl = url.href;
+				if (page.kind === "code" && active && (active.preload || active.index) && active.context.owner === page.context.owner && active.context.repo === page.context.repo && active.context.refKind === page.context.refKind && active.context.refName === page.context.refName && active.context.commitSha === page.context.commitSha && !force) {
+					active.context = {
+						...active.context,
+						...page.context
+					};
+					handle.setContext(page);
+					if (retainedView) handle.restoreView(retainedView);
+					if (active.index) handle.setIndex(active.index);
+					handle.setCurrentPath(page.context.path);
+					return;
+				}
+				if (retainedView) handle.restoreView(retainedView);
+				detach();
+				handle = ensureSidebar();
+				handle.setContext(page);
+				const scope = await readAuthScope();
+				if (!live(ticket)) return;
+				auth = scope;
+				handle.setAuth(scope);
+				const pageOwner = page.kind === "code" ? page.context.owner : page.owner;
+				const pageRepo = page.kind === "code" ? page.context.repo : page.repo;
+				const client = scope.authenticated ? await authClient(scope) : anonymousClient;
+				const metadata = await client.getRepository(pageOwner, pageRepo, signal);
+				if (!live(ticket)) return;
+				if (metadata.visibility !== "public" && !scope.authenticated) throw new ApiError("auth", msg("Configure a fine-grained read-only PAT in Settings → API authentication to read this repository."));
+				if (page.kind === "empty") {
+					handle.setContext(page);
+					handle.setIndex({
+						entries: new Map(),
+						children: new Map(),
+						state: "empty",
+						pending: 0
+					});
+					return;
+				}
+				const context = await client.resolveTree(page.context, metadata, signal);
+				if (!live(ticket)) return;
+				if (metadata.visibility !== "public" && (await readAuthScope()).id !== scope.id) return;
+				const controller = new AbortController();
+				const current = {
+					context,
+					scope,
+					client,
+					controller
+				};
+				active = current;
+				const saved = await readView(context, scope);
+				if (!live(ticket) || active !== current) return;
+				if (saved) handle.restoreView(saved);
+				const key = memoryKey(context, scope);
+				let cached = memory.get(key);
+				if (!cached) {
+					const entries = await readTree(context, scope);
+					if (!live(ticket) || active !== current) return;
+					if (entries) {
+						const index = new TreeIndex();
+						index.add(entries);
+						cached = index.view("complete");
+					}
+				}
+				if (context.visibility !== "public" && !isAuthScopeCurrent(scope)) {
+					controller.abort();
+					return;
+				}
+				if (!live(ticket) || active !== current) return;
+				if (cached) {
+					current.index = cached;
+					memory.delete(key);
+					memory.set(key, cached);
+					while (memory.size > 2) memory.delete(memory.keys().next().value);
+					handle.setIndex(cached);
+					handle.setCurrentPath(context.path);
+					return;
+				}
+				handle.setCurrentPath(context.path);
+				current.preload = startPreload(context, scope, client, (view) => {
+					if (controller.signal.aborted || active !== current || stopped) return;
+					current.index = view;
+					if (verifiedUrl === location.href) handle.setIndex(view);
+					if (view.state === "complete") {
+						memory.delete(key);
+						memory.set(key, view);
+						while (memory.size > 2) memory.delete(memory.keys().next().value);
+						writeTree(context, scope, [...view.entries.values()]).catch((error) => {
+							if (active === current && verifiedUrl === location.href && !controller.signal.aborted && !isAbortError(error)) handle.setIndex({
+								...view,
+								reason: error instanceof StorageLimitError ? error.detail : msg("Persistent cache unavailable; index remains usable in memory.")
+							});
+						});
+					} else if (view.state === "failed" && !view.canResume && context.visibility !== "public") {
+						controller.abort();
+						current.index = void 0;
+						handle.setIndex({
+							entries: new Map(),
+							children: new Map(),
+							state: "failed",
+							pending: 0,
+							reason: view.reason
+						});
+						memory.delete(key);
+					}
+				}, controller.signal);
+			} catch (error) {
+				if (!live(ticket) || isAbortError(error)) return;
+				active?.controller.abort();
+				active = null;
+				const canResume = error instanceof ApiError && (error.kind === "network" || error.kind === "rate");
+				handle.setIndex({
+					entries: new Map(),
+					children: new Map(),
+					state: error instanceof ApiError && error.kind === "rate" ? "paused" : "failed",
+					pending: 0,
+					reason: safeMessage(error),
+					canResume,
+					resumeAt: error instanceof ApiError ? error.resumeAt || void 0 : void 0
+				});
+			}
+		}
+		async function checkConnection(cancelSignal) {
+			const page = readPage(document, new URL(location.href));
+			if (page.kind !== "code" && page.kind !== "empty") throw new ApiError("invalid", msg("Current GitHub context is unresolved. Reload the page and try again."));
+			const ticket = generation, signal = AbortSignal.any([cancelSignal, resolving.signal]);
+			const scope = await readAuthScope();
+			const client = scope.authenticated ? await authClient(scope) : anonymousClient;
+			if (scope.authenticated) await client.getIdentity(signal);
+			const metadata = await client.getRepository(page.kind === "code" ? page.context.owner : page.owner, page.kind === "code" ? page.context.repo : page.repo, signal);
+			if (page.kind === "code") {
+				const context = await client.resolveTree(page.context, metadata, signal);
+				await client.getTree(context, context.rootTreeSha, false, signal);
+			}
+			if (!live(ticket) || signal.aborted || !isAuthScopeCurrent(scope)) throw new DOMException("Repository check cancelled", "AbortError");
+			return msg(page.kind === "empty" ? "Repository metadata access verified. Empty repository: Contents permission was not exercised." : "Repository read access verified.");
+		}
+		async function authorizationChanged(next) {
+			if (next.id === auth.id && next.authenticated === auth.authenticated) return;
+			auth = next;
+			generation++;
+			resolving.abort();
+			detach(false);
+			authenticatedClient = null;
+			for (const key of memory.keys()) if (!key.endsWith(":public")) memory.delete(key);
+			await purgePrivateData();
+			if (!stopped) await navigate(true);
+		}
+		const stopAuth = observeAuthScope((scope) => {
+			authorizationChanged(scope).catch(() => notice(msg("Authorization changed; private data stopped. Storage cleanup failed.")));
+		});
+		const stopSettings = observeSettings((next) => applySettings({
+			...next,
+			...pendingSettings
+		}));
+		const menuCommands = [["OpsGitTrees: Manage Token…", credentials.open], ["OpsGitTrees: Open file navigation", () => {
+			if (sidebar) sidebar.setCollapsed(false);
+			else navigate(true);
+		}]];
+		let menuIds = [], menuUpdate = Promise.resolve();
+		function updateMenus() {
+			menuUpdate = menuUpdate.then(async () => {
+				for (const id of menuIds) await _GM.unregisterMenuCommand(id);
+				menuIds = [];
+				if (!stopped) for (const [key, action] of menuCommands) menuIds.push(await _GM.registerMenuCommand(t(key), action));
+			}).catch(() => {
+				if (!stopped) notice(msg("Script menu could not be updated."));
+			});
+		}
+		const stopLanguage = observeLanguage(updateMenus);
+		updateMenus();
+		const shortcut = (event) => {
+			if (!sidebar || !settings.shortcutsEnabled || !event.altKey || !event.shiftKey || event.ctrlKey || event.metaKey || event.repeat) return;
+			if (event.composedPath().some((target) => target instanceof HTMLElement && (target.matches("input,textarea,select,[role=\"textbox\"]") || target.isContentEditable))) return;
+			if (event.code === "KeyO") {
+				sidebar.setCollapsed(!settings.collapsed);
+				event.preventDefault();
+			}
+			if (event.code === "KeyF") {
+				sidebar.focusSearch();
+				event.preventDefault();
+			}
+		};
+		const pageHide = () => {
+			credentials.close();
+			flushView();
+			flushSettings();
+		};
+		window.addEventListener("keydown", shortcut);
+		window.addEventListener("pagehide", pageHide);
+		const stopPage = observePage(() => {
+			navigate();
+		});
+		purgePrivateData().catch(() => notice(msg("Cache cleanup failed. Check manager storage.")));
+		applySettings({
+			...await readSettings(),
+			...pendingSettings
+		});
+		await navigate();
+		return { stop() {
+			stopped = true;
+			generation++;
+			resolving.abort();
+			credentials.close();
+			detach();
+			stopPage();
+			stopAuth();
+			stopSettings();
+			stopLanguage();
+			updateMenus();
+			flushSettings();
+			window.removeEventListener("keydown", shortcut);
+			window.removeEventListener("pagehide", pageHide);
+		} };
+	}
+	window.top === window.self ? startApplication().catch(() => {
+		_GM.notification({
+			title: "OpsGitTrees",
+			text: t("Could not start. Check userscript manager permissions and storage."),
+			timeout: 8e3
+		});
+		return null;
+	}) : Promise.resolve(null);
+})();

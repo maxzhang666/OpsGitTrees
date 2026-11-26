@@ -19,5 +19,5 @@ export default defineConfig({
     build: { fileName: 'opsgittrees.user.js' },
     server: { open: false },
   })],
-  build: { target: 'es2022', minify: true },
+  build: { target: 'es2022', minify: false },
 });
