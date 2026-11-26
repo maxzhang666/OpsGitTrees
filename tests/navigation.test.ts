@@ -39,9 +39,11 @@ it('a failed load stops the whole-tree loading indicator and a new load can rest
   sidebar.setIndex({ entries: new Map(), children: new Map(), state: 'failed', pending: 0, reason: 'Connection failed' });
   expect(loading?.hidden).toBe(true); expect(viewport().getAttribute('aria-busy')).toBe('false');
   expect(root().querySelector('.status')?.getAttribute('title')).toContain('Connection failed');
+  expect(root().querySelector('.tree-message')?.textContent || '').toContain('Connection failed');
   sidebar.setIndex({ entries: new Map(), children: new Map(), state: 'loading', pending: 0 });
   expect(loading?.hidden).toBe(false);
   sidebar.setIndex(data()); expect(loading?.hidden).toBe(true); expect(viewport().getAttribute('aria-busy')).toBe('false');
+  expect(root().querySelector<HTMLElement>('.tree-message')?.hidden).toBe(true);
 });
 
 it('searchRoundTripRestoresBothViews', async () => {
@@ -183,6 +185,10 @@ it('a Token configured in another tab is used for public API requests without an
     return { body: { sha: sha(2), truncated: false, tree: [entry('available.ts')] } };
   });
   app = await startApplication(); expect(status()).toContain('paused');
+  const message = root().querySelector<HTMLElement>('.tree-message');
+  expect(message?.hidden).toBe(false); expect(message?.textContent || '').toMatch(/rate limit/i);
+  expect(root().querySelector<HTMLElement>('.tree-auth-hint')?.hidden).toBe(false);
+  expect(root().querySelector<HTMLButtonElement>('.resume')?.disabled).toBe(true);
   await configureToken('public-test-token');
   await vi.waitFor(() => expect(paths()).toContain('available.ts'));
   expect(root().querySelector('.identity')?.textContent).toContain('@api-user');
@@ -191,6 +197,31 @@ it('a Token configured in another tab is used for public API requests without an
   await clearToken();
   await vi.waitFor(() => expect(status()).toContain('paused'));
   expect(paths()).not.toContain('available.ts');
+});
+it('a quota notice preserves loaded paths and hides anonymous advice once a Token is present', () => {
+  sidebar = mountSidebar(defaultSettings); sidebar.setContext({ kind: 'code', context });
+  sidebar.setIndex({ ...data(), state: 'paused', reason: 'Request quota is low', canResume: true, resumeAt: Date.now() + 60000 });
+  const message = root().querySelector<HTMLElement>('.tree-message');
+  expect(message?.textContent || '').toContain('Request quota is low'); expect(message?.hidden).toBe(false);
+  expect(root().querySelector<HTMLElement>('.tree-retry-time')?.hidden).toBe(false);
+  expect(viewport().getAttribute('aria-busy')).toBe('false');
+  root().querySelector<HTMLButtonElement>('[data-path="docs"]')!.click(); expect(paths()).toContain('docs/help.md');
+  sidebar.setAuth({ id: 'token-user', login: 'api-user', authenticated: true });
+  expect(root().querySelector<HTMLElement>('.tree-auth-hint')?.hidden).toBe(true);
+  root().querySelector<HTMLButtonElement>('[aria-label="Open navigation settings"]')!.click();
+  expect(root().querySelector<HTMLElement>('.tree-area')?.hidden).toBe(true);
+});
+it('a rate-limit retry stays disabled until the advertised recovery time', () => {
+  vi.useFakeTimers();
+  try {
+    vi.setSystemTime(1800000000000);
+    sidebar = mountSidebar(defaultSettings); sidebar.setContext({ kind: 'code', context });
+    sidebar.setIndex({ entries: new Map(), children: new Map(), state: 'paused', pending: 0, reason: 'API rate limit reached', canResume: true, resumeAt: Date.now() + 60000 });
+    const resume = root().querySelector<HTMLButtonElement>('.resume');
+    expect(root().querySelector<HTMLElement>('.tree-message')?.hidden).toBe(false);
+    expect(resume?.disabled).toBe(true); vi.advanceTimersByTime(59999); expect(resume?.disabled).toBe(true);
+    vi.advanceTimersByTime(1); expect(resume?.disabled).toBe(false);
+  } finally { vi.useRealTimers(); }
 });
 
 it('a local shortcut and page exit cannot overwrite another tab’s unrelated preferences', async () => {

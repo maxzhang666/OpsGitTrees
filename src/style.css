@@ -33,7 +33,14 @@ button:hover { background:var(--hover); }
 .footer-info { display:flex; align-items:center; gap:8px; flex:1; min-width:0; padding:5px 8px; }
 .brand { flex-shrink:0; font-size:11px; font-weight:600; line-height:16px; }
 .status { flex:1; min-width:0; font-size:10px; line-height:16px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.resume { flex-shrink:0; margin:6px 8px; padding:5px; border:1px solid var(--border); border-radius:var(--borderRadius-medium,6px); color:var(--accent); font-size:12px; }
+.resume,.message-token { padding:5px 8px; border:1px solid var(--border); border-radius:var(--borderRadius-medium,6px); background:var(--button-bg); font-size:12px; }
+.resume { color:var(--accent); }
+.tree-area { display:flex; flex:1; flex-direction:column; min-height:0; }
+.tree-message { flex:0 1 auto; max-height:100%; overflow:auto; display:flex; flex-direction:column; gap:8px; padding:12px; border-bottom:1px solid var(--border); font-size:12px; line-height:1.5; overflow-wrap:anywhere; }
+.tree-area.has-paths .tree-message { max-height:50%; }
+.tree-message-title { font-weight:600; }
+.tree-message p { margin:0; color:var(--muted); }
+.tree-message-actions { display:flex; flex-wrap:wrap; gap:6px; }
 .viewport { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; position:relative; scrollbar-width:thin; }
 .tree-loading { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:16px; color:var(--muted); font-size:12px; text-align:center; }
 .tree-loading svg { width:20px; height:20px; color:var(--accent); animation:ogt-spin 1s linear infinite; }

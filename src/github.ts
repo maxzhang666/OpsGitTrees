@@ -29,11 +29,13 @@ export function createGitHubClient(token: string | null): GitHubClient {
       const retry = values.get('retry-after');
       let retryAt = retry ? (/^\d+$/.test(retry) ? Date.now() + Number(retry) * 1000 : Date.parse(retry)) : 0;
       if (!Number.isFinite(retryAt)) retryAt = 0;
-      quota.resumeAt = Math.max(Number.isFinite(reset) ? reset : 0, retryAt) || null;
-      if (response.status === 429 || (response.status === 403 && (quota.remaining === 0 || !!retry))) {
-        quota.resumeAt = quota.resumeAt && quota.resumeAt > Date.now() ? quota.resumeAt : Date.now() + 60000;
-        quota.blockedUntil = Math.max(quota.blockedUntil || 0, quota.resumeAt);
-        throw new ApiError('rate', msg('GitHub rate limit reached. Resume after {time}.', { time: new Date(quota.resumeAt) }), quota.resumeAt);
+      quota.resumeAt = Number.isFinite(reset) && reset > 0 ? reset : null;
+      const secondaryLimit = typeof response.response?.message === 'string' && /secondary rate limit/i.test(response.response.message);
+      if (response.status === 429 || (response.status === 403 && (quota.remaining === 0 || !!retry || secondaryLimit))) {
+        const now = Date.now(), suggested = Math.max(retryAt, quota.remaining === 0 ? quota.resumeAt || 0 : 0);
+        quota.blockedUntil = Math.max(quota.blockedUntil || 0, suggested > now ? suggested : now + 60000);
+        if (quota.remaining === 0 && (!quota.resumeAt || quota.resumeAt <= now)) quota.resumeAt = quota.blockedUntil;
+        throw new ApiError('rate', msg('GitHub rate limit reached. Resume after {time}.', { time: new Date(quota.blockedUntil) }), quota.blockedUntil);
       }
       if (response.status === 401) throw new ApiError('auth', msg('GitHub rejected the Token (HTTP 401): invalid, expired or revoked. Replace or clear it in the Token configuration dialog.'));
       if (response.status === 403) throw new ApiError('forbidden', msg(values.has('x-github-sso') ? 'Organization SSO authorization is required.' : 'GitHub denied access. Check repository scope, organization approval and read-only permissions.'));

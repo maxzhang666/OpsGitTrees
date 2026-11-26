@@ -57,6 +57,14 @@ export function mountSidebar(initialSettings: Settings): SidebarHandle {
   const loading = element('div', 'tree-loading'); loading.setAttribute('aria-hidden', 'true'); loading.append(svgIcon('loading'), text('span', '', 'Loading repository index…'));
   viewport.append(canvas, loading);
   const noResults = element('div', 'no-results');
+  const treeArea = element('div', 'tree-area');
+  const treeMessage = element('section', 'tree-message'); treeMessage.hidden = true; treeMessage.setAttribute('role', 'region'); translations.bind(treeMessage, msg('Directory loading status'), 'aria-label');
+  const messageTitle = element('strong', 'tree-message-title'), messageReason = element('p', 'tree-message-reason');
+  const retryTime = element('p', 'tree-retry-time');
+  const authHint = text('p', 'tree-auth-hint', 'No Token configured: requests use the anonymous API quota. GitHub sign-in does not authorize the script. Wait or configure a read-only Token.');
+  const messageToken = action('Manage Token…', 'Configure a read-only Token', 'message-token');
+  const messageActions = element('div', 'tree-message-actions'); messageActions.append(resume, messageToken);
+  treeMessage.append(messageTitle, messageReason, retryTime, authHint, messageActions); treeArea.append(treeMessage, viewport, noResults);
   const settingsPanel = element('section', 'settings'); settingsPanel.hidden = true;
   const languageLabel = element('label', 'language-option'); languageLabel.append(text('span', '', 'Language'));
   const language = element('select'); translations.bind(language, msg('Interface language'), 'aria-label');
@@ -72,7 +80,7 @@ export function mountSidebar(initialSettings: Settings): SidebarHandle {
   const manageToken = action('Manage Token…', 'Open Token configuration dialog');
   const connectionStatus = element('p', 'connection-status'); connectionStatus.setAttribute('role', 'status');
   settingsPanel.append(authHeading, identity, manageToken, connectionStatus);
-  panel.append(header, searchBar, viewport, noResults, settingsPanel, resume, footer);
+  panel.append(header, searchBar, treeArea, settingsPanel, footer);
   const rail = action('FILES ›', 'Open file navigation', 'rail');
   const resize = element('div', 'resize'); resize.tabIndex = 0; resize.setAttribute('role', 'separator'); translations.bind(resize, msg('Resize file navigation'), 'aria-label'); resize.setAttribute('aria-orientation', 'vertical'); resize.setAttribute('aria-valuemin', '200'); resize.setAttribute('aria-valuemax', '480');
   shell.append(panel, rail, resize); shadow.append(style, shell); document.body.append(host);
@@ -96,6 +104,17 @@ export function mountSidebar(initialSettings: Settings): SidebarHandle {
     status.title = status.textContent || '';
     const isLoading = index.state === 'loading' && index.entries.size === 0;
     loading.hidden = !isLoading; canvas.hidden = isLoading; viewport.setAttribute('aria-busy', String(isLoading));
+    treeArea.classList.toggle('has-paths', index.entries.size > 0);
+    treeMessage.hidden = !(index.state === 'paused' || index.state === 'failed' || (index.state === 'partial' && index.reason));
+    if (!treeMessage.hidden) {
+      messageTitle.textContent = t(index.state === 'paused' ? 'Directory loading paused' : index.state === 'failed' ? 'Directory loading failed' : 'Directory index incomplete');
+      messageReason.textContent = index.reason ? renderText(index.reason) : messageTitle.textContent;
+      const timedReason = typeof index.reason === 'object' && index.reason.values?.time instanceof Date;
+      retryTime.hidden = !index.resumeAt || timedReason;
+      retryTime.textContent = index.resumeAt ? t('Try again after {time}.', { time: new Date(index.resumeAt).toLocaleString(getLanguage()) }) : '';
+      const anonymousLimit = index.state === 'paused' && !auth.authenticated;
+      authHint.hidden = !anonymousLimit; messageToken.hidden = !anonymousLimit;
+    }
   }
   let filtered: ReturnType<typeof filterTree> | null = null;
   let paths: readonly string[] = [], expanded = new Set<string>();
@@ -218,14 +237,15 @@ export function mountSidebar(initialSettings: Settings): SidebarHandle {
   locate.addEventListener('click', locateCurrent); collapse.addEventListener('click', () => setCollapsed(true)); rail.addEventListener('click', () => setCollapsed(false));
   function showSettings(open: boolean) {
     if (open) capture();
-    settingsPanel.hidden = !open; viewport.hidden = open; noResults.hidden = open || !noResults.textContent; renderSettingsToggle(); renderSearch();
+    settingsPanel.hidden = !open; treeArea.hidden = open; viewport.hidden = open; noResults.hidden = open || !noResults.textContent; renderSettingsToggle(); renderSearch();
     if (!open) { restorePosition(); renderWindow(true); }
   }
   openSettings.addEventListener('click', () => showSettings(settingsPanel.hidden !== false));
   shortcuts.addEventListener('change', () => { settings.shortcutsEnabled = shortcuts.checked; settingsChanged(); });
   language.addEventListener('change', () => { settings.language = language.value as Settings['language']; settingsChanged(); });
   resume.addEventListener('click', () => { for (const listener of resumeListeners) listener(); });
-  manageToken.addEventListener('click', () => { for (const listener of manageListeners) listener(); });
+  const openToken = () => { for (const listener of manageListeners) listener(); };
+  manageToken.addEventListener('click', openToken); messageToken.addEventListener('click', openToken);
   viewport.addEventListener('scroll', () => { if (!scrollFrame) scrollFrame = requestAnimationFrame(() => { scrollFrame = 0; capture(); renderWindow(); changed(); }); }, { passive: true });
   const resizeObserver = new ResizeObserver(() => renderWindow(true)); resizeObserver.observe(viewport);
   let dragging = false;
@@ -277,7 +297,7 @@ export function mountSidebar(initialSettings: Settings): SidebarHandle {
     onResumePreload: listener => subscribe(resumeListeners, listener),
     onManageToken: listener => subscribe(manageListeners, listener),
     onVisiblePaths: listener => subscribe(visibleListeners, listener),
-    setAuth(scope: AuthScope) { auth = scope; renderAuth(); },
+    setAuth(scope: AuthScope) { auth = scope; renderAuth(); renderStatus(); },
     setConnectionStatus(message) { connectionMessage = message; connectionStatus.textContent = renderText(message); },
     destroy() { clearTimeout(searchTimer); clearTimeout(resumeTimer); cancelAnimationFrame(scrollFrame); resizeObserver.disconnect(); stopTheme(); stopLanguage(); space.destroy(); host.remove(); viewListeners.clear(); settingsListeners.clear(); resumeListeners.clear(); manageListeners.clear(); visibleListeners.clear(); },
   };

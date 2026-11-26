@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { createGitHubClient } from '../src/github';
 import { context, entry, sha } from './fixtures';
 import { requests, setHttpHandler } from './gm';
@@ -27,4 +27,14 @@ it('rejects redirected origins and never publishes their response', async () => 
 it('does not resolve a different commit returned by the API', async () => {
   setHttpHandler(async () => ({ body: { sha: sha(99), tree: { sha: sha(2) } } }));
   await expect(createGitHubClient(null).resolveTree(context, context, new AbortController().signal)).rejects.toMatchObject({ kind: 'invalid' });
+});
+it.each([
+  { status: 429, retry: 'Retry-After: 60\r\n', message: 'Too many requests' },
+  { status: 403, retry: '', message: 'You have exceeded a secondary rate limit.' },
+])('a secondary limit (HTTP $status) does not wait for an unrelated primary quota reset', async ({ status, retry, message }) => {
+  const clock = vi.spyOn(Date, 'now').mockReturnValue(1800000000000);
+  try {
+    setHttpHandler(async () => ({ status, headers: retry + 'X-RateLimit-Remaining: 100\r\nX-RateLimit-Reset: 1800003600', body: { message } }));
+    await expect(createGitHubClient(null).getRepository('example', 'repo', new AbortController().signal)).rejects.toMatchObject({ kind: 'rate', resumeAt: 1800000060000 });
+  } finally { clock.mockRestore(); }
 });

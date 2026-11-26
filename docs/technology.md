@@ -76,9 +76,11 @@
 - 工具链：Node 22.22.0、pnpm 10.30.3、TypeScript 7.0.2、Vite 8.3.8、vite-plugin-monkey 8.1.1、Vitest 5.1.1、jsdom 26.1.0；版本已固定在 package.json 与 pnpm-lock.yaml，沿用用户共享 store。
 - 图标库固定为 Lucide 1.80.0，`src/icons.ts` 仅导入实际使用的 14 个图标（含 loading），供侧栏和 Token 弹窗共用，无 CDN、远程字体或整库运行时扫描。
 - 历次构建与测试证据按修订保留在下方记录。B 方案运行 `tests/navigation.test.ts`、`tests/credential-window.test.ts`，28 项全部通过，`pnpm typecheck` 成功。随后 GitHub 配色版仅调整 CSS，`pnpm build` 成功，并以真实 ScriptCat 运行时验证配色，未重跑逻辑测试。
-- 当前生产包：`dist/opsgittrees.user.js`，约 110.95 kB，2475 行可读源码；使用树区域整体 loading、单行品牌／状态底栏和仓库／分支两行顶部工具栏，继承 GitHub 主题色及控件圆角。清除 Token 和仓库检查集中于管理弹窗，包含中文翻译，无运行时框架、CDN、远程 `@require` 或项目后端。
+- 当前生产包：`dist/opsgittrees.user.js`，约 114.41 kB，2513 行可读源码；使用树区域整体 loading、树内失败／限流原因提示、单行品牌／状态底栏和仓库／分支两行顶部工具栏，继承 GitHub 主题色及控件圆角。清除 Token 和仓库检查集中于管理弹窗，包含中文翻译，无运行时框架、CDN、远程 `@require` 或项目后端。
 - Lucide／品牌底栏版运行 `tests/navigation.test.ts`、`tests/credential-window.test.ts`，31 项全部通过；类型检查与构建成功，并检查最终脚本保留完整图库许可、元数据位于文件开头、无远程 `@require`。已通过 sctl 更新原 ScriptCat UUID，返回 enabled；真实页面验证 320px 浅色与 200px 深色布局，无底栏重叠或水平溢出，品牌与状态区总高 42px。设置开关、Token 弹窗关闭／眼睛图标、底部收起与重新展开均正常；Token 保持遮罩，未修改真实凭据。截图已查看，最终恢复 320px、浅色、README 高亮及完整索引状态。
 - `dist/` 纳入版本管理。源码变更后运行 `pnpm build`，将 `dist/opsgittrees.user.js` 和相关源码一起提交，安装者无需自行构建。发布构建使用 `minify: false`，不压缩、不混淆，保留正常缩进、函数名和 Unicode 文本。
+- 限流／失败提示修订将原因、重试时间和匿名认证说明放入树区域；恢复前禁用继续加载，已有路径保持可浏览。主额度重置与二级限流等待分开处理，识别没有 Retry-After 的二级限流 403，不把它当成权限错误。相关 6 项断言／用例先验证失败，再实现；`tests/navigation.test.ts`、`tests/github.test.ts` 与 `tests/preload.test.ts` 共 50 项通过，类型检查、构建及产物语法检查通过。
+- 本次 `sctl install` 更新原 UUID 并正常返回 enabled；真实登录页仍显示 `490 个路径 · 完整`，错误区在成功状态隐藏，文件树无水平溢出。另以真实组件及源 CSS 生成隔离布局预览，检查了 320px 浅色匿名限流、200px 深色部分目录和英文网络失败，已查看截图；这些预览是受控数据，不是真实 GitHub 限流响应，未主动耗尽 API 额度或修改真实凭据。临时预览脚本已删除。
 - 登录态上下文适配新增首页、目录页和文件页 3 项回归，覆盖斜杠分支、文件链接与弹窗内仓库检查；先验证失败，再补齐同源 JSON 上下文解析。`tests/page.test.ts` 与 `tests/navigation.test.ts` 共 41 项通过，类型检查、构建和生产脚本语法检查通过。
 - 本次 ScriptCat 更新命令退出码为 2（operation voided or timed out），但原 UUID 的更新时间已推进且保持 enabled；没有盲目重装或把异常回执记为成功。首次实机验收因浏览器 `ERR_CONNECTION_CLOSED` 中断，网络恢复后完成下述验收；未修改代理、登录状态或真实 Token。
 - 网络恢复后，在 Chrome 156／ScriptCat 1.5.2 的真实登录态新结构页面（无 code-view 嵌入 JSON）确认新版实际生效：显示 `490 个路径 · 完整`，README 正确定位；通过文件树点击 `package.json` 后页面跳转及高亮同步，`aria-busy` 为 false。已查看实机截图；原安装命令的异常回执仍单独保留，不改记为成功。
