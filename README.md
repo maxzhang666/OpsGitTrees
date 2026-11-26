@@ -1,6 +1,8 @@
-<img src="assets/icon.svg" alt="OpsGitTrees 图标" width="80" height="80">
+<p align="center">
+  <img src="assets/icon.svg" alt="OpsGitTrees 图标" width="80" height="80">
+</p>
 
-# OpsGitTrees — GitHub 文件树与路径导航
+<h1 align="center">OpsGitTrees — GitHub 文件树与路径导航</h1>
 
 在 GitHub 仓库页面添加独立的文件树，方便浏览目录、查找文件和找回阅读位置。适合探索陌生项目，也适合在多个文件之间往返阅读。
 
