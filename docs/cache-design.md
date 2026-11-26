@@ -130,6 +130,7 @@
 
 ## 相关文档
 
+- [缓存实现计划](./cache-implementation-plan.md)
 - [目录预加载](./directory-preloading.md#缓存约束)
 - [技术设计](./architecture.md#缓存与隐私)
 - [仓库授权](./authentication.md#授权操作设计)
