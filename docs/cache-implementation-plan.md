@@ -10,7 +10,7 @@
 
 **Spec:** [目录缓存设计](./cache-design.md)、[完整性证明](./architecture.md#完整性证明)、[授权操作设计](./authentication.md#授权操作设计)。
 
-状态：实施中。任务 1 的组合检查已通过；其余未勾选项仍为待执行计划，不是通过记录。沿用当前 docs 平铺结构，与首版开发计划分开维护。
+状态：任务 1–4 的窄检查已通过，任务 4 类型检查通过；真实脚本验收及独立审查尚未完成。未勾选项不是通过记录。
 
 ## 全局约束
 
@@ -122,16 +122,16 @@ export function writeTreeBlock(context: RepoContext, scope: AuthScope, sha: stri
 
 **Files:** 修改 `src/main.ts`、`src/storage.ts`、`tests/navigation.test.ts`、`tests/storage.test.ts`；消费任务 1 的提交映射与任务 3 的现有 IndexView 更新接口。
 
-- [ ] 扩展现有同版本缓存导航用例：停止应用、清除请求记录后新建实例；公开仓库仍请求 Metadata，但命中提交映射及目录块后不请求 git/commits 或 git/trees。
-- [ ] 添加 `privateCacheStillChecksContents`：缓存齐全时仍调用 getRepository 和 resolveTree；Metadata 成功但提交接口拒绝、凭据撤销或仓库从 public 变 private 时，不展示旧缓存目录。
+- [x] 扩展现有同版本缓存导航用例：停止应用、清除请求记录后新建实例；公开仓库仍请求 Metadata，但命中提交映射及目录块后不请求 git/commits 或 git/trees。
+- [x] 添加 `privateCacheStillChecksContents`：缓存齐全时仍调用 getRepository 和 resolveTree；Metadata 成功但提交接口拒绝、凭据撤销或仓库从 public 变 private 时，不展示旧缓存目录。
   关键断言：提交接口拒绝后，`expect(paths()).not.toContain('sensitive.ts')`；公开缓存命中轮次的 git/commits 与 git/trees 请求都为零，Metadata 请求仍存在。
-- [ ] 添加 `commitSwitchReusesOnlyMatchingSubtrees`：新提交重新取得根树，可复用 SHA 相同的子块；不同根树不当作同一完整索引；旧加载／缓存警告更新不得改变新页面。
-- [ ] 在 Metadata 成功且页面提交已确认后组装 CommitContext；公开仓库先查提交映射，未命中才 resolveTree；非公开仓库始终 resolveTree 做 Contents 核验，之后才读任何持久化目录。
-- [ ] 新解析结果通过 writeCommitTree 发布，缓存读写失败只降级为必要网络解析／内存使用；不使缓存错误掩盖真实权限错误。每次 await 后保留 generation、signal、active 及授权检查。
-- [ ] 去掉 main 的 readTree 缓存分支和完整后 writeTree；保留两份完整内存索引复用及现有阅读状态恢复。存储错误通过当前索引 reason 展示，不把完整内存索引改判不完整，不覆盖更重要的 API 错误。
-- [ ] 删除旧 readTree／writeTree／treeKey 及无调用的旧快照序列化路径，不留兼容导出；门槛、提示及授权测试已在任务 1 同步迁移，此处确认不再有旧接口调用。保留 view 的键、格式、同步提交能力及只用于升级识别的 v1 tree 解析。
-- [ ] 与旧链路退役同批启用合法旧 tree 的升级删除，新增 `upgradeCleanupKeepsViewsAndPreferences`：只删除可解析且结构合法的旧 tree 键，删除前复核授权和当前值；旧 view、设置、凭据及无关键不因升级被清空。此清理不得在任务 1–3 提前启用。
-- [ ] 运行 `pnpm exec vitest run tests/navigation.test.ts tests/storage.test.ts tests/preload.test.ts tests/github.test.ts`，随后 `pnpm typecheck`；预期全部通过。提交 `feat: use commit mappings and retire index snapshots`。
+- [x] 添加 `commitSwitchReusesOnlyMatchingSubtrees`：新提交重新取得根树，可复用 SHA 相同的子块；不同根树不当作同一完整索引；旧加载／缓存警告更新不得改变新页面。
+- [x] 在 Metadata 成功且页面提交已确认后组装 CommitContext；公开仓库先查提交映射，未命中才 resolveTree；非公开仓库始终 resolveTree 做 Contents 核验，之后才读任何持久化目录。
+- [x] 新解析结果通过 writeCommitTree 发布，缓存读写失败只降级为必要网络解析／内存使用；不使缓存错误掩盖真实权限错误。每次 await 后保留 generation、signal、active 及授权检查。
+- [x] 去掉 main 的 readTree 缓存分支和完整后 writeTree；保留两份完整内存索引复用及现有阅读状态恢复。存储错误通过当前索引 reason 展示，不把完整内存索引改判不完整，不覆盖更重要的 API 错误。
+- [x] 删除旧 readTree／writeTree／treeKey 及无调用的旧快照序列化路径，不留兼容导出；门槛、提示及授权测试已在任务 1 同步迁移，此处确认不再有旧接口调用。保留 view 的键、格式、同步提交能力及只用于升级识别的 v1 tree 解析。
+- [x] 与旧链路退役同批启用合法旧 tree 的升级删除，新增 `upgradeCleanupKeepsViewsAndPreferences`：只删除可解析且结构合法的旧 tree 键，删除前复核授权和当前值；旧 view、设置、凭据及无关键不因升级被清空。此清理不得在任务 1–3 提前启用。
+- [x] 运行 `pnpm exec vitest run tests/navigation.test.ts tests/storage.test.ts tests/preload.test.ts tests/github.test.ts`，随后 `pnpm typecheck`；预期全部通过。提交 `feat: use commit mappings and retire index snapshots`。
 
 ## 任务 5：真实验收
 

@@ -3,6 +3,7 @@ import { application, startApplication } from '../src/main';
 import { clearToken, configureToken, readAuthScope } from '../src/credentials';
 import { mountSidebar } from '../src/sidebar';
 import { defaultSettings, readSettings, readView, writeSettings, writeView } from '../src/storage';
+import * as storage from '../src/storage';
 import { TreeIndex } from '../src/tree-index';
 import type { SidebarHandle } from '../src/types';
 import { codePage, context, entry, sha } from './fixtures';
@@ -139,12 +140,104 @@ it('clearedGenerationRejectsLatePrivateResults', async () => {
   app = await startApplication(); await vi.waitFor(() => expect(requests.some(r => r.url.includes('/git/trees/'))).toBe(true));
   await clearToken(); await vi.waitFor(() => expect(root().querySelector('.identity')?.textContent).toContain('No Token'));
   tree.resolve({ body: { sha: sha(2), truncated: false, tree: [entry('sensitive.ts')] } }); await new Promise(done => setTimeout(done, 0));
-  expect(paths()).not.toContain('sensitive.ts'); expect([...values.entries()].some(([key, value]) => key.startsWith('ogt:data:') && JSON.stringify(value).includes('sensitive.ts'))).toBe(false);
+  expect(paths()).not.toContain('sensitive.ts'); expect([...values.entries()].some(([key, value]) => (key.startsWith('ogt:data:') || key.startsWith('ogt:cache:')) && JSON.stringify(value).includes('sensitive.ts'))).toBe(false);
 });
-it('same-version persistent cache avoids refetching tree data', async () => {
+it('same-version persistent cache avoids commit and tree requests but still verifies metadata', async () => {
   codePage(); api(); app = await startApplication(); await vi.waitFor(() => expect(status()).toContain('Complete'));
-  await vi.waitFor(() => expect([...values.keys()].some(k => k.includes('tree'))).toBe(true)); app.stop(); app = await startApplication();
-  await vi.waitFor(() => expect(status()).toContain('Complete')); expect(requests.filter(r => r.url.includes('/git/trees/'))).toHaveLength(1);
+  app.stop(); requests.length = 0; app = await startApplication();
+  await vi.waitFor(() => expect(status()).toContain('Complete'));
+  expect(requests.map(r => new URL(r.url).pathname)).toEqual(['/repos/example/repo']);
+  await search('help.md'); expect(paths()).toContain('docs/help.md');
+});
+it('privateCacheStillChecksContents on a warm hit and refuses cached paths after denial', async () => {
+  let denied = false;
+  setHttpHandler(async ({ url }) => {
+    const path = new URL(url).pathname;
+    if (path === '/user') return { body: { id: 1, login: 'api-user' } };
+    if (path === '/repos/example/repo') return { body: { id: 1, visibility: 'private' } };
+    if (path.includes('/git/commits/')) return denied ? { status: 403, body: {} } : { body: { sha: sha(1), tree: { sha: sha(2) } } };
+    return { body: { sha: sha(2), truncated: false, tree: [entry('sensitive.ts')] } };
+  });
+  await configureToken('private-test-token'); codePage(); app = await startApplication();
+  await vi.waitFor(() => expect(paths()).toContain('sensitive.ts'));
+  await vi.waitFor(() => expect(status()).toContain('Complete'));
+  app.stop(); requests.length = 0; app = await startApplication();
+  await vi.waitFor(() => expect(status()).toContain('Complete'));
+  expect(paths()).toContain('sensitive.ts');
+  expect(requests.map(r => new URL(r.url).pathname)).toEqual(['/repos/example/repo', '/repos/example/repo/git/commits/' + sha(1)]);
+  app.stop(); denied = true; requests.length = 0; app = await startApplication();
+  await search('sensitive.ts'); expect(paths()).not.toContain('sensitive.ts');
+  expect(requests.map(r => new URL(r.url).pathname)).toEqual(['/repos/example/repo', '/repos/example/repo/git/commits/' + sha(1)]);
+});
+it('a repository becoming private cannot reuse its old public directory block', async () => {
+  let privateNow = false;
+  setHttpHandler(async ({ url }) => {
+    const path = new URL(url).pathname;
+    if (path === '/user') return { body: { id: 1, login: 'api-user' } };
+    if (path === '/repos/example/repo') return { body: { id: 1, visibility: privateNow ? 'private' : 'public' } };
+    if (path.includes('/git/commits/')) return { body: { sha: sha(1), tree: { sha: sha(2) } } };
+    return privateNow ? { status: 403, body: {} } : { body: { sha: sha(2), truncated: false, tree: [entry('formerly-public.ts')] } };
+  });
+  codePage(); app = await startApplication(); await vi.waitFor(() => expect(status()).toContain('Complete'));
+  expect(paths()).toContain('formerly-public.ts'); app.stop();
+  await configureToken('private-test-token'); privateNow = true; requests.length = 0; app = await startApplication();
+  await search('formerly-public'); expect(paths()).not.toContain('formerly-public.ts');
+  expect(requests.filter(r => r.url.includes('/git/trees/'))).toHaveLength(1);
+});
+it('commitSwitchReusesOnlyMatchingSubtrees without keeping paths from the old root', async () => {
+  setHttpHandler(async ({ url }) => {
+    const u = new URL(url), object = u.pathname.split('/').pop();
+    if (u.pathname === '/repos/example/repo') return { body: { id: 1, visibility: 'public' } };
+    if (u.pathname.includes('/git/commits/')) return { body: { sha: object, tree: { sha: object === sha(1) ? sha(2) : sha(8) } } };
+    if (object === sha(4)) return { body: { sha: object, truncated: false, tree: [entry('shared.ts')] } };
+    return { body: { sha: object, truncated: u.searchParams.has('recursive'), tree: u.searchParams.has('recursive') ? [] : [entry('same', 'tree', 4), entry(object === sha(2) ? 'old.ts' : 'new.ts')] } };
+  });
+  codePage(); app = await startApplication(); await vi.waitFor(() => expect(status()).toContain('Complete'));
+  expect(paths()).toContain('old.ts'); requests.length = 0;
+  codePage('', 'dev', sha(9)); await vi.waitFor(() => expect(paths()).toContain('new.ts'));
+  await vi.waitFor(() => expect(status()).toContain('Complete'));
+  expect(requests.filter(r => new URL(r.url).pathname.endsWith('/git/trees/' + sha(4)))).toHaveLength(0);
+  await search('shared.ts'); expect(paths()).toContain('same/shared.ts');
+  await search('old.ts'); expect(paths()).not.toContain('old.ts');
+});
+it('a late commit-cache result cannot replace a newer branch', async () => {
+  await storage.writeCommitTree(context, await readAuthScope());
+  const entered = deferred<void>(), release = deferred<void>();
+  const read = storage.readCommitTree;
+  vi.spyOn(storage, 'readCommitTree').mockImplementation(async (current, scope) => {
+    const result = await read(current, scope);
+    if (current.commitSha === sha(1)) { entered.resolve(); await release.promise; }
+    return result;
+  });
+  setHttpHandler(async ({ url }) => {
+    const path = new URL(url).pathname;
+    if (path === '/repos/example/repo') return { body: { id: 1, visibility: 'public' } };
+    if (path.includes('/git/commits/')) return { body: { sha: sha(9), tree: { sha: sha(8) } } };
+    return { body: { sha: sha(8), truncated: false, tree: [entry('new.ts')] } };
+  });
+  codePage(); const starting = startApplication();
+  try {
+    await entered.promise; codePage('', 'dev', sha(9));
+    await vi.waitFor(() => expect(paths()).toContain('new.ts'));
+  } finally { release.resolve(); app = await starting; }
+  await search('new.ts'); expect(paths()).toContain('new.ts');
+  expect(requests.filter(r => new URL(r.url).pathname.endsWith('/git/trees/' + sha(2)))).toHaveLength(0);
+});
+it('commit and block cache I/O failure still permits usable network-loaded paths', async () => {
+  const get = GM.getValue, set = GM.setValue;
+  vi.spyOn(GM, 'getValue').mockImplementation(async <T>(key: string, fallback?: T): Promise<T> => {
+    if (key.startsWith('ogt:cache:v2:')) throw new Error('cache read unavailable');
+    return get(key, fallback);
+  });
+  vi.spyOn(GM, 'setValue').mockImplementation(async (key, value) => {
+    if (key.startsWith('ogt:cache:v2:')) throw new Error('cache write unavailable');
+    return set(key, value);
+  });
+  codePage(); api(); app = await startApplication(); await vi.waitFor(() => expect(status()).toContain('Complete'));
+  await search('help.md'); expect(paths()).toContain('docs/help.md');
+  expect(requests.filter(r => r.url.includes('/git/commits/'))).toHaveLength(1);
+  expect(requests.filter(r => r.url.includes('/git/trees/'))).toHaveLength(1);
+  expect([...values.keys()].some(key => key.startsWith('ogt:cache:v2:'))).toBe(false);
 });
 it('oversizedSnapshotRemainsUsableInMemory', async () => {
   codePage(); const entries = Array.from({ length: 10000 }, (_, i) => entry('f' + i + '-' + 'x'.repeat(900)));

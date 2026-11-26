@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
 import { clearToken, configureToken, readAuthScope } from '../src/credentials';
-import { purgePrivateData, readCommitTree, readSettings, readTree, readTreeBlock, readView, StorageLimitError, writeCommitTree, writeSettings, writeTree, writeTreeBlock, writeView } from '../src/storage';
+import { purgePrivateData, readCommitTree, readSettings, readTreeBlock, readView, StorageLimitError, writeCommitTree, writeSettings, writeTreeBlock, writeView } from '../src/storage';
 import { TreeIndex } from '../src/tree-index';
 import type { TreeResponse, ViewState } from '../src/types';
 import { context, entry, sha } from './fixtures';
@@ -10,6 +10,7 @@ const privateContext = { ...context, visibility: 'private' as const };
 const cachePrefix = 'ogt:cache:v2:';
 const commitKey = (scope = 'public') => cachePrefix + JSON.stringify(['commit', context.repoId, context.commitSha, scope]);
 const blockKey = (scope = 'public', treeSha = context.rootTreeSha, recursive = true) => cachePrefix + JSON.stringify(['tree', context.repoId, treeSha, recursive, scope]);
+const legacyTreeKey = (scope = 'public', treeSha = context.rootTreeSha) => 'ogt:data:v1:' + JSON.stringify(['tree', context.repoId, treeSha, scope]);
 const response: TreeResponse = { sha: context.rootTreeSha, truncated: false, tree: [entry('cached.ts')] };
 const responseRecord = () => ({ schema: 2, kind: 'response', repoId: context.repoId, scope: 'public', private: false, usedAt: 1, treeSha: context.rootTreeSha, recursive: true, response });
 const splitRecord = (scope: string, treeSha = sha(4)) => ({ schema: 2, kind: 'split', repoId: context.repoId, scope, private: scope !== 'public', usedAt: 1, treeSha, recursive: true });
@@ -79,18 +80,18 @@ it('privateCacheRequiresCurrentScope', async () => {
   values.set(currentLegacyKey, JSON.stringify({ schema: 1, scope: next.id, private: true, usedAt: 1, entries: [entry('current-private.ts')] }));
   await writeCommitTree(context, next); await writeTreeBlock(context, next, context.rootTreeSha, true, response);
   values.set(blockKey('public', sha(4)), JSON.stringify(splitRecord('public')));
-  await writeTree(context, next, [entry('legacy-public.ts')]);
+  values.set(legacyTreeKey(), JSON.stringify({ schema: 1, scope: 'public', private: false, usedAt: 1, entries: [entry('legacy-public.ts')] }));
   await purgePrivateData();
   expect([...values.keys()].filter(key => key.includes(scope.id))).toEqual([]);
   expect(values.has(legacyKey)).toBe(false);
   expect(await readCommitTree(privateContext, next)).toBe(context.rootTreeSha);
   expect(await readTreeBlock(privateContext, next, context.rootTreeSha, true)).toEqual({ kind: 'response', response });
   expect(await readTreeBlock(privateContext, next, sha(4), true)).toEqual({ kind: 'split' });
-  expect(values.has(currentLegacyKey)).toBe(true); expect(await readView(privateContext, next)).toEqual(state);
+  expect(values.has(currentLegacyKey)).toBe(false); expect(await readView(privateContext, next)).toEqual(state);
   expect(await readCommitTree(context, next)).toBe(context.rootTreeSha);
   expect(await readTreeBlock(context, next, context.rootTreeSha, true)).toEqual({ kind: 'response', response });
   expect(await readTreeBlock(context, next, sha(4), true)).toEqual({ kind: 'split' });
-  expect(await readTree(context, next)).toEqual([entry('legacy-public.ts')]);
+  expect(values.has(legacyTreeKey())).toBe(false);
   await purgePrivateData();
 });
 it('visibilityChangeStopsPublicReuse', async () => {
@@ -132,13 +133,11 @@ it.each(['commit', 'response'] as const)('rejected GM writes are not reported as
   await expect(kind === 'commit' ? writeCommitTree(context, scope) : writeTreeBlock(context, scope, context.rootTreeSha, true, response)).rejects.toBe(failure);
   expect(await readCommitTree(context, scope)).toBeNull(); expect(await readTreeBlock(context, scope, context.rootTreeSha, true)).toBeNull();
 });
-it('single-record admission uses the total application budget for old and new records', async () => {
+it('single directory records use the total application budget', async () => {
   const scope = await readAuthScope(); const entries = [entry('x'.repeat(3 * 1024 * 1024))];
-  await writeTree(context, scope, entries); expect(await readTree(context, scope)).toEqual(entries);
   await writeTreeBlock(context, scope, context.rootTreeSha, true, { ...response, tree: entries });
   expect(await readTreeBlock(context, scope, context.rootTreeSha, true)).toEqual({ kind: 'response', response: { ...response, tree: entries } });
   const oversized = [entry('x'.repeat(9 * 1024 * 1024))];
-  await expect(writeTree(context, scope, oversized)).rejects.toBeInstanceOf(StorageLimitError);
   await expect(writeTreeBlock(context, scope, context.rootTreeSha, true, { ...response, tree: oversized })).rejects.toBeInstanceOf(StorageLimitError);
   expect(await readTreeBlock(context, scope, context.rootTreeSha, true)).toEqual({ kind: 'response', response: { ...response, tree: entries } });
 });
@@ -210,7 +209,7 @@ it('evictionPreservesRecoverySkeleton', async () => {
   expect(await readTreeBlock(context, scope, sha(6), true)).toEqual({ kind: 'response', response: ordinary });
   expect(values.get(blockKey('public', sha(6)))).toBe(raw);
   await writeTreeBlock(context, scope, sha(8), true, { ...ordinary, sha: sha(8) });
-  expect(await readTree(context, scope)).toBeNull(); expect(await readView(context, scope)).toEqual(state);
+  expect(values.has(legacyTreeKey())).toBe(false); expect(await readView(context, scope)).toEqual(state);
   expect(await readTreeBlock(context, scope, sha(6), true)).toEqual({ kind: 'response', response: ordinary });
   expect(await readTreeBlock(context, scope, context.rootTreeSha, true)).toEqual({ kind: 'split' });
   expect(await readTreeBlock(context, scope, context.rootTreeSha, false)).toEqual({ kind: 'response', response: listing });
@@ -267,16 +266,47 @@ it('latePartialWritesKeepStrongerBlocks', async () => {
 });
 it('legacyEvictionLeavesV2Untouched', async () => {
   const scope = await authorize(); const state: ViewState = { browsing: { expanded: ['docs'], scrollTop: 12, anchorPath: null, anchorOffset: 0 }, search: null };
-  await writeTree(context, scope, [entry('legacy.ts')]); await writeView(context, scope, state);
+  values.set(legacyTreeKey(), JSON.stringify({ schema: 1, scope: 'public', private: false, usedAt: 1, entries: [entry('legacy.ts')] })); await writeView(context, scope, state);
   await writeSettings({ width: 320 }); await writeCommitTree(context, scope); await writeTreeBlock(context, scope, context.rootTreeSha, true, response);
   values.set(blockKey('public', sha(4)), JSON.stringify(splitRecord('public')));
   await purgePrivateData();
-  expect(await readTree(context, scope)).toEqual([entry('legacy.ts')]); expect(await readView(context, scope)).toEqual(state);
+  expect(values.has(legacyTreeKey())).toBe(false); expect(await readView(context, scope)).toEqual(state);
   for (const key of await GM.listValues()) if (key.startsWith('ogt:data:v1:')) await GM.deleteValue(key);
   expect(await readCommitTree(context, scope)).toBe(context.rootTreeSha);
   expect(await readTreeBlock(context, scope, context.rootTreeSha, true)).toEqual({ kind: 'response', response });
   expect(await readTreeBlock(context, scope, sha(4), true)).toEqual({ kind: 'split' });
   expect((await readAuthScope()).id).toBe(scope.id); expect((await readSettings()).width).toBe(320);
+});
+it('upgradeCleanupKeepsViewsAndPreferences', async () => {
+  const scope = await authorize();
+  const state: ViewState = { browsing: { expanded: ['docs'], scrollTop: 42, anchorPath: 'docs', anchorOffset: 3 }, search: null };
+  await writeView(context, scope, state); await writeView(privateContext, scope, state);
+  await writeSettings({ width: 340, language: 'zh-CN' });
+  await writeCommitTree(context, scope); await writeTreeBlock(context, scope, context.rootTreeSha, true, response);
+  const legacy = { schema: 1, scope: 'public', private: false, usedAt: 1, entries: [entry('legacy.ts')] };
+  const preserved = new Map(values);
+  preserved.set('ogt:data:v1:not-json', '{');
+  preserved.set(legacyTreeKey('public', 'bad-sha'), JSON.stringify(legacy));
+  preserved.set(legacyTreeKey('public', sha(7)), JSON.stringify({ ...legacy, entries: [entry('../unsafe.ts')] }));
+  preserved.set(legacyTreeKey('public', sha(8)), JSON.stringify({ ...legacy, scope: 'other' }));
+  preserved.set('ogt:data:v1:' + JSON.stringify(['other', context.repoId, context.rootTreeSha, 'public']), JSON.stringify(legacy));
+  preserved.set('unrelated', 'untouched');
+  for (const [key, value] of preserved) values.set(key, value);
+  values.set(legacyTreeKey(), JSON.stringify(legacy));
+  values.set(legacyTreeKey(scope.id), JSON.stringify({ ...legacy, scope: scope.id, private: true }));
+  await purgePrivateData();
+  expect(values.has(legacyTreeKey())).toBe(false); expect(values.has(legacyTreeKey(scope.id))).toBe(false);
+  for (const [key, value] of preserved) expect(values.get(key), key).toEqual(value);
+  expect(await readView(context, scope)).toEqual(state); expect(await readView(privateContext, scope)).toEqual(state);
+  const key = legacyTreeKey('public', sha(6)), original = JSON.stringify(legacy);
+  const replacement = JSON.stringify({ ...legacy, usedAt: 2, entries: [entry('replacement.ts')] });
+  values.set(key, original);
+  const get = GM.getValue; let scanned = false;
+  vi.spyOn(GM, 'getValue').mockImplementation(async (name, fallback) => {
+    if (name === key && !scanned) { scanned = true; values.set(key, replacement); return original as never; }
+    return get(name, fallback);
+  });
+  await purgePrivateData(); expect(values.get(key)).toBe(replacement);
 });
 
 it('concurrent changes to different preferences preserve both choices', async () => {

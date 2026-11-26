@@ -46,7 +46,6 @@ export class StorageLimitError extends Error {
   constructor() { super(); this.message = renderText(this.detail); }
 }
 const cacheScope = (context: CommitContext, scope: AuthScope) => context.visibility === 'public' ? 'public' : scope.id;
-const treeKey = (context: RepoContext, scope: AuthScope) => prefix + JSON.stringify(['tree', context.repoId, context.rootTreeSha, cacheScope(context, scope)]);
 const viewKey = (context: RepoContext, scope: AuthScope) => prefix + JSON.stringify(['view', context.repoId, context.refKind, context.refName, cacheScope(context, scope)]);
 const commitKey = (context: CommitContext, scope: AuthScope) => cachePrefix + JSON.stringify(['commit', context.repoId, context.commitSha, cacheScope(context, scope)]);
 const blockKey = (context: RepoContext, scope: AuthScope, sha: string, recursive: boolean) => cachePrefix + JSON.stringify(['tree', context.repoId, sha, recursive, cacheScope(context, scope)]);
@@ -55,9 +54,21 @@ async function allowed(context: CommitContext, scope: AuthScope): Promise<boolea
   const now = await readAuthScope();
   return scope.authenticated && now.authenticated && now.id === scope.id && isAuthScopeCurrent(scope);
 }
-function parse(value: unknown): RecordValue | null {
+function parseLegacy(key: string, value: unknown): RecordValue | null {
   if (typeof value !== 'string') return null;
-  try { const record = JSON.parse(value) as RecordValue | null; return record?.schema === 1 && typeof record.scope === 'string' && typeof record.private === 'boolean' && typeof record.usedAt === 'number' ? record : null; } catch { return null; }
+  try {
+    const record = JSON.parse(value) as RecordValue | null;
+    const identity: unknown = JSON.parse(key.slice(prefix.length));
+    if (!record || record.schema !== 1 || !Array.isArray(identity) || !Number.isSafeInteger(identity[1]) || identity[1] <= 0 ||
+      typeof record.scope !== 'string' || !record.scope || record.private !== (record.scope !== 'public') ||
+      !Number.isFinite(record.usedAt) || record.usedAt < 0 || identity.at(-1) !== record.scope) return null;
+    if (identity[0] === 'tree' && identity.length === 4 && typeof identity[2] === 'string' && objectSha.test(identity[2]) &&
+      Array.isArray(record.entries) && !('view' in record) && parseTreeResponse({ sha: identity[2], truncated: false, tree: record.entries }, identity[2]) &&
+      record.entries.every(entry => typeof entry.name === 'string' && typeof entry.mode === 'string')) return record;
+    if (identity[0] === 'view' && identity.length === 5 && ['branch', 'tag', 'commit'].includes(identity[2]) &&
+      typeof identity[3] === 'string' && identity[3] && record.view && typeof record.view === 'object' && !('entries' in record)) return record;
+    return null;
+  } catch { return null; }
 }
 function parseCache(key: string, value: unknown): CacheRecord | null {
   if (!key.startsWith(cachePrefix) || typeof value !== 'string') return null;
@@ -100,7 +111,7 @@ async function changeUnchanged(key: string, raw: unknown, scope: AuthScope, repl
 }
 async function readRecord(key: string, context: RepoContext, scope: AuthScope): Promise<RecordValue | null> {
   if (!await allowed(context, scope)) return null;
-  const record = parse(await GM.getValue(key));
+  const record = parseLegacy(key, await GM.getValue(key));
   if (!record || record.scope !== cacheScope(context, scope) || record.private !== (context.visibility !== 'public') || !await allowed(context, scope)) { recent.delete(key); return null; }
   rememberUse(key);
   return record;
@@ -114,8 +125,9 @@ async function trim(): Promise<void> {
     if (!key.startsWith(prefix) && !key.startsWith(cachePrefix)) continue;
     const raw = await GM.getValue<unknown>(key);
     if (!isAuthScopeCurrent(scope)) return;
-    const record = key.startsWith(cachePrefix) ? parseCache(key, raw) : parse(raw);
-    if (!record || (record.private && (!scope.authenticated || record.scope !== scope.id))) {
+    const record = key.startsWith(cachePrefix) ? parseCache(key, raw) : parseLegacy(key, raw);
+    if (!record && key.startsWith(prefix)) continue;
+    if (!record || (record.schema === 1 && record.entries) || (record.private && (!scope.authenticated || record.scope !== scope.id))) {
       await changeUnchanged(key, raw, scope);
       continue;
     }
@@ -215,12 +227,6 @@ export async function writeTreeBlock(context: RepoContext, scope: AuthScope, sha
   if (!validated || !Number.isSafeInteger(context.repoId) || context.repoId <= 0 || typeof recursive !== 'boolean') throw new TypeError('Invalid tree cache response');
   await writeRecord(blockKey(context, scope, sha, recursive), context, scope, { schema: 2, kind: 'response', repoId: context.repoId, scope: cacheScope(context, scope), private: context.visibility !== 'public', usedAt: Date.now(), treeSha: sha, recursive, response: validated });
 }
-export async function readTree(context: RepoContext, scope: AuthScope): Promise<readonly TreeEntry[] | null> {
-  const record = await readRecord(treeKey(context, scope), context, scope);
-  if (!record?.entries || !Array.isArray(record.entries)) return null;
-  return record.entries;
-}
-export async function writeTree(context: RepoContext, scope: AuthScope, entries: readonly TreeEntry[]): Promise<void> { await writeRecord(treeKey(context, scope), context, scope, { schema: 1, scope: cacheScope(context, scope), private: context.visibility !== 'public', usedAt: Date.now(), entries }); }
 export async function readView(context: RepoContext, scope: AuthScope): Promise<ViewState | null> { return (await readRecord(viewKey(context, scope), context, scope))?.view || null; }
 export async function writeView(context: RepoContext, scope: AuthScope, view: ViewState): Promise<void> {
   if (context.visibility !== 'public' && (!scope.authenticated || !isAuthScopeCurrent(scope))) throw new DOMException('Authorization changed', 'AbortError');

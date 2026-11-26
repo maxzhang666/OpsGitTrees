@@ -5,9 +5,8 @@ import { ApiError, createGitHubClient } from './github';
 import { observePage, readPage, resolvePage } from './page';
 import { startPreload } from './preload';
 import { mountSidebar } from './sidebar';
-import { observeSettings, purgePrivateData, readSettings, readTree, readView, StorageLimitError, writeSettings, writeTree, writeView } from './storage';
-import { TreeIndex } from './tree-index';
-import type { AuthScope, GitHubClient, IndexView, PageState, RepoContext, Settings, SidebarHandle } from './types';
+import { observeSettings, purgePrivateData, readCommitTree, readSettings, readView, StorageLimitError, writeCommitTree, writeSettings, writeView } from './storage';
+import type { AuthScope, CommitContext, GitHubClient, IndexView, PageState, RepoContext, Settings, SidebarHandle, ViewState } from './types';
 import { msg, observeLanguage, renderText, setLanguage, t, type MessageKey, type Text } from './i18n';
 
 interface Active {
@@ -121,32 +120,54 @@ export async function startApplication(): Promise<{ stop(): void }> {
       if (!live(ticket)) return;
       if (metadata.visibility !== 'public' && !scope.authenticated) throw new ApiError('auth', msg('Configure a fine-grained read-only PAT in Settings → API authentication to read this repository.'));
       if (page.kind === 'empty') { handle.setContext(page); handle.setIndex({ entries: new Map(), children: new Map(), state: 'empty', pending: 0 }); return; }
-      const context = await client.resolveTree(page.context, metadata, signal);
-      if (!live(ticket)) return;
-      if (metadata.visibility !== 'public' && (await readAuthScope()).id !== scope.id) return;
+      const commit: CommitContext = { ...page.context, ...metadata };
+      let rootTreeSha: string | null = null;
+      let cacheWarning: Text | undefined;
+      if (metadata.visibility === 'public') {
+        try { rootTreeSha = await readCommitTree(commit, scope); }
+        catch (error) {
+          if (!live(ticket) || signal.aborted || isAbort(error)) return;
+          cacheWarning = msg('Persistent cache unavailable; index remains usable in memory.');
+        }
+        if (!live(ticket) || signal.aborted) return;
+      }
+      const context: RepoContext = rootTreeSha ? { ...commit, rootTreeSha } : await client.resolveTree(page.context, metadata, signal);
+      if (!live(ticket) || signal.aborted) return;
+      if (metadata.visibility !== 'public') {
+        const checked = await readAuthScope();
+        if (!live(ticket) || signal.aborted || checked.id !== scope.id || !checked.authenticated) return;
+      }
+      if (!rootTreeSha) {
+        try { await writeCommitTree(context, scope); }
+        catch (error) {
+          if (!live(ticket) || signal.aborted || isAbort(error)) return;
+          cacheWarning = error instanceof StorageLimitError ? error.detail : msg('Persistent cache unavailable; index remains usable in memory.');
+        }
+        if (!live(ticket) || signal.aborted) return;
+      }
       const controller = new AbortController();
       const current: Active = { context, scope, client, controller }; active = current;
-      const saved = await readView(context, scope);
+      let saved: ViewState | null = null;
+      try { saved = await readView(context, scope); }
+      catch (error) {
+        if (!live(ticket) || active !== current || isAbort(error)) return;
+        cacheWarning = msg('Persistent cache unavailable; index remains usable in memory.');
+      }
       if (!live(ticket) || active !== current) return;
       if (saved) handle.restoreView(saved);
+      const display = (view: IndexView): IndexView => view.reason || !cacheWarning ? view : { ...view, reason: cacheWarning };
       const key = memoryKey(context, scope);
-      let cached = memory.get(key);
-      if (!cached) {
-        const entries = await readTree(context, scope);
-        if (!live(ticket) || active !== current) return;
-        if (entries) { const index = new TreeIndex(); index.add(entries); cached = index.view('complete'); }
-      }
+      const cached = memory.get(key);
       if (context.visibility !== 'public' && !isAuthScopeCurrent(scope)) { controller.abort(); return; }
       if (!live(ticket) || active !== current) return;
-      if (cached) { current.index = cached; memory.delete(key); memory.set(key, cached); while (memory.size > 2) memory.delete(memory.keys().next().value!); handle.setIndex(cached); handle.setCurrentPath(context.path); return; }
+      if (cached) { current.index = display(cached); memory.delete(key); memory.set(key, cached); while (memory.size > 2) memory.delete(memory.keys().next().value!); handle.setIndex(current.index); handle.setCurrentPath(context.path); return; }
       handle.setCurrentPath(context.path);
       current.preload = startPreload(context, scope, client, view => {
         if (controller.signal.aborted || active !== current || stopped) return;
-        current.index = view;
-        if (verifiedUrl === location.href) handle.setIndex(view);
+        current.index = display(view);
+        if (verifiedUrl === location.href) handle.setIndex(current.index);
         if (view.state === 'complete') {
           memory.delete(key); memory.set(key, view); while (memory.size > 2) memory.delete(memory.keys().next().value!);
-          void writeTree(context, scope, [...view.entries.values()]).catch(error => { if (active === current && verifiedUrl === location.href && !controller.signal.aborted && !isAbort(error)) handle.setIndex({ ...view, reason: error instanceof StorageLimitError ? error.detail : msg('Persistent cache unavailable; index remains usable in memory.') }); });
         } else if (view.state === 'failed' && !view.canResume && context.visibility !== 'public') {
           controller.abort(); current.index = undefined; handle.setIndex({ entries: new Map(), children: new Map(), state: 'failed', pending: 0, reason: view.reason }); memory.delete(key);
         }
