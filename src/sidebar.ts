@@ -74,7 +74,9 @@ export function mountSidebar(initialSettings: Settings): SidebarHandle {
   language.value = settings.language; languageLabel.append(language); settingsPanel.append(languageLabel);
   const shortcutsLabel = element('label', 'option'), shortcuts = element('input'); shortcuts.type = 'checkbox'; shortcuts.checked = settings.shortcutsEnabled;
   translations.bind(shortcuts, msg('Keyboard shortcuts'), 'aria-label'); translations.bind(shortcuts, msg('Enable Alt+Shift+O / Alt+Shift+F'), 'title'); shortcuts.setAttribute('role', 'switch');
-  shortcutsLabel.append(translations.bind(document.createTextNode(''), msg('Keyboard shortcuts')), shortcuts); settingsPanel.append(shortcutsLabel);
+  const shortcutHelp = text('span', 'shortcut-help', 'Alt+Shift+O: expand or collapse the sidebar. Alt+Shift+F: find a file or path.'); shortcutHelp.id = 'ogt-shortcut-help'; shortcuts.setAttribute('aria-describedby', shortcutHelp.id);
+  const shortcutText = element('span'); shortcutText.append(text('span', '', 'Keyboard shortcuts'), shortcutHelp);
+  shortcutsLabel.append(shortcutText, shortcuts); settingsPanel.append(shortcutsLabel);
   const authHeading = text('h2', '', 'GitHub API authentication');
   const identity = element('p', 'identity');
   const manageToken = action('Manage Token…', 'Open Token configuration dialog');

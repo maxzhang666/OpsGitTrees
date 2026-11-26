@@ -1,5 +1,6 @@
 export const zhCN = {
   'Keyboard shortcuts': '键盘快捷键',
+  'Alt+Shift+O: expand or collapse the sidebar. Alt+Shift+F: find a file or path.': 'Alt+Shift+O：展开／收起侧栏；Alt+Shift+F：查找文件或路径。',
   'Token management': 'Token 管理',
   'Token saved': 'Token 已保存',
   'Token input is unavailable in this execution context. Reinstall the current script with content / DOM isolation enabled, then reload GitHub. No Token was requested.': '当前执行环境无法输入 Token。请以 content／DOM 隔离模式重新安装脚本并刷新 GitHub；尚未读取 Token。',

@@ -76,7 +76,7 @@
 - 工具链：Node 22.22.0、pnpm 10.30.3、TypeScript 7.0.2、Vite 8.3.8、vite-plugin-monkey 8.1.1、Vitest 5.1.1、jsdom 26.1.0；版本已固定在 package.json 与 pnpm-lock.yaml，沿用用户共享 store。
 - 图标库固定为 Lucide 1.80.0，`src/icons.ts` 仅导入实际使用的 14 个图标（含 loading），供侧栏和 Token 弹窗共用，无 CDN、远程字体或整库运行时扫描。
 - 历次构建与测试证据按修订保留在下方记录。B 方案运行 `tests/navigation.test.ts`、`tests/credential-window.test.ts`，28 项全部通过，`pnpm typecheck` 成功。随后 GitHub 配色版仅调整 CSS，`pnpm build` 成功，并以真实 ScriptCat 运行时验证配色，未重跑逻辑测试。
-- 当前生产包：`dist/opsgittrees.user.js`，约 114.41 kB，2513 行可读源码；使用树区域整体 loading、树内失败／限流原因提示、单行品牌／状态底栏和仓库／分支两行顶部工具栏，继承 GitHub 主题色及控件圆角。清除 Token 和仓库检查集中于管理弹窗，包含中文翻译，无运行时框架、CDN、远程 `@require` 或项目后端。
+- 当前生产包：`dist/opsgittrees.user.js`，约 114.96 kB，2519 行可读源码；使用树区域整体 loading、树内失败／限流原因提示、单行品牌／状态底栏和仓库／分支两行顶部工具栏，继承 GitHub 主题色及控件圆角。清除 Token 和仓库检查集中于管理弹窗，包含中文翻译，无运行时框架、CDN、远程 `@require` 或项目后端。
 - Lucide／品牌底栏版运行 `tests/navigation.test.ts`、`tests/credential-window.test.ts`，31 项全部通过；类型检查与构建成功，并检查最终脚本保留完整图库许可、元数据位于文件开头、无远程 `@require`。已通过 sctl 更新原 ScriptCat UUID，返回 enabled；真实页面验证 320px 浅色与 200px 深色布局，无底栏重叠或水平溢出，品牌与状态区总高 42px。设置开关、Token 弹窗关闭／眼睛图标、底部收起与重新展开均正常；Token 保持遮罩，未修改真实凭据。截图已查看，最终恢复 320px、浅色、README 高亮及完整索引状态。
 - `dist/` 纳入版本管理。源码变更后运行 `pnpm build`，将 `dist/opsgittrees.user.js` 和相关源码一起提交，安装者无需自行构建。发布构建使用 `minify: false`，不压缩、不混淆，保留正常缩进、函数名和 Unicode 文本。
 - 限流／失败提示修订将原因、重试时间和匿名认证说明放入树区域；恢复前禁用继续加载，已有路径保持可浏览。主额度重置与二级限流等待分开处理，识别没有 Retry-After 的二级限流 403，不把它当成权限错误。相关 6 项断言／用例先验证失败，再实现；`tests/navigation.test.ts`、`tests/github.test.ts` 与 `tests/preload.test.ts` 共 50 项通过，类型检查、构建及产物语法检查通过。
@@ -88,7 +88,7 @@
 - Token 操作归位包已通过 sctl 更新原 ScriptCat UUID 并返回 enabled。实机设置页只剩“管理 Token…”和“返回文件”按钮；弹窗内显示检查已存 Token、检查当前仓库和清除本地 Token。实际点击仓库检查后，成功结果“已验证仓库读取权限。”显示于弹窗，侧栏没有重复结果。截图已查看，Token 保持遮罩；清除通过模拟 GM 的实际弹窗按钮测试验证，未清除用户真实凭据。
 - 本地安装：运行 `pnpm install --frozen-lockfile && pnpm build`，再将上述 `.user.js` 导入用户选择的脚本管理器。首次进入仓库主动加载；未配置 Token 时匿名，已验证并保存的 Token 默认用于全部 GitHub API 请求。侧栏“管理 Token”或同名管理器菜单打开页内密码弹窗，不开新窗口／标签；输入框与 GitHub 共享 DOM。
 - ScriptCat 可使用已配对的 `sctl install dist/opsgittrees.user.js` 安装，并由用户在浏览器中确认外部接入请求。ScriptCat「工具 → 本地备份 → 导入文件」用于配置／备份，不用于安装 `.user.js`；无需修改确认策略。
-- 默认 `Alt+Shift+O` 收起／打开、`Alt+Shift+F` 聚焦查找；设置可禁用。用户运行生产脚本不需要构建服务器，`pnpm dev` 只用于本地开发。
+- 默认 `Alt+Shift+O` 收起／打开、`Alt+Shift+F` 聚焦查找；设置可禁用，开关下方常驻显示按键与用途。UI 文案精简只移除布局／设计理由的元说明，保留功能解释和必要操作指引。用户运行生产脚本不需要构建服务器，`pnpm dev` 只用于本地开发。
 - 设置精简包已通过 sctl 更新到原 ScriptCat UUID 并返回 enabled；实机查看中英文设置及 Token 弹窗，删除冗长介绍、重复链接、自动回填说明和空闲提示，保留短权限／安全提示。实际检查已存 Token 后成功反馈可见，回填仍为密码遮罩；未写入或清除真实凭据。截图已查看，最终恢复跟随浏览器的中文设置页。
 - B 方案最终包已通过 sctl 更新原 ScriptCat UUID 并返回 enabled。真实 GitHub 页面测得侧栏 320px、活动栏 34px、文件行高 24px，页面让出 320px，无水平溢出；保留 GitHub 原生文件树。
 - B 方案实机交互：搜索 `src` 后往返设置和文件页，查询、已渲染路径及滚动位置一致；定位当前 README、目录整行展开／收起、普通点击打开 `package.json` 并同步高亮、切回 README 均通过。快捷键开关可关闭并重新启用，最终恢复原启用状态及跟随浏览器的中文界面。
