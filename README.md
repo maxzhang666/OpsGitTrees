@@ -4,6 +4,23 @@
 
 **脚本负责文件导航，GitHub 负责代码展示。** 默认主动预加载目录索引，不预加载文件内容，也不另做代码编辑器。
 
+## 界面预览
+
+![OpsGitTrees 文件树导航界面](assets/screenshots/overview.webp)
+
+<details>
+<summary>侧栏设置与 Token 管理</summary>
+
+**侧栏设置**
+
+<img src="assets/screenshots/settings.webp" alt="OpsGitTrees 侧栏设置" width="320">
+
+**Token 管理**
+
+<img src="assets/screenshots/token-management.webp" alt="OpsGitTrees Token 管理弹窗" width="640">
+
+</details>
+
 ## 主要功能
 
 | 功能 | 说明 |
