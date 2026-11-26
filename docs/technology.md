@@ -80,7 +80,8 @@
 - Lucide／品牌底栏版运行 `tests/navigation.test.ts`、`tests/credential-window.test.ts`，31 项全部通过；类型检查与构建成功，并检查最终脚本保留完整图库许可、元数据位于文件开头、无远程 `@require`。已通过 sctl 更新原 ScriptCat UUID，返回 enabled；真实页面验证 320px 浅色与 200px 深色布局，无底栏重叠或水平溢出，品牌与状态区总高 42px。设置开关、Token 弹窗关闭／眼睛图标、底部收起与重新展开均正常；Token 保持遮罩，未修改真实凭据。截图已查看，最终恢复 320px、浅色、README 高亮及完整索引状态。
 - `dist/` 纳入版本管理。源码变更后运行 `pnpm build`，将 `dist/opsgittrees.user.js` 和相关源码一起提交，安装者无需自行构建。发布构建使用 `minify: false`，不压缩、不混淆，保留正常缩进、函数名和 Unicode 文本。
 - 登录态上下文适配新增首页、目录页和文件页 3 项回归，覆盖斜杠分支、文件链接与弹窗内仓库检查；先验证失败，再补齐同源 JSON 上下文解析。`tests/page.test.ts` 与 `tests/navigation.test.ts` 共 41 项通过，类型检查、构建和生产脚本语法检查通过。
-- 本次 ScriptCat 更新命令退出码为 2（operation voided or timed out），但原 UUID 的更新时间已推进且保持 enabled；没有盲目重装或把异常回执记为成功。刷新验收页及访问另一个仓库均遇到浏览器 `ERR_CONNECTION_CLOSED`，尚未完成新版真实登录态验收；未修改代理、登录状态或真实 Token。
+- 本次 ScriptCat 更新命令退出码为 2（operation voided or timed out），但原 UUID 的更新时间已推进且保持 enabled；没有盲目重装或把异常回执记为成功。首次实机验收因浏览器 `ERR_CONNECTION_CLOSED` 中断，网络恢复后完成下述验收；未修改代理、登录状态或真实 Token。
+- 网络恢复后，在 Chrome 156／ScriptCat 1.5.2 的真实登录态新结构页面（无 code-view 嵌入 JSON）确认新版实际生效：显示 `490 个路径 · 完整`，README 正确定位；通过文件树点击 `package.json` 后页面跳转及高亮同步，`aria-busy` 为 false。已查看实机截图；原安装命令的异常回执仍单独保留，不改记为成功。
 - 整体 loading／单行底栏版新增“已有路径时不被后台加载阻挡”和“失败后停止 loading、重试可重新开始”两项回归测试：先验证失败，再实现；全量 77 项测试、类型检查、构建及产物检查通过。真实 ScriptCat 更新返回 enabled；观察到首次加载时树区域整体 busy、20px 旋转图标及提示，数据可用后自动消失。320px 浅色和 200px 深色侧栏的底栏均为 27px，比此前减少 15px；品牌、状态同一行，窄宽度状态省略且保留完整悬停提示，无水平溢出。已查看完成态明暗截图，最终恢复 320px 浅色 README 页面。
 - Token 操作归位包已通过 sctl 更新原 ScriptCat UUID 并返回 enabled。实机设置页只剩“管理 Token…”和“返回文件”按钮；弹窗内显示检查已存 Token、检查当前仓库和清除本地 Token。实际点击仓库检查后，成功结果“已验证仓库读取权限。”显示于弹窗，侧栏没有重复结果。截图已查看，Token 保持遮罩；清除通过模拟 GM 的实际弹窗按钮测试验证，未清除用户真实凭据。
 - 本地安装：运行 `pnpm install --frozen-lockfile && pnpm build`，再将上述 `.user.js` 导入用户选择的脚本管理器。首次进入仓库主动加载；未配置 Token 时匿名，已验证并保存的 Token 默认用于全部 GitHub API 请求。侧栏“管理 Token”或同名管理器菜单打开页内密码弹窗，不开新窗口／标签；输入框与 GitHub 共享 DOM。
