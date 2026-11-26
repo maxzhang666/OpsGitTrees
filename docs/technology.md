@@ -74,10 +74,12 @@
 ### 构建与安装
 
 - 工具链：Node 22.22.0、pnpm 10.30.3、TypeScript 7.0.2、Vite 8.3.8、vite-plugin-monkey 8.1.1、Vitest 5.1.1、jsdom 26.1.0；版本已固定在 package.json 与 pnpm-lock.yaml，沿用用户共享 store。
-- 图标库固定为 Lucide 1.80.0，`src/icons.ts` 仅导入实际使用的 13 个图标，供侧栏和 Token 弹窗共用，无 CDN、远程字体或整库运行时扫描。`vite.config.ts` 从依赖读取原始许可，通过 `build.rolldownOptions.output.postBanner` 在最终压缩之后写入完整 ISC／MIT 许可；普通源码注释和 `banner` 会在最终脚本打包中被移除。
+- 图标库固定为 Lucide 1.80.0，`src/icons.ts` 仅导入实际使用的 14 个图标（含 loading），供侧栏和 Token 弹窗共用，无 CDN、远程字体或整库运行时扫描。通过 `build.license` 生成独立的 `dist/THIRD-PARTY-LICENSES.md`，脚本正文只保留简短文件指引，不再内联长篇许可。
 - 历次构建与测试证据按修订保留在下方记录。B 方案运行 `tests/navigation.test.ts`、`tests/credential-window.test.ts`，28 项全部通过，`pnpm typecheck` 成功。随后 GitHub 配色版仅调整 CSS，`pnpm build` 成功，并以真实 ScriptCat 运行时验证配色，未重跑逻辑测试。
-- 当前生产包：`dist/opsgittrees.user.js`，约 74.97 kB，gzip 约 25.66 kB，包含图标的完整许可；使用仓库／分支两行顶部工具栏、owner 与仓库原生链接、底部品牌与状态区和按需展开查找，继承 GitHub 主题色及控件圆角。清除 Token 和仓库检查集中于管理弹窗，包含中文翻译，无运行时框架、CDN、远程 `@require` 或项目后端。
+- 当前生产包：`dist/opsgittrees.user.js`，约 72.59 kB，gzip 约 24.34 kB；使用树区域整体 loading、单行品牌／状态底栏和仓库／分支两行顶部工具栏，继承 GitHub 主题色及控件圆角。清除 Token 和仓库检查集中于管理弹窗，包含中文翻译，无运行时框架、CDN、远程 `@require` 或项目后端。
 - Lucide／品牌底栏版运行 `tests/navigation.test.ts`、`tests/credential-window.test.ts`，31 项全部通过；类型检查与构建成功，并检查最终脚本保留完整图库许可、元数据位于文件开头、无远程 `@require`。已通过 sctl 更新原 ScriptCat UUID，返回 enabled；真实页面验证 320px 浅色与 200px 深色布局，无底栏重叠或水平溢出，品牌与状态区总高 42px。设置开关、Token 弹窗关闭／眼睛图标、底部收起与重新展开均正常；Token 保持遮罩，未修改真实凭据。截图已查看，最终恢复 320px、浅色、README 高亮及完整索引状态。
+- `dist/` 纳入版本管理。源码变更后运行 `pnpm build`，将 `dist/opsgittrees.user.js` 与 `dist/THIRD-PARTY-LICENSES.md` 和相关源码一起提交，安装者无需自行构建。
+- 整体 loading／单行底栏版新增“已有路径时不被后台加载阻挡”和“失败后停止 loading、重试可重新开始”两项回归测试：先验证失败，再实现；全量 77 项测试、类型检查、构建及产物检查通过。真实 ScriptCat 更新返回 enabled；观察到首次加载时树区域整体 busy、20px 旋转图标及提示，数据可用后自动消失。320px 浅色和 200px 深色侧栏的底栏均为 27px，比此前减少 15px；品牌、状态同一行，窄宽度状态省略且保留完整悬停提示，无水平溢出。已查看完成态明暗截图，最终恢复 320px 浅色 README 页面。
 - Token 操作归位包已通过 sctl 更新原 ScriptCat UUID 并返回 enabled。实机设置页只剩“管理 Token…”和“返回文件”按钮；弹窗内显示检查已存 Token、检查当前仓库和清除本地 Token。实际点击仓库检查后，成功结果“已验证仓库读取权限。”显示于弹窗，侧栏没有重复结果。截图已查看，Token 保持遮罩；清除通过模拟 GM 的实际弹窗按钮测试验证，未清除用户真实凭据。
 - 本地安装：运行 `pnpm install --frozen-lockfile && pnpm build`，再将上述 `.user.js` 导入用户选择的脚本管理器。首次进入仓库主动加载；未配置 Token 时匿名，已验证并保存的 Token 默认用于全部 GitHub API 请求。侧栏“管理 Token”或同名管理器菜单打开页内密码弹窗，不开新窗口／标签；输入框与 GitHub 共享 DOM。
 - ScriptCat 可使用已配对的 `sctl install dist/opsgittrees.user.js` 安装，并由用户在浏览器中确认外部接入请求。ScriptCat「工具 → 本地备份 → 导入文件」用于配置／备份，不用于安装 `.user.js`；无需修改确认策略。

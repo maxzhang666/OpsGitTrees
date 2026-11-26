@@ -53,7 +53,9 @@ export function mountSidebar(initialSettings: Settings): SidebarHandle {
   const footer = element('footer', 'footer'); footer.append(footerInfo, collapse);
   const resume = action('Continue loading', 'Continue directory loading', 'resume'); resume.hidden = true;
   const viewport = element('div', 'viewport'); viewport.setAttribute('role', 'tree'); translations.bind(viewport, msg('Repository files'), 'aria-label'); viewport.tabIndex = 0;
-  const canvas = element('div', 'canvas'); viewport.append(canvas);
+  const canvas = element('div', 'canvas');
+  const loading = element('div', 'tree-loading'); loading.setAttribute('aria-hidden', 'true'); loading.append(svgIcon('loading'), text('span', '', 'Loading repository index…'));
+  viewport.append(canvas, loading);
   const noResults = element('div', 'no-results');
   const settingsPanel = element('section', 'settings'); settingsPanel.hidden = true;
   const languageLabel = element('label', 'language-option'); languageLabel.append(text('span', '', 'Language'));
@@ -91,6 +93,9 @@ export function mountSidebar(initialSettings: Settings): SidebarHandle {
   function renderStatus() {
     const state = index.state === 'complete' ? t('Complete') : t('Index incomplete — {state}', { state: msg(index.state) });
     status.textContent = contextMessage && index.state === 'loading' ? renderText(contextMessage) : index.state === 'empty' ? t('This repository is empty.') : index.state === 'loading' ? t('Loading repository index…') : t('{count} paths · {state}', { count: index.entries.size, state }) + (index.pending ? ' · ' + t('{count} pending', { count: index.pending }) : '') + (index.reason ? '\n' + renderText(index.reason) : '');
+    status.title = status.textContent || '';
+    const isLoading = index.state === 'loading' && index.entries.size === 0;
+    loading.hidden = !isLoading; canvas.hidden = isLoading; viewport.setAttribute('aria-busy', String(isLoading));
   }
   let filtered: ReturnType<typeof filterTree> | null = null;
   let paths: readonly string[] = [], expanded = new Set<string>();

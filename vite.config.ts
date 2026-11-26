@@ -1,8 +1,5 @@
-import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import monkey from 'vite-plugin-monkey';
-
-const iconLicense = readFileSync(new URL('./node_modules/lucide/LICENSE', import.meta.url), 'utf8');
 
 export default defineConfig({
   plugins: [monkey({
@@ -22,5 +19,5 @@ export default defineConfig({
     build: { fileName: 'opsgittrees.user.js' },
     server: { open: false },
   })],
-  build: { target: 'es2022', minify: true, rolldownOptions: { output: { postBanner: `/*! Lucide icons\n${iconLicense}\n*/` } } },
+  build: { target: 'es2022', minify: true, license: { fileName: 'THIRD-PARTY-LICENSES.md' }, rolldownOptions: { output: { postBanner: '/* Icon licenses: see THIRD-PARTY-LICENSES.md. */' } } },
 });

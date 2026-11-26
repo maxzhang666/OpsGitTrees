@@ -25,6 +25,25 @@ async function search(value: string) { query().value = value; query().dispatchEv
 function data() { const index = new TreeIndex(); index.add([entry('docs', 'tree'), entry('docs/help.md'), entry('src/auth', 'tree'), ...Array.from({ length: 40 }, (_, i) => entry('src/auth/file' + String(i).padStart(2, '0') + '.ts'))]); return index.view('complete'); }
 function api() { setHttpHandler(async ({ url }) => { const u = new URL(url); if (u.pathname.endsWith('/repo')) return { body: { id: 1, visibility: 'public' } }; if (u.pathname.includes('/git/commits/')) return { body: { sha: u.pathname.split('/').pop(), tree: { sha: sha(2) } } }; return { body: { sha: sha(2), truncated: false, tree: [...data().entries.values()].map(value => ({ ...value, sha: value.sha || sha(3) })) } }; }); }
 
+it('initial loading releases the tree when paths arrive, even while background loading continues', () => {
+  sidebar = mountSidebar(defaultSettings); sidebar.setContext({ kind: 'code', context });
+  const loading = root().querySelector<HTMLElement>('.tree-loading');
+  expect(loading?.hidden).toBe(false); expect(viewport().getAttribute('aria-busy')).toBe('true');
+  sidebar.setIndex({ ...data(), state: 'loading', pending: 1 });
+  expect(loading?.hidden).toBe(true); expect(viewport().getAttribute('aria-busy')).toBe('false');
+  expect(root().querySelector<HTMLElement>('.canvas')!.hidden).toBe(false); expect(paths()).toContain('docs');
+});
+it('a failed load stops the whole-tree loading indicator and a new load can restart it', () => {
+  sidebar = mountSidebar(defaultSettings); sidebar.setContext({ kind: 'code', context });
+  const loading = root().querySelector<HTMLElement>('.tree-loading');
+  sidebar.setIndex({ entries: new Map(), children: new Map(), state: 'failed', pending: 0, reason: 'Connection failed' });
+  expect(loading?.hidden).toBe(true); expect(viewport().getAttribute('aria-busy')).toBe('false');
+  expect(root().querySelector('.status')?.getAttribute('title')).toContain('Connection failed');
+  sidebar.setIndex({ entries: new Map(), children: new Map(), state: 'loading', pending: 0 });
+  expect(loading?.hidden).toBe(false);
+  sidebar.setIndex(data()); expect(loading?.hidden).toBe(true); expect(viewport().getAttribute('aria-busy')).toBe('false');
+});
+
 it('searchRoundTripRestoresBothViews', async () => {
   sidebar = mountSidebar(defaultSettings); sidebar.setContext({ kind: 'code', context }); sidebar.setIndex(data());
   sidebar.restoreView({ browsing: { expanded: ['docs'], scrollTop: 24, anchorPath: 'docs/help.md', anchorOffset: 0 }, search: null });
