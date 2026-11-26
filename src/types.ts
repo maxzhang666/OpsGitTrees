@@ -13,6 +13,7 @@ export interface PageContext {
 export type PageState = { kind: 'code'; context: PageContext } | { kind: 'empty'; owner: string; repo: string } | { kind: 'outside' } | { kind: 'unresolved'; message: Text };
 export interface RepositoryMetadata { owner: string; repo: string; repoId: number; visibility: 'public' | 'private' | 'internal' }
 export interface RepoContext extends PageContext, RepositoryMetadata { rootTreeSha: string }
+export type CommitContext = Omit<RepoContext, 'rootTreeSha'>;
 export interface AuthScope { id: string; login: string | null; authenticated: boolean }
 export interface TreeEntry { path: string; name: string; sha: string; mode: string; type: 'tree' | 'blob' | 'commit' }
 export type LoadState = 'loading' | 'partial' | 'complete' | 'paused' | 'failed' | 'empty';
@@ -30,6 +31,7 @@ export interface SearchState { query: string; view: TreeViewState; collapsed: st
 export interface ViewState { browsing: TreeViewState; search: SearchState | null }
 export interface Settings { collapsed: boolean; width: number; shortcutsEnabled: boolean; language: LanguagePreference }
 export interface TreeResponse { sha: string; truncated: boolean; tree: TreeEntry[] }
+export type TreeCacheValue = { kind: 'response'; response: TreeResponse } | { kind: 'split' };
 export interface GitHubClient {
   readonly quota: { remaining: number | null; resumeAt: number | null; blockedUntil: number | null };
   getIdentity(signal: AbortSignal): Promise<{ id: number; login: string }>;

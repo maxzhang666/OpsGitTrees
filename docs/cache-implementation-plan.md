@@ -10,7 +10,7 @@
 
 **Spec:** [目录缓存设计](./cache-design.md)、[完整性证明](./architecture.md#完整性证明)、[授权操作设计](./authentication.md#授权操作设计)。
 
-状态：已按 review 修订，尚未执行。以下检查均为计划，不是通过记录。沿用当前 docs 平铺结构，与首版开发计划分开维护。
+状态：实施中。任务 1 的组合检查已通过；其余未勾选项仍为待执行计划，不是通过记录。沿用当前 docs 平铺结构，与首版开发计划分开维护。
 
 ## 全局约束
 
@@ -49,6 +49,8 @@
 
 ## 任务 1：单键读写
 
+验证记录：任务 1 组合检查 `pnpm exec vitest run tests/storage.test.ts tests/github.test.ts tests/navigation.test.ts`，3 个文件、92 项通过；尚未构建或更新真实脚本。
+
 **Files:** 修改 `src/types.ts`、`src/github.ts`、`src/storage.ts`、`tests/setup.ts`、`tests/storage.test.ts`、`tests/navigation.test.ts`、`src/zh-CN.ts`。
 
 **Interfaces:** 新增以下类型／函数，现有 GitHubClient 方法签名不变：
@@ -66,19 +68,19 @@ export function readTreeBlock(context: RepoContext, scope: AuthScope, sha: strin
 export function writeTreeBlock(context: RepoContext, scope: AuthScope, sha: string, recursive: boolean, response: TreeResponse): Promise<void>;
 ```
 
-- [ ] 增补 `tests/storage.test.ts` 中的 `treeBlockIdentityAndValidation`：不同 repoId／scope／SHA／recursive 不命中；损坏 schema、错误 SHA、非法相对路径、错误可见性按未命中处理；合法空响应仍可恢复。
+- [x] 增补 `tests/storage.test.ts` 中的 `treeBlockIdentityAndValidation`：不同 repoId／scope／SHA／recursive 不命中；损坏 schema、错误 SHA、非法相对路径、错误可见性按未命中处理；合法空响应仍可恢复。
   关键断言：`expect(await readCommitTree({ ...context, commitSha: sha(9) }, scope)).toBeNull()`；仅缓存递归响应后，`expect(await readTreeBlock(context, scope, context.rootTreeSha, false)).toBeNull()`。
-- [ ] 将现有 `privateCacheRequiresCurrentScope`、`visibilityChangeStopsPublicReuse`、`lateWriteCannotReviveClearedScope` 从旧快照迁移到提交映射及目录块，同步更新 GM 前缀拦截和残留断言。分别验证清除后 v2 提交映射／响应／split 及旧私有 view 不可读且失效记录已删除；旧轮清理不能删除替换值。GM 拒绝不能成功返回。
+- [x] 将现有 `privateCacheRequiresCurrentScope`、`visibilityChangeStopsPublicReuse`、`lateWriteCannotReviveClearedScope` 从旧快照迁移到提交映射及目录块，同步更新 GM 前缀拦截和残留断言。分别验证清除后 v2 提交映射／响应／split 及旧私有 view 不可读且失效记录已删除；旧轮清理不能删除替换值。GM 拒绝不能成功返回。
   split 清理使用直接写入的 schema 2 夹具，不依赖任务 2 的降级逻辑生成标记。
-- [ ] 调整受存储互斥影响的 deferred 用例：延迟发布先启动清理但不 await，释放写入后再等待两者；旧轮扫描用例先启动新 writeView，释放旧扫描后再等两者，保留新授权 view 仍在的断言。不得等待同一存储锁的排队任务完成后才释放锁持有者。
-- [ ] 实现以上接口：schema 2 的单键 JSON 记录包含 kind、repoId、scope、private、usedAt，以及对应 commitSha／treeSha／recursive／response；标记只允许 recursive=true 且无响应正文。完整记录身份必须与键一致。
-- [ ] `getTree` 和缓存读取共用 `parseTreeResponse`，保留现有 SHA／路径／条目类型校验；API 解析失败仍抛 ApiError，存储损坏只作未命中，不混为 API 成功或失败。
-- [ ] 新缓存变更统一进入 `opsgittrees:storage` 锁；需要授权锁的删除按 storage → authorization 顺序，禁止反向嵌套，锁内不做网络请求。私有发布保留 GM 写入前后授权复核；删除前核对值未被替换。
-- [ ] 在本任务扩展现有 `purgePrivateData(): Promise<void>`，删除失效授权的 v2 提交映射、目录响应、split 及旧私有记录，保留当前授权和 public 数据；删除复用上述锁序、授权复核及值未替换检查。此入口必须独立可用，不依赖任务 2 的预算扫描；授权失效清理不等于提前启用合法旧 tree 的升级删除。
-- [ ] 将 `tests/setup.ts` 的单一 lockTail 改为按锁名排队；不得把锁改成无互斥执行。保留 `writeView` 离开页面时同步提交状态的现有能力，不借机改设置或凭据流程。
-- [ ] 同一任务内删除 snapshotLimit，将仍在使用的旧快照／view 序列化和新目录记录的单记录准入统一按现有 16 MiB 总预算判断；保留旧快照读写供任务 4 切换前使用。同步更新 StorageLimitError 的总预算／内存可用提示及中文，不保留“按 4 MiB 拒写却报总预算”的中间状态。
-- [ ] 同步迁移现有 `oversizedSnapshotRemainsUsableInMemory`：构造超过总预算的响应，断言索引仍完整可查、持久化被拒绝且有提示，不再绑定旧 4 MiB 文案。预算内超过旧门槛的刷新恢复仍在任务 5 做一次性验证。
-- [ ] 运行 `pnpm exec vitest run tests/storage.test.ts tests/github.test.ts tests/navigation.test.ts`；预期全部通过、无挂起的锁任务，不遗留本任务已改变契约的导航失败。提交 `feat: persist validated directory response blocks`。
+- [x] 调整受存储互斥影响的 deferred 用例：延迟发布先启动清理但不 await，释放写入后再等待两者；旧轮扫描用例先启动新 writeView，释放旧扫描后再等两者，保留新授权 view 仍在的断言。不得等待同一存储锁的排队任务完成后才释放锁持有者。
+- [x] 实现以上接口：schema 2 的单键 JSON 记录包含 kind、repoId、scope、private、usedAt，以及对应 commitSha／treeSha／recursive／response；标记只允许 recursive=true 且无响应正文。完整记录身份必须与键一致。
+- [x] `getTree` 和缓存读取共用 `parseTreeResponse`，保留现有 SHA／路径／条目类型校验；API 解析失败仍抛 ApiError，存储损坏只作未命中，不混为 API 成功或失败。
+- [x] 新缓存变更统一进入 `opsgittrees:storage` 锁；需要授权锁的删除按 storage → authorization 顺序，禁止反向嵌套，锁内不做网络请求。私有发布保留 GM 写入前后授权复核；删除前核对值未被替换。
+- [x] 在本任务扩展现有 `purgePrivateData(): Promise<void>`，删除失效授权的 v2 提交映射、目录响应、split 及旧私有记录，保留当前授权和 public 数据；删除复用上述锁序、授权复核及值未替换检查。此入口必须独立可用，不依赖任务 2 的预算扫描；授权失效清理不等于提前启用合法旧 tree 的升级删除。
+- [x] 将 `tests/setup.ts` 的单一 lockTail 改为按锁名排队；不得把锁改成无互斥执行。保留 `writeView` 离开页面时同步提交状态的现有能力，不借机改设置或凭据流程。
+- [x] 同一任务内删除 snapshotLimit，将仍在使用的旧快照／view 序列化和新目录记录的单记录准入统一按现有 16 MiB 总预算判断；保留旧快照读写供任务 4 切换前使用。同步更新 StorageLimitError 的总预算／内存可用提示及中文，不保留“按 4 MiB 拒写却报总预算”的中间状态。
+- [x] 同步迁移现有 `oversizedSnapshotRemainsUsableInMemory`：构造超过总预算的响应，断言索引仍完整可查、持久化被拒绝且有提示，不再绑定旧 4 MiB 文案。预算内超过旧门槛的刷新恢复仍在任务 5 做一次性验证。
+- [x] 运行 `pnpm exec vitest run tests/storage.test.ts tests/github.test.ts tests/navigation.test.ts`；预期全部通过、无挂起的锁任务，不遗留本任务已改变契约的导航失败。提交 `feat: persist validated directory response blocks`。
 
 ## 任务 2：回收与升级
 

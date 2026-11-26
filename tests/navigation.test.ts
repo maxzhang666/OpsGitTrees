@@ -147,10 +147,12 @@ it('same-version persistent cache avoids refetching tree data', async () => {
   await vi.waitFor(() => expect(status()).toContain('Complete')); expect(requests.filter(r => r.url.includes('/git/trees/'))).toHaveLength(1);
 });
 it('oversizedSnapshotRemainsUsableInMemory', async () => {
-  codePage(); const entries = Array.from({ length: 10000 }, (_, i) => entry('f' + i + '-' + 'x'.repeat(200)));
+  codePage(); const entries = Array.from({ length: 10000 }, (_, i) => entry('f' + i + '-' + 'x'.repeat(900)));
+  expect(new TextEncoder().encode(JSON.stringify({ sha: sha(2), truncated: false, tree: entries })).byteLength).toBeGreaterThan(16 * 1024 * 1024);
   setHttpHandler(async ({ url }) => url.includes('/git/trees/') ? { body: { sha: sha(2), truncated: false, tree: entries } } : url.includes('/git/commits/') ? { body: { sha: sha(1), tree: { sha: sha(2) } } } : { body: { id: 1, visibility: 'public' } });
-  app = await startApplication(); await vi.waitFor(() => expect(status()).toContain('4 MiB')); expect(status()).toContain('Complete');
-  await search('f9999-'); expect(paths()).toEqual(['f9999-' + 'x'.repeat(200)]);
+  app = await startApplication(); await vi.waitFor(() => expect(status()).toMatch(/persistent.cache budget/i)); expect(status()).toContain('Complete'); expect(status()).toMatch(/memory/i);
+  expect([...values.keys()].some(key => key.startsWith('ogt:data:v1:["tree",') || key.startsWith('ogt:cache:v2:["tree",'))).toBe(false);
+  await search('f9999-'); expect(paths()).toEqual(['f9999-' + 'x'.repeat(900)]);
 });
 it('initial deep-file positioning never overrides a saved collapsed preference', async () => {
   await writeSettings({ ...defaultSettings, collapsed: true }); codePage('src/auth/file00.ts'); api();
