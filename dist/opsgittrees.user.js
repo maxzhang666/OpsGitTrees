@@ -497,7 +497,7 @@
 		"education",
 		"resources"
 	]);
-	function readPage(doc, url) {
+	function readPage(doc, url, payload) {
 		if (url.origin !== "https://github.com") return { kind: "outside" };
 		const parts = url.pathname.split("/").filter(Boolean);
 		if (parts.length < 2 || parts.length > 2 && parts[2] !== "tree" && parts[2] !== "blob") return { kind: "outside" };
@@ -518,7 +518,7 @@
 		};
 		const script = doc.querySelector(embeddedSelector);
 		try {
-			const payload = JSON.parse(script?.textContent || "{}").payload;
+			payload ??= JSON.parse(script?.textContent || "{}").payload;
 			const repository = (payload?.codeViewLayoutRoute)?.repo;
 			if (repository?.ownerLogin?.toLowerCase() !== owner.toLowerCase() || repository?.name?.toLowerCase() !== repo.toLowerCase()) {
 				const nwo = doc.querySelector("meta[name=\"octolytics-dimension-repository_nwo\"]")?.getAttribute("content");
@@ -535,7 +535,7 @@
 				repo
 			};
 			const view = parts.length === 2 ? "root" : parts[2];
-			const route = view === "root" ? payload.codeViewRepoRoute : view === "tree" ? payload.codeViewTreeRoute : payload.codeViewBlobLayoutRoute;
+			const route = view === "root" ? payload?.codeViewRepoRoute : view === "tree" ? payload?.codeViewTreeRoute : payload?.codeViewBlobLayoutRoute;
 			const ref = route?.refInfo;
 			if (typeof route?.path !== "string" || typeof ref?.name !== "string" || !shaPattern.test(ref?.currentOid || "")) return unresolved;
 			const path = route.path === "/" ? "" : route.path;
@@ -559,6 +559,35 @@
 		} catch {
 			return unresolved;
 		}
+	}
+	async function resolvePage(doc, url, signal) {
+		const page = readPage(doc, url);
+		if (page.kind !== "unresolved") return page;
+		const parts = url.pathname.split("/").filter(Boolean);
+		const target = new URL(url.href);
+		if (parts[2] === "blob") target.pathname = "/" + [
+			...parts.slice(0, 2),
+			"_layout",
+			...parts.slice(3)
+		].join("/");
+		const request = async (endpoint) => {
+			const response = await fetch(endpoint.href, {
+				signal,
+				credentials: "same-origin",
+				headers: {
+					Accept: "application/json",
+					"GitHub-Is-React": "true"
+				}
+			});
+			if (!response.ok || new URL(response.url).origin !== url.origin) throw new ApiError("invalid", msg("Could not read the current GitHub page context."));
+			return response;
+		};
+		const response = await request(target);
+		if (!response.headers.get("content-type")?.includes("application/json")) return readPage(new DOMParser().parseFromString(await response.text(), "text/html"), url);
+		const payload = (await response.json()).payload;
+		if (!payload || typeof payload !== "object" || Array.isArray(payload)) return page;
+		if (!payload.codeViewLayoutRoute) payload.codeViewLayoutRoute = (await (await request(new URL("/" + parts.slice(0, 2).join("/") + "/_layout", url))).json()).payload?.codeViewLayoutRoute;
+		return readPage(doc, url, payload);
 	}
 	function fileUrl(context, path) {
 		return "https://github.com/" + encodeURIComponent(context.owner) + "/" + encodeURIComponent(context.repo) + "/blob/" + encodeURIComponent(context.refName) + "/" + path.split("/").map(encodeURIComponent).join("/");
@@ -2218,16 +2247,9 @@
 			}
 			try {
 				if (page.kind === "unresolved") {
-					const response = await fetch(url.href, {
-						signal,
-						credentials: "same-origin",
-						headers: { Accept: "text/html" }
-					});
+					page = await resolvePage(document, url, signal);
 					if (!live(ticket)) return;
-					if (!response.ok || new URL(response.url).origin !== url.origin) throw new ApiError("invalid", msg("Could not read the current GitHub page context."));
-					page = readPage(new DOMParser().parseFromString(await response.text(), "text/html"), url);
 					if (page.kind === "unresolved" || page.kind === "outside") throw new ApiError("invalid", msg("GitHub page context is not recognized. No branch or commit was guessed."));
-					if (!live(ticket)) return;
 				}
 				verifiedUrl = url.href;
 				if (page.kind === "code" && active && (active.preload || active.index) && active.context.owner === page.context.owner && active.context.repo === page.context.repo && active.context.refKind === page.context.refKind && active.context.refName === page.context.refName && active.context.commitSha === page.context.commitSha && !force) {
@@ -2349,9 +2371,9 @@
 			}
 		}
 		async function checkConnection(cancelSignal) {
-			const page = readPage(document, new URL(location.href));
-			if (page.kind !== "code" && page.kind !== "empty") throw new ApiError("invalid", msg("Current GitHub context is unresolved. Reload the page and try again."));
 			const ticket = generation, signal = AbortSignal.any([cancelSignal, resolving.signal]);
+			const page = await resolvePage(document, new URL(location.href), signal);
+			if (page.kind !== "code" && page.kind !== "empty") throw new ApiError("invalid", msg("Current GitHub context is unresolved. Reload the page and try again."));
 			const scope = await readAuthScope();
 			const client = scope.authenticated ? await authClient(scope) : anonymousClient;
 			if (scope.authenticated) await client.getIdentity(signal);

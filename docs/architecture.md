@@ -70,7 +70,7 @@ GitHub 页面 → page → main → github / credentials
 
 1. 脚本匹配 `https://github.com/*`，仅顶层运行，使从非代码页站内导航到代码页也能启用；非代码页不挂侧栏、不发目录请求。
 2. page 读取 GitHub 已解析的 ref、路径和实际 commit SHA；不能把 `/tree/feature/a/...` 的第一段当作完整分支，也不靠遍历所有分支猜测。
-3. 实现时先在真实页面确认嵌入数据形状，将选择器与解析集中在 page；无法确认时报告适配失败并停止展示旧树，不回退为猜测当前版本。
+3. 优先读取 code-view 嵌入 JSON；不可用时通过同源 JSON 路由补齐上下文：文件页读取 `/_layout/<ref>/<path>`，首页和目录页读取原路由，缺少仓库信息时补读 `/_layout`。选择器、请求与解析集中在 page，沿用仓库、ref、路径和 commit SHA 校验；保留 HTML 响应解析，不执行页面的序列化脚本。无法确认时报告适配失败并停止展示旧树，不猜测当前版本。
 4. 先由 `getRepository(owner, repo, signal)` 读取仓库元数据，确认 `repoId`、访问权和可见性；该接口也适用于没有提交的空仓库。只有 code 状态才调用 `resolveTree(page, repository, signal)`，通过 Git commit 元数据接口由实际 commit SHA 取得根 tree SHA，不请求带文件 diff 的提交详情。
 5. 数据上下文键为 `repoId + rootTreeSha + 请求授权代号`；同版本切文件复用当前预加载任务，仅更新路径、高亮和阅读状态。
 6. 分支／版本或授权改变时取消旧任务；每个异步结果应用前核对数据上下文。另设导航代号，防止较早的上下文解析覆盖较新的导航。

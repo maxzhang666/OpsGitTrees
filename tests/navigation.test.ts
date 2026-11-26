@@ -66,6 +66,31 @@ it('fileNavigationKeepsQueryAndScroll and reuses the same preload', async () => 
   await vi.waitFor(() => expect(root().querySelector('.current')?.getAttribute('data-path')).toBe('src/auth/file00.ts'));
   expect(query().value).toBe('auth'); expect(viewport().scrollTop).toBe(48); expect(requests.filter(r => r.url.includes('/git/trees/'))).toHaveLength(1);
 });
+it.each([
+  { view: 'root', url: '/example/repo', endpoint: '/example/repo', route: 'codeViewRepoRoute', path: '/', ref: 'main', file: 'https://github.com/example/repo/blob/main/docs/help.md' },
+  { view: 'tree', url: '/example/repo/tree/feature/a/src/auth', endpoint: '/example/repo/tree/feature/a/src/auth', route: 'codeViewTreeRoute', path: 'src/auth', ref: 'feature/a', file: 'https://github.com/example/repo/blob/feature%2Fa/docs/help.md' },
+  { view: 'blob', url: '/example/repo/blob/feature/a/src/auth/file00.ts', endpoint: '/example/repo/_layout/feature/a/src/auth/file00.ts', route: 'codeViewBlobLayoutRoute', path: 'src/auth/file00.ts', ref: 'feature/a', file: 'https://github.com/example/repo/blob/feature%2Fa/docs/help.md' },
+])('logged-in $view page loads the tree and checks repository access without embedded JSON', async ({ url, endpoint, route, path, ref, file }) => {
+  history.replaceState(null, '', url); api();
+  const payloads: Record<string, object> = {
+    '/example/repo/_layout': { codeViewLayoutRoute: { repo: { name: 'repo', ownerLogin: 'example', isEmpty: false } } },
+    [endpoint]: { [route]: { path, refInfo: { name: ref, refType: 'branch', currentOid: sha(1) } } },
+  };
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async input => {
+    const target = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
+    const payload = payloads[target.pathname];
+    const response = new Response(JSON.stringify({ payload }), { status: payload ? 200 : 404, headers: { 'Content-Type': 'application/json' } });
+    Object.defineProperty(response, 'url', { value: target.href }); return response;
+  });
+  app = await startApplication(); await vi.waitFor(() => expect(status()).toContain('Complete'));
+  root().querySelector<HTMLButtonElement>('[data-path="docs"]')!.click();
+  expect(root().querySelector<HTMLAnchorElement>('[data-path="docs/help.md"]')!.href).toBe(file);
+  root().querySelector<HTMLButtonElement>('[aria-label="Open navigation settings"]')!.click();
+  root().querySelector<HTMLButtonElement>('[aria-label="Open Token configuration dialog"]')!.click();
+  const dialog = document.querySelector('#opsgittrees-credentials')!.shadowRoot!;
+  [...dialog.querySelectorAll('button')].find(button => button.textContent === 'Check current repository')!.click();
+  await vi.waitFor(() => expect(dialog.querySelector('.result')?.getAttribute('data-kind')).toBe('success'));
+});
 it('stale SPA embedded data resolves the actual page and keeps the current reading state', async () => {
   codePage(); api(); app = await startApplication(); await vi.waitFor(() => expect(status()).toContain('Complete'));
   await search('auth'); root().querySelector<HTMLButtonElement>('[data-path="src/auth"]')!.click();
@@ -75,7 +100,7 @@ it('stale SPA embedded data resolves the actual page and keeps the current readi
   const script = source.querySelector('script')!;
   script.textContent = JSON.stringify({ payload: { codeViewLayoutRoute: { repo: { name: 'repo', ownerLogin: 'example', isEmpty: false } }, codeViewBlobLayoutRoute: { path: 'src/auth/file00.ts', refInfo: { name: 'main', refType: 'branch', currentOid: sha(1) } } } });
   doc.body.append(source);
-  vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true, url: 'https://github.com/example/repo/blob/main/src/auth/file00.ts', text: async () => doc.documentElement.outerHTML } as Response);
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true, url: 'https://github.com/example/repo/blob/main/src/auth/file00.ts', headers: new Headers({ 'Content-Type': 'text/html' }), text: async () => doc.documentElement.outerHTML } as Response);
   history.replaceState(null, '', '/example/repo/blob/main/src/auth/file00.ts'); document.dispatchEvent(new Event('turbo:load'));
   await vi.waitFor(() => expect(root().querySelector('.current')?.getAttribute('data-path')).toBe('src/auth/file00.ts'));
   expect(query().value).toBe('auth'); expect(viewport().scrollTop).toBe(48); expect(requests.filter(r => r.url.includes('/git/trees/'))).toHaveLength(1);

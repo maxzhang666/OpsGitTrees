@@ -2,7 +2,7 @@ import { GM } from '$';
 import { getGitHubClient, isAbortError as isAbort, isAuthScopeCurrent, observeAuthScope, readAuthScope } from './credentials';
 import { createCredentialManager } from './credential-window';
 import { ApiError, createGitHubClient } from './github';
-import { observePage, readPage } from './page';
+import { observePage, readPage, resolvePage } from './page';
 import { startPreload } from './preload';
 import { mountSidebar } from './sidebar';
 import { observeSettings, purgePrivateData, readSettings, readTree, readView, StorageLimitError, writeSettings, writeTree, writeView } from './storage';
@@ -96,12 +96,9 @@ export async function startApplication(): Promise<{ stop(): void }> {
     }
     try {
       if (page.kind === 'unresolved') {
-        const response = await fetch(url.href, { signal, credentials: 'same-origin', headers: { Accept: 'text/html' } });
+        page = await resolvePage(document, url, signal);
         if (!live(ticket)) return;
-        if (!response.ok || new URL(response.url).origin !== url.origin) throw new ApiError('invalid', msg('Could not read the current GitHub page context.'));
-        page = readPage(new DOMParser().parseFromString(await response.text(), 'text/html'), url);
         if (page.kind === 'unresolved' || page.kind === 'outside') throw new ApiError('invalid', msg('GitHub page context is not recognized. No branch or commit was guessed.'));
-        if (!live(ticket)) return;
       }
       verifiedUrl = url.href;
       if (page.kind === 'code' && active && (active.preload || active.index) && active.context.owner === page.context.owner && active.context.repo === page.context.repo && active.context.refKind === page.context.refKind && active.context.refName === page.context.refName && active.context.commitSha === page.context.commitSha && !force) {
@@ -162,9 +159,9 @@ export async function startApplication(): Promise<{ stop(): void }> {
     }
   }
   async function checkConnection(cancelSignal: AbortSignal): Promise<Text> {
-    const page = readPage(document, new URL(location.href));
-    if (page.kind !== 'code' && page.kind !== 'empty') throw new ApiError('invalid', msg('Current GitHub context is unresolved. Reload the page and try again.'));
     const ticket = generation, signal = AbortSignal.any([cancelSignal, resolving.signal]);
+    const page = await resolvePage(document, new URL(location.href), signal);
+    if (page.kind !== 'code' && page.kind !== 'empty') throw new ApiError('invalid', msg('Current GitHub context is unresolved. Reload the page and try again.'));
     const scope = await readAuthScope(); const client = scope.authenticated ? await authClient(scope) : anonymousClient;
     if (scope.authenticated) await client.getIdentity(signal);
     const metadata = await client.getRepository(page.kind === 'code' ? page.context.owner : page.owner, page.kind === 'code' ? page.context.repo : page.repo, signal);

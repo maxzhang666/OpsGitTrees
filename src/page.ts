@@ -1,12 +1,21 @@
 import type { PageContext, PageState } from './types';
 import { msg } from './i18n';
+import { ApiError } from './github';
+
+interface CodeViewPayload {
+  [route: string]: {
+    repo?: { ownerLogin: string; name: string; isEmpty?: boolean };
+    path?: string;
+    refInfo?: { name: string; currentOid: string; refType?: string };
+  } | undefined;
+}
 
 const embeddedSelector = 'react-app[app-name="code-view"] script[data-target="react-app.embeddedData"]';
 const shaPattern = /^[a-f0-9]{40}$/i;
 const normalPath = (path: string) => decodeURIComponent(path).replace(/\/$/, '');
 const reservedRoots = new Set(['settings', 'orgs', 'organizations', 'users', 'search', 'marketplace', 'collections', 'topics', 'explore', 'login', 'logout', 'join', 'signup', 'features', 'enterprise', 'pricing', 'sponsors', 'notifications', 'account', 'customer-stories', 'solutions', 'security', 'about', 'site', 'readme', 'apps', 'codespaces', 'discussions', 'events', 'contact', 'education', 'resources']);
 
-export function readPage(doc: Document, url: URL): PageState {
+export function readPage(doc: Document, url: URL, payload?: CodeViewPayload): PageState {
   if (url.origin !== 'https://github.com') return { kind: 'outside' };
   const parts = url.pathname.split('/').filter(Boolean);
   if (parts.length < 2 || (parts.length > 2 && parts[2] !== 'tree' && parts[2] !== 'blob')) return { kind: 'outside' };
@@ -16,7 +25,7 @@ export function readPage(doc: Document, url: URL): PageState {
   const unresolved: PageState = { kind: 'unresolved', message: msg('Waiting for GitHub repository context…') };
   const script = doc.querySelector(embeddedSelector);
   try {
-    const payload = JSON.parse(script?.textContent || '{}').payload;
+    payload ??= JSON.parse(script?.textContent || '{}').payload;
     const layout = payload?.codeViewLayoutRoute;
     const repository = layout?.repo;
     if (repository?.ownerLogin?.toLowerCase() !== owner.toLowerCase() || repository?.name?.toLowerCase() !== repo.toLowerCase()) {
@@ -26,7 +35,7 @@ export function readPage(doc: Document, url: URL): PageState {
     }
     if (repository.isEmpty === true && parts.length === 2) return { kind: 'empty', owner, repo };
     const view = parts.length === 2 ? 'root' : parts[2] as 'tree' | 'blob';
-    const route = view === 'root' ? payload.codeViewRepoRoute : view === 'tree' ? payload.codeViewTreeRoute : payload.codeViewBlobLayoutRoute;
+    const route = view === 'root' ? payload?.codeViewRepoRoute : view === 'tree' ? payload?.codeViewTreeRoute : payload?.codeViewBlobLayoutRoute;
     const ref = route?.refInfo;
     if (typeof route?.path !== 'string' || typeof ref?.name !== 'string' || !shaPattern.test(ref?.currentOid || '')) return unresolved;
     const path = route.path === '/' ? '' : route.path;
@@ -37,6 +46,28 @@ export function readPage(doc: Document, url: URL): PageState {
     if (normalPath(url.pathname) !== expected.replace(/\/$/, '')) return unresolved;
     return { kind: 'code', context };
   } catch { return unresolved; }
+}
+
+export async function resolvePage(doc: Document, url: URL, signal: AbortSignal): Promise<PageState> {
+  const page = readPage(doc, url);
+  if (page.kind !== 'unresolved') return page;
+  const parts = url.pathname.split('/').filter(Boolean);
+  const target = new URL(url.href);
+  if (parts[2] === 'blob') target.pathname = '/' + [...parts.slice(0, 2), '_layout', ...parts.slice(3)].join('/');
+  const request = async (endpoint: URL) => {
+    const response = await fetch(endpoint.href, { signal, credentials: 'same-origin', headers: { Accept: 'application/json', 'GitHub-Is-React': 'true' } });
+    if (!response.ok || new URL(response.url).origin !== url.origin) throw new ApiError('invalid', msg('Could not read the current GitHub page context.'));
+    return response;
+  };
+  const response = await request(target);
+  if (!response.headers.get('content-type')?.includes('application/json')) return readPage(new DOMParser().parseFromString(await response.text(), 'text/html'), url);
+  const payload: CodeViewPayload | undefined = (await response.json()).payload;
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return page;
+  if (!payload.codeViewLayoutRoute) {
+    const layout = await request(new URL('/' + parts.slice(0, 2).join('/') + '/_layout', url));
+    payload.codeViewLayoutRoute = (await layout.json()).payload?.codeViewLayoutRoute;
+  }
+  return readPage(doc, url, payload);
 }
 
 export function fileUrl(context: PageContext, path: string): string {
