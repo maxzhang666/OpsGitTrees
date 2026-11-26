@@ -3,6 +3,7 @@ import { fileUrl, observeTheme, parentDirectoryUrl, reservePageSpace } from './p
 import { filterTree, visiblePaths } from './search';
 import { ancestors } from './tree-index';
 import { createTranslations, getLanguage, msg, observeLanguage, renderText, t, type MessageKey, type Text } from './i18n';
+import { svgIcon, type IconName } from './icons';
 import css from './style.css?inline';
 
 const rowHeight = 24;
@@ -12,20 +13,6 @@ function element<K extends keyof HTMLElementTagNameMap>(tag: K, className = '', 
 }
 function button(text: string, label: string, className = ''): HTMLButtonElement { const node = element('button', className, text); node.type = 'button'; node.setAttribute('aria-label', label); node.title = label; return node; }
 function subscribe<T>(listeners: Set<(value: T) => void>, listener: (value: T) => void): () => void { listeners.add(listener); return () => listeners.delete(listener); }
-const iconPaths = {
-  settings: 'm9 3-1 3-3 1 1 3-2 2 2 2-1 3 3 1 1 3h6l1-3 3-1-1-3 2-2-2-2 1-3-3-1-1-3ZM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
-  back: 'm14 6-6 6 6 6', down: 'm7 10 5 5 5-5', right: 'm10 7 5 5-5 5',
-  branch: 'M6 7v10M18 7v2a5 5 0 0 1-5 5H6M8 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM8 19a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM20 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z',
-  folder: 'M3 7V5h7l2 2h9v12H3Z', file: 'M6 3h8l4 4v14H6ZM14 3v5h4',
-  link: 'M10 4h10v10M20 4 9 15M5 9H3v12h12v-2',
-  search: 'M16 10a6 6 0 1 1-12 0 6 6 0 0 1 12 0Zm-2 4 6 6',
-  locate: 'M18 12a6 6 0 1 1-12 0 6 6 0 0 1 12 0ZM12 2v5m0 10v5M2 12h5m10 0h5',
-  close: 'm6 6 12 12M18 6 6 18',
-} as const;
-function svgIcon(name: keyof typeof iconPaths, className = ''): SVGSVGElement {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('class', className);
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path'); path.setAttribute('d', iconPaths[name]); svg.append(path); return svg;
-}
 
 export function mountSidebar(initialSettings: Settings): SidebarHandle {
   let settings = { ...initialSettings };
@@ -36,7 +23,7 @@ export function mountSidebar(initialSettings: Settings): SidebarHandle {
     if (text) translations.bind(node, msg(text));
     translations.bind(node, msg(label), 'aria-label'); translations.bind(node, msg(label), 'title'); return node;
   }
-  function iconButton(icon: keyof typeof iconPaths, label: MessageKey, className = 'icon-button'): HTMLButtonElement { const node = action(null, label, className); node.append(svgIcon(icon)); return node; }
+  function iconButton(icon: IconName, label: MessageKey, className = 'icon-button'): HTMLButtonElement { const node = action(null, label, className); node.append(svgIcon(icon)); return node; }
   const host = element('aside'); host.id = 'opsgittrees'; translations.bind(host, msg('OpsGitTrees repository navigation'), 'aria-label'); host.lang = getLanguage();
   host.style.cssText = 'position:fixed;left:0;top:0;bottom:0;z-index:100;';
   const shadow = host.attachShadow({ mode: 'open' });
@@ -56,12 +43,14 @@ export function mountSidebar(initialSettings: Settings): SidebarHandle {
   const locate = iconButton('locate', 'Locate current file');
   searchBar.append(search, clear);
   const openSearch = iconButton('search', 'Find a file or path', 'icon-button search-toggle'); openSearch.setAttribute('aria-controls', searchBar.id); openSearch.setAttribute('aria-expanded', 'false');
-  const openSettings = button('', '', 'icon-button settings-toggle'); openSettings.append(svgIcon('settings'));
+  const settingsIcon = svgIcon('settings'), closeSettingsIcon = svgIcon('close');
+  const openSettings = button('', '', 'icon-button settings-toggle'); openSettings.append(settingsIcon);
   const repositoryRow = element('div', 'repository-row'); repositoryRow.append(repositoryBar, openSettings);
   const refRow = element('div', 'ref-row'); refRow.append(svgIcon('branch', 'ref-icon'), refLabel, openSearch, locate);
   header.append(repositoryRow, refRow);
   const status = element('div', 'status'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
-  const footer = element('footer', 'footer'); footer.append(status, collapse);
+  const footerInfo = element('div', 'footer-info'); footerInfo.append(element('div', 'brand', 'OpsGitTrees'), status);
+  const footer = element('footer', 'footer'); footer.append(footerInfo, collapse);
   const resume = action('Continue loading', 'Continue directory loading', 'resume'); resume.hidden = true;
   const viewport = element('div', 'viewport'); viewport.setAttribute('role', 'tree'); translations.bind(viewport, msg('Repository files'), 'aria-label'); viewport.tabIndex = 0;
   const canvas = element('div', 'canvas'); viewport.append(canvas);
@@ -114,7 +103,7 @@ export function mountSidebar(initialSettings: Settings): SidebarHandle {
   function renderSettingsToggle() {
     const open = !settingsPanel.hidden, label = t(open ? 'Close navigation settings' : 'Open navigation settings');
     openSettings.setAttribute('aria-label', label); openSettings.title = label; openSettings.setAttribute('aria-pressed', String(open));
-    openSettings.querySelector('path')!.setAttribute('d', iconPaths[open ? 'close' : 'settings']);
+    openSettings.replaceChildren(open ? closeSettingsIcon : settingsIcon);
   }
   function renderSearch() { searchBar.hidden = !settingsPanel.hidden || !searchOpen; openSearch.setAttribute('aria-expanded', String(!searchBar.hidden)); }
   function setSearchOpen(open: boolean) { if (searchOpen === open) return; capture(); searchOpen = open; renderSearch(); restorePosition(); renderWindow(true); }

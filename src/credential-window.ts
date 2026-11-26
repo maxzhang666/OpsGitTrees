@@ -4,6 +4,7 @@ import { ApiError } from './github';
 import { observeTheme } from './page';
 import { createTranslations, getLanguage, msg, observeLanguage, renderText, t, type Text } from './i18n';
 import type { AuthScope } from './types';
+import { svgIcon } from './icons';
 import css from './credential-window.css?inline';
 
 function isolationRestriction(): Text | null {
@@ -51,7 +52,7 @@ export function createCredentialManager(notice: (message: Text) => void, checkRe
     const modal = node('dialog'); modal.setAttribute('aria-labelledby', 'token-title');
     dialog = modal;
     const main = node('main');
-    const done = button('×'); done.className = 'close'; translations.bind(done, msg('Close Token configuration'), 'aria-label');
+    const done = button(''); done.className = 'close'; done.append(svgIcon('close')); translations.bind(done, msg('Close Token configuration'), 'aria-label');
     const title = node('h1', msg('Token management')); title.id = 'token-title';
     const header = node('header'); header.append(title, done);
     const summary = node('div', '', 'summary');
@@ -62,12 +63,11 @@ export function createCredentialManager(notice: (message: Text) => void, checkRe
     const input = node('input'); input.id = 'token'; input.type = 'password'; input.required = true; input.autocomplete = 'off'; input.spellcheck = false; input.autocapitalize = 'none';
     const field = node('div', '', 'token-field');
     const reveal = button(''); reveal.className = 'reveal';
-    const icon = doc.createElementNS('http://www.w3.org/2000/svg', 'svg'); icon.setAttribute('viewBox', '0 0 24 24'); icon.setAttribute('aria-hidden', 'true');
-    const eye = doc.createElementNS('http://www.w3.org/2000/svg', 'path'); eye.setAttribute('d', 'M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z');
-    const slash = doc.createElementNS('http://www.w3.org/2000/svg', 'path'); slash.setAttribute('d', 'M3 3l18 18'); slash.classList.add('slash');
-    icon.append(eye, slash); reveal.append(icon); field.append(input, reveal);
+    const eye = svgIcon('eye'), eyeOff = svgIcon('eyeOff');
+    reveal.append(eye, eyeOff); field.append(input, reveal);
     function setRevealed(show: boolean) {
       input.type = show ? 'text' : 'password'; reveal.setAttribute('aria-pressed', String(show));
+      eye.toggleAttribute('hidden', show); eyeOff.toggleAttribute('hidden', !show);
       const text = t(show ? 'Hide Token' : 'Show Token'); reveal.setAttribute('aria-label', text); reveal.title = text;
     }
     setRevealed(false);
