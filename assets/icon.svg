@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none" role="img" aria-labelledby="title description">
+  <title id="title">OpsGitTrees</title>
+  <desc id="description">A mint Git branch connecting a folder and a file on a rounded dark background.</desc>
+  <rect width="128" height="128" rx="28" fill="#101820"/>
+  <path d="M40 42v44a10 10 0 0 0 10 10h26M40 60h32" stroke="#62E6AC" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="40" cy="32" r="9" stroke="#62E6AC" stroke-width="8"/>
+  <path d="M72 46h11l6 6h13a4 4 0 0 1 4 4v12a4 4 0 0 1-4 4H72a4 4 0 0 1-4-4V50a4 4 0 0 1 4-4Z" fill="#F4F7FB"/>
+  <path d="M78 82h14l12 12v10a4 4 0 0 1-4 4H78a4 4 0 0 1-4-4V86a4 4 0 0 1 4-4Z" fill="#F4F7FB"/>
+  <path d="M92 82v10a2 2 0 0 0 2 2h10" stroke="#101820" stroke-width="4" stroke-linejoin="round"/>
+</svg>
