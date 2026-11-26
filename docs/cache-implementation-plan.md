@@ -105,18 +105,18 @@ export function writeTreeBlock(context: RepoContext, scope: AuthScope, sha: stri
 
 **落盘取舍：** 本轮保留最多两项工作槽，每槽包含缓存读取、网络请求及响应落盘等待，不将其描述为两个始终饱和的纯网络槽。选择有界背压和简单收束：慢 GM 或锁争用可能延后后续请求，但不能延后已取得路径的展示，也不能让仍空闲的槽等待另一槽落盘。不提前引入后台发布队列，不能以跳过持久化掩盖成本。
 
-- [ ] 扩展现有截断、SHA 多路径、自动续批和 Retry-After 用例，不重复添加同义测试；保持现有调用接口。
-- [ ] 添加 `refreshRestoresOnlyCommittedBlocks`：根枚举与子树 a=sha(4) 已确认落盘、b=sha(5) 尚未完成时中止第一轮；只清空请求记录，不清空 GM，再用新实例恢复。a 路径立即可用，后续 Tree 请求只涉及缺失 b，不依赖旧实例内存；测试结束前释放所有 deferred 并收束旧任务，不能让异步写入污染下一个用例。
+- [x] 扩展现有截断、SHA 多路径、自动续批和 Retry-After 用例，不重复添加同义测试；保持现有调用接口。
+- [x] 添加 `refreshRestoresOnlyCommittedBlocks`：根枚举与子树 a=sha(4) 已确认落盘、b=sha(5) 尚未完成时中止第一轮；只清空请求记录，不清空 GM，再用新实例恢复。a 路径立即可用，后续 Tree 请求只涉及缺失 b，不依赖旧实例内存；测试结束前释放所有 deferred 并收束旧任务，不能让异步写入污染下一个用例。
   关键断言：`expect(latest.entries.has('a/file.ts')).toBe(true)`；`expect(requests.filter(r => r.url.includes('/git/trees/')).map(r => new URL(r.url).pathname.split('/').pop())).toEqual([sha(5)])`。
-- [ ] 添加 `splitAndEnumerationSkipRecursiveRefetch`：只剩 split 时直取非递归响应；只剩非递归枚举时直接恢复子任务；缓存的非递归截断仍为 partial、pending=0，不自动重复请求。
-- [ ] 添加 `quotaDoesNotBlockCachedWork`：额度为 5 或仍处于 blockedUntil 时，缺失项即使先到也不妨碍后续缓存节点恢复；全命中可完成，混合命中只暂停缺失任务；缓存不占用 40 次网络批次或突破 2 个网络并发。
-- [ ] 添加 `cacheFailureDoesNotFailPreload`：GM 读取或写入失败不丢已取得路径，不转成 ApiError／停止网络补齐；reason 提示未持久化而内存仍可用，不覆盖更重要的 API／不完整原因；授权过期或 signal 取消仍停止旧任务。
-- [ ] 添加 `slowStorageKeepsPathsAndUsesIdleSlot`：分别用 deferred 阻塞首个 v2 GM 写入、持有 `opsgittrees:storage` 锁；等待未解除时，已取得的 ready.ts 已出现在索引，空闲第二槽已发起新发现的非递归请求。释放后缺失目录继续加载并完成；不使用真实延时维持用例。
-- [ ] 添加 `abortDuringStorageWaitStopsFollowupWork`：在上述等待期间取消，再释放 GM／锁，确认不再发起后续目录请求、不加入取消后晚到路径；测试结束前收束已启动操作，不遗留写入或锁持有者。
-- [ ] 调度分开处理本地恢复与已确认缺失的网络任务；先查完整递归块，再处理 split／非递归块，最后才决定网络请求。保留 SHA+recursive 的单次请求合并及各挂载前缀，不保存队列。
-- [ ] 每项网络响应先合并、发出可用索引并调度空闲工作槽，再 await 本响应块写入；最多两槽等待发布，不建立额外后台队列。每槽最终释放前收束写入，失败只记低优先级持久化 reason；signal 取消后不启动后续工作。GM 未确认或记录已淘汰不承诺恢复，不把落盘成功当作目录完整性证据。
-- [ ] 维持统一完整性证明：非递归截断为终止性不完整，split 不证明存在或不存在任何文件；网络被暂停时仍处理能够本地恢复的工作，不绕过实际限流。
-- [ ] 运行 `pnpm exec vitest run tests/preload.test.ts`；预期全部通过，旧额度／并发／取消契约不变；任务 1 已同步迁移门槛与导航断言，不以推迟相关检查保留已知失败。提交 `feat: resume preloading from persisted tree blocks`。
+- [x] 添加 `splitAndEnumerationSkipRecursiveRefetch`：只剩 split 时直取非递归响应；只剩非递归枚举时直接恢复子任务；缓存的非递归截断仍为 partial、pending=0，不自动重复请求。
+- [x] 添加 `quotaDoesNotBlockCachedWork`：额度为 5 或仍处于 blockedUntil 时，缺失项即使先到也不妨碍后续缓存节点恢复；全命中可完成，混合命中只暂停缺失任务；缓存不占用 40 次网络批次或突破 2 个网络并发。
+- [x] 添加 `cacheFailureDoesNotFailPreload`：GM 读取或写入失败不丢已取得路径，不转成 ApiError／停止网络补齐；reason 提示未持久化而内存仍可用，不覆盖更重要的 API／不完整原因；授权过期或 signal 取消仍停止旧任务。
+- [x] 添加 `slowStorageKeepsPathsAndUsesIdleSlot`：分别用 deferred 阻塞首个 v2 GM 写入、持有 `opsgittrees:storage` 锁；等待未解除时，已取得的 ready.ts 已出现在索引，空闲第二槽已发起新发现的非递归请求。释放后缺失目录继续加载并完成；不使用真实延时维持用例。
+- [x] 添加 `abortDuringStorageWaitStopsFollowupWork`：在上述等待期间取消，再释放 GM／锁，确认不再发起后续目录请求、不加入取消后晚到路径；测试结束前收束已启动操作，不遗留写入或锁持有者。
+- [x] 调度分开处理本地恢复与已确认缺失的网络任务；先查完整递归块，再处理 split／非递归块，最后才决定网络请求。保留 SHA+recursive 的单次请求合并及各挂载前缀，不保存队列。
+- [x] 每项网络响应先合并、发出可用索引并调度空闲工作槽，再 await 本响应块写入；最多两槽等待发布，不建立额外后台队列。每槽最终释放前收束写入，失败只记低优先级持久化 reason；signal 取消后不启动后续工作。GM 未确认或记录已淘汰不承诺恢复，不把落盘成功当作目录完整性证据。
+- [x] 维持统一完整性证明：非递归截断为终止性不完整，split 不证明存在或不存在任何文件；网络被暂停时仍处理能够本地恢复的工作，不绕过实际限流。
+- [x] 运行 `pnpm exec vitest run tests/preload.test.ts`；预期全部通过，旧额度／并发／取消契约不变；任务 1 已同步迁移门槛与导航断言，不以推迟相关检查保留已知失败。提交 `feat: resume preloading from persisted tree blocks`。
 
 ## 任务 4：导航接入
 
