@@ -1,12 +1,26 @@
 import { GM } from '$';
 import { msg, renderText, type Text } from './i18n';
-import type { GitHubClient, PageContext, RepositoryMetadata, TreeEntry } from './types';
+import type { GitHubClient, PageContext, RepositoryMetadata, TreeEntry, TreeResponse } from './types';
 
 export class ApiError extends Error {
   constructor(public readonly kind: 'auth' | 'forbidden' | 'rate' | 'not-found' | 'conflict' | 'network' | 'invalid', public readonly detail: Text, public readonly resumeAt: number | null = null) { super(renderText(detail)); this.name = 'ApiError'; }
 }
 const shaPattern = /^[a-f0-9]{40}$/i;
 const abortError = () => new DOMException('Request cancelled', 'AbortError');
+
+export function parseTreeResponse(value: unknown, expectedSha: string): TreeResponse | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const data = value as Record<string, unknown>;
+  if (typeof data.sha !== 'string' || !shaPattern.test(data.sha) || data.sha !== expectedSha || typeof data.truncated !== 'boolean' || !Array.isArray(data.tree)) return null;
+  const tree: TreeEntry[] = [];
+  for (const value of data.tree) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    const item = value as Record<string, unknown>;
+    if (typeof item.path !== 'string' || !item.path || item.path.startsWith('/') || item.path.split('/').some(p => !p || p === '.' || p === '..') || typeof item.sha !== 'string' || !shaPattern.test(item.sha) || typeof item.mode !== 'string' || (item.type !== 'tree' && item.type !== 'blob' && item.type !== 'commit')) return null;
+    tree.push({ path: item.path, name: item.path.slice(item.path.lastIndexOf('/') + 1), sha: item.sha, mode: item.mode, type: item.type });
+  }
+  return { sha: data.sha, truncated: data.truncated, tree };
+}
 
 export function createGitHubClient(token: string | null): GitHubClient {
   const quota: GitHubClient['quota'] = { remaining: null, resumeAt: null, blockedUntil: null };
@@ -74,12 +88,9 @@ export function createGitHubClient(token: string | null): GitHubClient {
     },
     async getTree(context, sha, recursive, signal) {
       const data = await request(repoPath(context.owner, context.repo) + '/git/trees/' + checkedSha(sha) + (recursive ? '?recursive=1' : ''), signal);
-      if (data.sha !== sha || typeof data.truncated !== 'boolean' || !Array.isArray(data.tree)) throw new ApiError('invalid', msg('GitHub returned invalid tree metadata.'));
-      const tree: TreeEntry[] = data.tree.map((value: Record<string, unknown>) => {
-        if (typeof value.path !== 'string' || !value.path || value.path.startsWith('/') || value.path.split('/').some(p => !p || p === '.' || p === '..') || typeof value.sha !== 'string' || typeof value.mode !== 'string' || !['tree', 'blob', 'commit'].includes(String(value.type))) throw new ApiError('invalid', msg('GitHub returned an invalid tree entry.'));
-        return { path: value.path, name: value.path.slice(value.path.lastIndexOf('/') + 1), sha: checkedSha(value.sha), mode: value.mode, type: value.type as TreeEntry['type'] };
-      });
-      return { sha, truncated: data.truncated, tree };
+      const response = parseTreeResponse(data, sha);
+      if (!response) throw new ApiError('invalid', msg('GitHub returned invalid tree metadata.'));
+      return response;
     },
   };
 }

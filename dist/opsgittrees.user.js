@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name               OpsGitTrees
 // @namespace          OpsGitTrees
-// @version            0.1.1
+// @version            0.1.2
 // @author             maxzhang666
 // @description        Lightweight GitHub repository tree and path navigation
 // @description:zh-CN  轻量的 GitHub 仓库文件树与路径导航
@@ -90,7 +90,6 @@
 		"Repository context changed.": "仓库上下文已变更。",
 		"GitHub returned a different commit or no root tree.": "GitHub 返回了不同的提交或缺少根目录树。",
 		"GitHub returned invalid tree metadata.": "GitHub 返回了无效的目录树元数据。",
-		"GitHub returned an invalid tree entry.": "GitHub 返回了无效的目录树条目。",
 		"GitHub rate limit remains active.": "GitHub 限流仍在生效。",
 		"GitHub request quota is low. Loaded paths remain usable; continue after the quota resets.": "GitHub 请求额度不足，已加载的路径仍可使用；请在额度重置后继续。",
 		"GitHub truncated a non-recursive directory listing. Results remain incomplete; this API cannot enumerate all entries.": "GitHub 截断了非递归目录列表，结果仍不完整；此 API 无法枚举全部条目。",
@@ -164,7 +163,7 @@
 		"Could not start. Check userscript manager permissions and storage.": "启动失败，请检查脚本管理器的权限和存储。",
 		"OpsGitTrees: Manage Token…": "OpsGitTrees：管理 Token…",
 		"OpsGitTrees: Open file navigation": "OpsGitTrees：打开文件导航",
-		"Snapshot exceeds the 4 MiB persistent-cache limit; the complete index remains available in memory.": "快照超过 4 MiB 的持久化缓存上限，完整索引仍可在内存中使用。"
+		"Persistent-cache budget exceeded; loaded paths remain available in memory.": "已超出持久化缓存预算，已加载的路径仍可在内存中使用。"
 	};
 	var preference = "auto";
 	var listeners = new Set();
@@ -246,6 +245,29 @@
 	};
 	var shaPattern$1 = /^[a-f0-9]{40}$/i;
 	var abortError = () => new DOMException("Request cancelled", "AbortError");
+	function parseTreeResponse(value, expectedSha) {
+		if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+		const data = value;
+		if (typeof data.sha !== "string" || !shaPattern$1.test(data.sha) || data.sha !== expectedSha || typeof data.truncated !== "boolean" || !Array.isArray(data.tree)) return null;
+		const tree = [];
+		for (const value of data.tree) {
+			if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+			const item = value;
+			if (typeof item.path !== "string" || !item.path || item.path.startsWith("/") || item.path.split("/").some((p) => !p || p === "." || p === "..") || typeof item.sha !== "string" || !shaPattern$1.test(item.sha) || typeof item.mode !== "string" || item.type !== "tree" && item.type !== "blob" && item.type !== "commit") return null;
+			tree.push({
+				path: item.path,
+				name: item.path.slice(item.path.lastIndexOf("/") + 1),
+				sha: item.sha,
+				mode: item.mode,
+				type: item.type
+			});
+		}
+		return {
+			sha: data.sha,
+			truncated: data.truncated,
+			tree
+		};
+	}
 	function createGitHubClient(token) {
 		const quota = {
 			remaining: null,
@@ -346,27 +368,9 @@
 				};
 			},
 			async getTree(context, sha, recursive, signal) {
-				const data = await request(repoPath(context.owner, context.repo) + "/git/trees/" + checkedSha(sha) + (recursive ? "?recursive=1" : ""), signal);
-				if (data.sha !== sha || typeof data.truncated !== "boolean" || !Array.isArray(data.tree)) throw new ApiError("invalid", msg("GitHub returned invalid tree metadata."));
-				const tree = data.tree.map((value) => {
-					if (typeof value.path !== "string" || !value.path || value.path.startsWith("/") || value.path.split("/").some((p) => !p || p === "." || p === "..") || typeof value.sha !== "string" || typeof value.mode !== "string" || ![
-						"tree",
-						"blob",
-						"commit"
-					].includes(String(value.type))) throw new ApiError("invalid", msg("GitHub returned an invalid tree entry."));
-					return {
-						path: value.path,
-						name: value.path.slice(value.path.lastIndexOf("/") + 1),
-						sha: checkedSha(value.sha),
-						mode: value.mode,
-						type: value.type
-					};
-				});
-				return {
-					sha,
-					truncated: data.truncated,
-					tree
-				};
+				const response = parseTreeResponse(await request(repoPath(context.owner, context.repo) + "/git/trees/" + checkedSha(sha) + (recursive ? "?recursive=1" : ""), signal), sha);
+				if (!response) throw new ApiError("invalid", msg("GitHub returned invalid tree metadata."));
+				return response;
 			}
 		};
 	}
@@ -1103,6 +1107,368 @@
 			close
 		};
 	}
+	var settingsKey = "ogt:settings:v1";
+	var prefix = "ogt:data:v1:";
+	var cachePrefix = "ogt:cache:v2:";
+	var storageLock = "opsgittrees:storage";
+	var objectSha = /^[0-9a-f]{40}$/i;
+	var encoder = new TextEncoder();
+	var totalLimit = 16777216;
+	var trimTextThreshold = 1048576;
+	var pendingTrimText = 0;
+	var recent = new Map();
+	function rememberUse(key) {
+		recent.delete(key);
+		recent.set(key, Date.now());
+		if (recent.size > 1024) {
+			const oldest = recent.keys().next().value;
+			if (oldest !== void 0) recent.delete(oldest);
+		}
+	}
+	function hasCachedCoverage(group, sha) {
+		const known = group.memo.get(sha);
+		if (known !== void 0) return known;
+		const cached = group.blocks.get(sha);
+		if (cached?.recursive && !cached.recursive.truncated) {
+			group.memo.set(sha, true);
+			return true;
+		}
+		if (group.visiting.has(sha)) return false;
+		if (!cached?.listing || cached.listing.truncated) {
+			group.memo.set(sha, false);
+			return false;
+		}
+		group.visiting.add(sha);
+		const complete = cached.listing.tree.every((entry) => entry.type !== "tree" || hasCachedCoverage(group, entry.sha));
+		group.visiting.delete(sha);
+		group.memo.set(sha, complete);
+		return complete;
+	}
+	var StorageLimitError = class extends Error {
+		detail = msg("Persistent-cache budget exceeded; loaded paths remain available in memory.");
+		constructor() {
+			super();
+			this.message = renderText(this.detail);
+		}
+	};
+	var cacheScope = (context, scope) => context.visibility === "public" ? "public" : scope.id;
+	var viewKey = (context, scope) => prefix + JSON.stringify([
+		"view",
+		context.repoId,
+		context.refKind,
+		context.refName,
+		cacheScope(context, scope)
+	]);
+	var commitKey = (context, scope) => cachePrefix + JSON.stringify([
+		"commit",
+		context.repoId,
+		context.commitSha,
+		cacheScope(context, scope)
+	]);
+	var blockKey = (context, scope, sha, recursive) => cachePrefix + JSON.stringify([
+		"tree",
+		context.repoId,
+		sha,
+		recursive,
+		cacheScope(context, scope)
+	]);
+	async function allowed(context, scope) {
+		if (context.visibility === "public") return true;
+		const now = await readAuthScope();
+		return scope.authenticated && now.authenticated && now.id === scope.id && isAuthScopeCurrent(scope);
+	}
+	function validTreeView(value) {
+		if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+		const view = value;
+		return Array.isArray(view.expanded) && view.expanded.every((path) => typeof path === "string") && typeof view.scrollTop === "number" && Number.isFinite(view.scrollTop) && view.scrollTop >= 0 && (view.anchorPath === null || typeof view.anchorPath === "string") && typeof view.anchorOffset === "number" && Number.isFinite(view.anchorOffset) && view.anchorOffset >= 0;
+	}
+	function validViewState(value) {
+		if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+		const view = value;
+		if (!validTreeView(view.browsing)) return false;
+		if (view.search === null) return true;
+		if (!view.search || typeof view.search !== "object" || Array.isArray(view.search)) return false;
+		return typeof view.search.query === "string" && validTreeView(view.search.view) && Array.isArray(view.search.collapsed) && view.search.collapsed.every((path) => typeof path === "string");
+	}
+	function parseLegacy(key, value) {
+		if (typeof value !== "string") return null;
+		try {
+			const record = JSON.parse(value);
+			const identity = JSON.parse(key.slice(12));
+			if (!record || record.schema !== 1 || !Array.isArray(identity) || !Number.isSafeInteger(identity[1]) || identity[1] <= 0 || typeof record.scope !== "string" || !record.scope || record.private !== (record.scope !== "public") || !Number.isFinite(record.usedAt) || record.usedAt < 0 || identity.at(-1) !== record.scope) return null;
+			if (identity[0] === "tree" && identity.length === 4 && typeof identity[2] === "string" && objectSha.test(identity[2]) && Array.isArray(record.entries) && !("view" in record) && parseTreeResponse({
+				sha: identity[2],
+				truncated: false,
+				tree: record.entries
+			}, identity[2]) && record.entries.every((entry) => typeof entry.name === "string" && typeof entry.mode === "string")) return record;
+			if (identity[0] === "view" && identity.length === 5 && [
+				"branch",
+				"tag",
+				"commit"
+			].includes(identity[2]) && typeof identity[3] === "string" && identity[3] && validViewState(record.view) && !("entries" in record)) return record;
+			return null;
+		} catch {
+			return null;
+		}
+	}
+	function parseCache(key, value) {
+		if (!key.startsWith(cachePrefix) || typeof value !== "string") return null;
+		try {
+			const record = JSON.parse(value);
+			const identity = JSON.parse(key.slice(13));
+			if (!record || !Array.isArray(identity) || record.schema !== 2 || typeof record.repoId !== "number" || !Number.isSafeInteger(record.repoId) || record.repoId <= 0 || typeof record.scope !== "string" || !record.scope || typeof record.private !== "boolean" || record.private !== (record.scope !== "public") || typeof record.usedAt !== "number" || !Number.isFinite(record.usedAt) || record.usedAt < 0 || typeof record.treeSha !== "string" || !objectSha.test(record.treeSha) || identity[1] !== record.repoId) return null;
+			if (record.kind === "commit") {
+				if (identity.length !== 4 || identity[0] !== "commit" || identity[2] !== record.commitSha || identity[3] !== record.scope || typeof record.commitSha !== "string" || !objectSha.test(record.commitSha)) return null;
+				return record;
+			}
+			if (identity.length !== 5 || identity[0] !== "tree" || identity[2] !== record.treeSha || identity[3] !== record.recursive || identity[4] !== record.scope || typeof record.recursive !== "boolean") return null;
+			if (record.kind === "split") return record.recursive && !("response" in record) ? record : null;
+			if (record.kind !== "response") return null;
+			const response = parseTreeResponse(record.response, record.treeSha);
+			if (!response) return null;
+			record.response = response;
+			return record;
+		} catch {
+			return null;
+		}
+	}
+	async function readCacheRecord(key, context, scope) {
+		if (!await allowed(context, scope)) return null;
+		const record = parseCache(key, await _GM.getValue(key));
+		if (!record || record.scope !== cacheScope(context, scope) || record.private !== (context.visibility !== "public") || !await allowed(context, scope)) {
+			recent.delete(key);
+			return null;
+		}
+		rememberUse(key);
+		return record;
+	}
+	async function changeUnchanged(key, raw, scope, replacement) {
+		return withAuthLock(async () => {
+			if (!isAuthScopeCurrent(scope)) return false;
+			const current = await _GM.getValue(key);
+			if (!isAuthScopeCurrent(scope) || current !== raw) return false;
+			if (replacement === void 0) {
+				await _GM.deleteValue(key);
+				recent.delete(key);
+			} else await _GM.setValue(key, replacement);
+			return true;
+		});
+	}
+	async function readRecord(key, context, scope) {
+		if (!await allowed(context, scope)) return null;
+		const record = parseLegacy(key, await _GM.getValue(key));
+		if (!record || record.scope !== cacheScope(context, scope) || record.private !== (context.visibility !== "public") || !await allowed(context, scope)) {
+			recent.delete(key);
+			return null;
+		}
+		rememberUse(key);
+		return record;
+	}
+	async function trim() {
+		const scope = await readAuthScope();
+		const records = [];
+		const groups = new Map();
+		const present = new Set();
+		for (const key of await _GM.listValues()) {
+			if (!key.startsWith(prefix) && !key.startsWith(cachePrefix)) continue;
+			const raw = await _GM.getValue(key);
+			if (!isAuthScopeCurrent(scope)) return false;
+			const record = key.startsWith(cachePrefix) ? parseCache(key, raw) : parseLegacy(key, raw);
+			if (!record && key.startsWith(prefix)) continue;
+			if (!record || record.schema === 1 && record.entries || record.private && (!scope.authenticated || record.scope !== scope.id)) {
+				await changeUnchanged(key, raw, scope);
+				continue;
+			}
+			present.add(key);
+			records.push({
+				key,
+				raw,
+				bytes: encoder.encode(raw).byteLength,
+				usedAt: Math.max(record.usedAt, recent.get(key) ?? record.usedAt),
+				record
+			});
+			if (record.schema !== 2 || record.kind !== "response") continue;
+			const identity = JSON.stringify([record.repoId, record.scope]);
+			let group = groups.get(identity);
+			if (!group) {
+				group = {
+					blocks: new Map(),
+					memo: new Map(),
+					visiting: new Set()
+				};
+				groups.set(identity, group);
+			}
+			let blocks = group.blocks.get(record.treeSha);
+			if (!blocks) {
+				blocks = {};
+				group.blocks.set(record.treeSha, blocks);
+			}
+			blocks[record.recursive ? "recursive" : "listing"] = record.response;
+		}
+		if (!isAuthScopeCurrent(scope)) return false;
+		for (const key of recent.keys()) if (!present.has(key)) recent.delete(key);
+		let size = records.reduce((bytes, item) => bytes + item.bytes, 0);
+		records.sort((a, b) => a.usedAt - b.usedAt);
+		for (const item of records) {
+			if (!isAuthScopeCurrent(scope)) return false;
+			const record = item.record;
+			if (record.schema !== 2 || record.kind !== "response" || !record.recursive || !record.response.truncated) continue;
+			const group = groups.get(JSON.stringify([record.repoId, record.scope]));
+			if (size <= totalLimit && (!group || !hasCachedCoverage(group, record.treeSha))) continue;
+			const split = {
+				schema: 2,
+				kind: "split",
+				repoId: record.repoId,
+				scope: record.scope,
+				private: record.private,
+				usedAt: record.usedAt,
+				treeSha: record.treeSha,
+				recursive: true
+			};
+			const replacement = serialize(split), bytes = encoder.encode(replacement).byteLength;
+			if (await changeUnchanged(item.key, item.raw, scope, replacement)) {
+				size += bytes - item.bytes;
+				item.raw = replacement;
+				item.bytes = bytes;
+				item.record = split;
+			}
+		}
+		for (const skeleton of [false, true]) for (const item of records) {
+			if (!isAuthScopeCurrent(scope)) return false;
+			if (size <= totalLimit) return true;
+			const record = item.record;
+			if ((record.schema === 2 && (record.kind === "split" || record.kind === "response" && !record.recursive)) !== skeleton) continue;
+			if (await changeUnchanged(item.key, item.raw, scope)) size -= item.bytes;
+		}
+		return isAuthScopeCurrent(scope);
+	}
+	function serialize(record) {
+		const value = JSON.stringify(record);
+		if (encoder.encode(value).byteLength > totalLimit) throw new StorageLimitError();
+		return value;
+	}
+	function noteSuccessfulWrite(serialized) {
+		pendingTrimText += serialized.length;
+		return pendingTrimText >= trimTextThreshold;
+	}
+	function resetTrimCounters() {
+		pendingTrimText = 0;
+	}
+	async function finishWrite(key, serialized, context, scope, written = true) {
+		const authorized = await allowed(context, scope);
+		if (authorized && written && noteSuccessfulWrite(serialized) && await trim()) resetTrimCounters();
+		if (!authorized || !await allowed(context, scope)) {
+			await changeUnchanged(key, serialized, await readAuthScope());
+			throw new DOMException("Authorization changed", "AbortError");
+		}
+	}
+	async function writeRecord(key, context, scope, record) {
+		await navigator.locks.request(storageLock, async () => {
+			if (!await allowed(context, scope)) throw new DOMException("Authorization changed", "AbortError");
+			const serialized = serialize(record);
+			if (record.schema === 2 && record.kind === "response") {
+				const raw = await _GM.getValue(key), previous = parseCache(key, raw);
+				if (!await allowed(context, scope)) throw new DOMException("Authorization changed", "AbortError");
+				if (record.response.truncated && (previous?.kind === "split" || previous?.kind === "response" && !previous.response.truncated)) {
+					rememberUse(key);
+					await finishWrite(key, raw, context, scope, false);
+					return;
+				}
+			}
+			await _GM.setValue(key, serialized);
+			rememberUse(key);
+			await finishWrite(key, serialized, context, scope);
+		});
+	}
+	function normalizeSettings(value) {
+		return {
+			collapsed: typeof value?.collapsed === "boolean" ? value.collapsed : false,
+			width: typeof value?.width === "number" && Number.isFinite(value.width) ? Math.max(200, Math.min(480, value.width)) : 280,
+			shortcutsEnabled: value?.shortcutsEnabled !== false,
+			language: value?.language === "en" || value?.language === "zh-CN" ? value.language : "auto"
+		};
+	}
+	async function readSettings() {
+		return normalizeSettings(await _GM.getValue(settingsKey, {}));
+	}
+	async function writeSettings(changes) {
+		await navigator.locks.request("opsgittrees:settings", async () => {
+			await _GM.setValue(settingsKey, {
+				...await readSettings(),
+				...changes
+			});
+		});
+	}
+	function observeSettings(listener) {
+		let stopped = false;
+		const registration = Promise.resolve(_GM.addValueChangeListener(settingsKey, (_name, _old, value) => {
+			if (!stopped) listener(normalizeSettings(value));
+		}));
+		return () => {
+			stopped = true;
+			registration.then((id) => _GM.removeValueChangeListener(id));
+		};
+	}
+	async function readCommitTree(context, scope) {
+		const record = await readCacheRecord(commitKey(context, scope), context, scope);
+		return record?.kind === "commit" ? record.treeSha : null;
+	}
+	async function writeCommitTree(context, scope) {
+		if (!Number.isSafeInteger(context.repoId) || context.repoId <= 0 || !objectSha.test(context.commitSha) || !objectSha.test(context.rootTreeSha)) throw new TypeError("Invalid commit cache identity");
+		await writeRecord(commitKey(context, scope), context, scope, {
+			schema: 2,
+			kind: "commit",
+			repoId: context.repoId,
+			scope: cacheScope(context, scope),
+			private: context.visibility !== "public",
+			usedAt: Date.now(),
+			commitSha: context.commitSha,
+			treeSha: context.rootTreeSha
+		});
+	}
+	async function readTreeBlock(context, scope, sha, recursive) {
+		const record = await readCacheRecord(blockKey(context, scope, sha, recursive), context, scope);
+		return record?.kind === "response" ? {
+			kind: "response",
+			response: record.response
+		} : record?.kind === "split" ? { kind: "split" } : null;
+	}
+	async function writeTreeBlock(context, scope, sha, recursive, response) {
+		const validated = parseTreeResponse(response, sha);
+		if (!validated || !Number.isSafeInteger(context.repoId) || context.repoId <= 0 || typeof recursive !== "boolean") throw new TypeError("Invalid tree cache response");
+		await writeRecord(blockKey(context, scope, sha, recursive), context, scope, {
+			schema: 2,
+			kind: "response",
+			repoId: context.repoId,
+			scope: cacheScope(context, scope),
+			private: context.visibility !== "public",
+			usedAt: Date.now(),
+			treeSha: sha,
+			recursive,
+			response: validated
+		});
+	}
+	async function readView(context, scope) {
+		return (await readRecord(viewKey(context, scope), context, scope))?.view || null;
+	}
+	async function writeView(context, scope, view) {
+		if (context.visibility !== "public" && (!scope.authenticated || !isAuthScopeCurrent(scope))) throw new DOMException("Authorization changed", "AbortError");
+		const key = viewKey(context, scope);
+		const serialized = serialize({
+			schema: 1,
+			scope: cacheScope(context, scope),
+			private: context.visibility !== "public",
+			usedAt: Date.now(),
+			view
+		});
+		_GM_setValue(key, serialized);
+		await navigator.locks.request(storageLock, () => finishWrite(key, serialized, context, scope));
+	}
+	async function purgePrivateData() {
+		await navigator.locks.request(storageLock, async () => {
+			if (await trim()) resetTrimCounters();
+		});
+	}
 	function parentPath(path) {
 		const slash = path.lastIndexOf("/");
 		return slash < 0 ? "" : path.slice(0, slash);
@@ -1158,96 +1524,186 @@
 			};
 		}
 	};
+	var emptyTreeSha = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
 	function startPreload(context, scope, client, onChange, signal) {
 		const index = new TreeIndex();
-		const queue = [{
+		const queue = context.rootTreeSha === emptyTreeSha ? [] : [{
 			sha: context.rootTreeSha,
 			prefix: "",
 			recursive: true
 		}];
+		const missing = [];
 		const responses = new Map();
+		const activeKeys = new Map();
 		let visible = new Set();
 		let active = 0, batchRequests = 0, timer;
-		let stopped = false, terminalIncomplete = false;
+		let stopped = false, halted = false, terminalIncomplete = false;
 		let state = "loading";
-		let reason;
+		let reason, storageReason;
 		let canResume = false;
 		let resumeAt;
+		const hasPendingKey = (key) => queue.some((task) => keyOf(task) === key) || missing.some((task) => keyOf(task) === key);
+		const releaseResponse = (key) => {
+			if (!responses.get(key)?.settled) return;
+			if (!(activeKeys.get(key) || 0) && !hasPendingKey(key)) responses.delete(key);
+		};
+		const dropSettledResponses = () => {
+			for (const key of responses.keys()) releaseResponse(key);
+		};
+		const incompleteReason = msg("GitHub truncated a non-recursive directory listing. Results remain incomplete; this API cannot enumerate all entries.");
 		const emit = () => {
 			if (!signal.aborted) onChange({
-				...index.view(state, queue.length + active, reason),
+				...index.view(state, halted ? 0 : queue.length + missing.length + active, reason || (terminalIncomplete ? incompleteReason : storageReason)),
 				canResume,
 				resumeAt
 			});
 		};
+		const keyOf = (task) => task.sha + ":" + task.recursive;
 		const priority = (task) => !task.prefix || context.path === task.prefix || context.path.startsWith(task.prefix + "/") ? 0 : visible.has(task.prefix) ? 1 : 2;
+		function halt(message) {
+			halted = true;
+			clearTimeout(timer);
+			queue.length = 0;
+			missing.length = 0;
+			responses.clear();
+			if (context.visibility !== "public") {
+				index.entries.clear();
+				index.children.clear();
+			}
+			state = "failed";
+			reason = message;
+			canResume = false;
+			resumeAt = void 0;
+			emit();
+		}
+		function current() {
+			if (signal.aborted || halted) return false;
+			if (context.visibility !== "public" && !isAuthScopeCurrent(scope)) {
+				halt(msg("Authorization changed; private index cleared."));
+				return false;
+			}
+			return true;
+		}
+		function storageFailure(error) {
+			if (isAbortError(error)) halt(msg("Authorization changed; private index cleared."));
+			else storageReason = error instanceof StorageLimitError ? error.detail : msg("Persistent cache unavailable; index remains usable in memory.");
+		}
+		async function readCached(task) {
+			try {
+				return await readTreeBlock(context, scope, task.sha, task.recursive);
+			} catch (error) {
+				if (current()) storageFailure(error);
+				return null;
+			}
+		}
 		function pause(message, nextState, retry, at) {
 			stopped = true;
-			if (resumeAt && resumeAt > Date.now() && !at && retry) {
+			dropSettledResponses();
+			const barrier = Math.max(resumeAt || 0, at || 0, client.quota.blockedUntil || 0) || void 0;
+			if (retry && resumeAt && resumeAt > Date.now() && (!at || at < resumeAt)) {
+				resumeAt = barrier;
 				emit();
 				return;
 			}
 			state = nextState;
 			reason = message;
 			canResume = retry;
-			resumeAt = Math.max(resumeAt || 0, at || 0) || void 0;
+			resumeAt = barrier;
 			emit();
 		}
 		function schedule() {
-			if (signal.aborted || stopped) return;
+			if (!current()) return;
 			const quota = client.quota;
 			if (quota.resumeAt && Date.now() >= quota.resumeAt) {
 				quota.remaining = null;
 				quota.resumeAt = null;
 			}
-			if (queue.length && quota.blockedUntil && quota.blockedUntil > Date.now()) {
-				pause(msg("GitHub rate limit remains active."), "paused", true, quota.blockedUntil);
-				return;
+			queue.sort((a, b) => priority(a) - priority(b));
+			missing.sort((a, b) => priority(a) - priority(b));
+			while (active < 2) {
+				let task = queue.shift();
+				const network = !task;
+				if (!task) {
+					const shared = missing.findIndex((candidate) => responses.has(keyOf(candidate)));
+					if (shared >= 0) task = missing.splice(shared, 1)[0];
+					else {
+						if (!missing.length || stopped) break;
+						if (quota.blockedUntil && quota.blockedUntil > Date.now()) {
+							pause(msg("GitHub rate limit remains active."), "paused", true, quota.blockedUntil);
+							break;
+						}
+						if (quota.remaining !== null && quota.remaining <= 5) {
+							pause(msg("GitHub request quota is low. Loaded paths remain usable; continue after the quota resets."), "paused", true, quota.resumeAt || void 0);
+							break;
+						}
+						if (batchRequests >= 40) break;
+						task = missing.shift();
+					}
+				}
+				if (!task || !current()) break;
+				active++;
+				run(task, network);
 			}
-			if (queue.length && quota.remaining !== null && quota.remaining <= 5) {
-				pause(msg("GitHub request quota is low. Loaded paths remain usable; continue after the quota resets."), "paused", true, quota.resumeAt || void 0);
-				return;
-			}
-			if (!queue.length && !active) {
+			if (!queue.length && !missing.length && !active) {
 				state = terminalIncomplete ? "partial" : "complete";
-				if (terminalIncomplete) reason = msg("GitHub truncated a non-recursive directory listing. Results remain incomplete; this API cannot enumerate all entries.");
+				canResume = false;
+				resumeAt = void 0;
 				responses.clear();
 				emit();
-				return;
-			}
-			if (batchRequests >= 40) {
-				if (!active && !timer) timer = setTimeout(() => {
-					timer = void 0;
-					batchRequests = 0;
-					schedule();
-				}, 0);
-				return;
-			}
-			queue.sort((a, b) => priority(a) - priority(b));
-			while (active < 2 && queue.length && batchRequests < 40 && !stopped) {
-				const task = queue.shift();
-				active++;
-				run(task);
-			}
+			} else if (!active && missing.length && !stopped && batchRequests >= 40 && !timer) timer = setTimeout(() => {
+				timer = void 0;
+				batchRequests = 0;
+				schedule();
+			}, 0);
 		}
-		async function run(task) {
-			const key = task.sha + ":" + task.recursive;
+		async function run(task, network) {
+			const runKey = keyOf(task);
+			activeKeys.set(runKey, (activeKeys.get(runKey) || 0) + 1);
+			let publish = false;
 			try {
-				let response = responses.get(key);
-				if (!response) {
-					batchRequests++;
-					response = client.getTree(context, task.sha, task.recursive, signal);
-					responses.set(key, response);
-				}
-				const data = await response;
-				if (signal.aborted) return;
-				if (context.visibility !== "public" && !isAuthScopeCurrent(scope)) {
-					index.entries.clear();
-					index.children.clear();
-					queue.length = 0;
-					responses.clear();
-					pause(msg("Authorization changed; private index cleared."), "failed", false);
-					return;
+				let data;
+				if (!network) {
+					const cached = await readCached(task);
+					if (!current()) return;
+					if (cached?.kind === "response") data = cached.response;
+					else if (task.recursive) {
+						const enumeration = {
+							...task,
+							recursive: false
+						};
+						const direct = await readCached(enumeration);
+						if (!current()) return;
+						if (direct?.kind === "response") {
+							task = enumeration;
+							data = direct.response;
+						} else if (cached?.kind === "split") task = enumeration;
+					}
+					if (!data) {
+						missing.push(task);
+						return;
+					}
+				} else {
+					const key = keyOf(task);
+					let slot = responses.get(key);
+					if (!slot) {
+						batchRequests++;
+						publish = true;
+						const created = {
+							promise: client.getTree(context, task.sha, task.recursive, signal),
+							settled: false
+						};
+						responses.set(key, created);
+						slot = created;
+						created.promise.then(() => {
+							created.settled = true;
+							if (responses.get(key) === created) releaseResponse(key);
+						}, () => {
+							created.settled = true;
+							if (responses.get(key) === created) responses.delete(key);
+						});
+					}
+					data = await slot.promise;
+					if (!current()) return;
 				}
 				index.add(data.tree, task.prefix);
 				if (task.recursive && data.truncated) queue.push({
@@ -1263,15 +1719,35 @@
 					});
 				}
 				if (!stopped) state = "partial";
+				emit();
+				schedule();
+				if (publish && current()) try {
+					await writeTreeBlock(context, scope, task.sha, task.recursive, data);
+				} catch (error) {
+					if (current()) storageFailure(error);
+				}
 			} catch (error) {
-				if (signal.aborted) return;
-				responses.delete(key);
-				queue.unshift(task);
+				if (!current()) return;
+				if (isAbortError(error)) {
+					halt(msg("Authorization changed; private index cleared."));
+					return;
+				}
+				responses.delete(keyOf(task));
 				const failure = error instanceof ApiError ? error : new ApiError("network", msg("Directory request failed."));
-				pause(failure.detail, failure.kind === "rate" ? "paused" : "failed", failure.kind === "rate" || failure.kind === "network", failure.resumeAt || void 0);
+				const retry = failure.kind === "rate" || failure.kind === "network";
+				if (context.visibility !== "public" && !retry) {
+					halt(failure.detail);
+					return;
+				}
+				missing.unshift(task);
+				pause(failure.detail, failure.kind === "rate" ? "paused" : "failed", retry, failure.resumeAt || void 0);
 			} finally {
 				active--;
-				if (!signal.aborted) {
+				const remaining = (activeKeys.get(runKey) || 1) - 1;
+				if (remaining > 0) activeKeys.set(runKey, remaining);
+				else activeKeys.delete(runKey);
+				releaseResponse(runKey);
+				if (current()) {
 					emit();
 					schedule();
 				}
@@ -1280,15 +1756,18 @@
 		signal.addEventListener("abort", () => {
 			clearTimeout(timer);
 			queue.length = 0;
+			missing.length = 0;
 			responses.clear();
 		}, { once: true });
 		queueMicrotask(() => {
-			emit();
-			schedule();
+			if (current()) {
+				emit();
+				schedule();
+			}
 		});
 		return {
 			resume() {
-				if (signal.aborted || !stopped || !canResume || resumeAt && Date.now() < resumeAt) return;
+				if (!current() || !stopped || !canResume || resumeAt && Date.now() < resumeAt) return;
 				if (client.quota.blockedUntil && client.quota.blockedUntil > Date.now()) return;
 				if (client.quota.remaining !== null && client.quota.remaining <= 5 && (!client.quota.resumeAt || Date.now() < client.quota.resumeAt)) return;
 				stopped = false;
@@ -1297,6 +1776,7 @@
 				canResume = false;
 				resumeAt = void 0;
 				batchRequests = 0;
+				queue.push(...missing.splice(0));
 				schedule();
 			},
 			prioritize(paths) {
@@ -2008,160 +2488,6 @@
 			}
 		};
 	}
-	var settingsKey = "ogt:settings:v1";
-	var prefix = "ogt:data:v1:";
-	var encoder = new TextEncoder();
-	var totalLimit = 16777216;
-	var snapshotLimit = 4194304;
-	var StorageLimitError = class extends Error {
-		detail = msg("Snapshot exceeds the 4 MiB persistent-cache limit; the complete index remains available in memory.");
-		constructor() {
-			super();
-			this.message = renderText(this.detail);
-		}
-	};
-	var cacheScope = (context, scope) => context.visibility === "public" ? "public" : scope.id;
-	var treeKey = (context, scope) => prefix + JSON.stringify([
-		"tree",
-		context.repoId,
-		context.rootTreeSha,
-		cacheScope(context, scope)
-	]);
-	var viewKey = (context, scope) => prefix + JSON.stringify([
-		"view",
-		context.repoId,
-		context.refKind,
-		context.refName,
-		cacheScope(context, scope)
-	]);
-	async function allowed(context, scope) {
-		if (context.visibility === "public") return true;
-		const now = await readAuthScope();
-		return scope.authenticated && now.authenticated && now.id === scope.id;
-	}
-	function parse(value) {
-		if (typeof value !== "string") return null;
-		try {
-			const record = JSON.parse(value);
-			return record.schema === 1 && typeof record.scope === "string" && typeof record.private === "boolean" && typeof record.usedAt === "number" ? record : null;
-		} catch {
-			return null;
-		}
-	}
-	async function readRecord(key, context, scope) {
-		if (!await allowed(context, scope)) return null;
-		const record = parse(await _GM.getValue(key));
-		if (!record || record.scope !== cacheScope(context, scope) || record.private !== (context.visibility !== "public") || !await allowed(context, scope)) return null;
-		return record;
-	}
-	async function trim() {
-		const scope = await readAuthScope();
-		const records = [];
-		for (const key of await _GM.listValues()) {
-			if (!key.startsWith(prefix)) continue;
-			const raw = await _GM.getValue(key);
-			if (!isAuthScopeCurrent(scope)) return;
-			const record = parse(raw);
-			if (!record || record.private && (!scope.authenticated || record.scope !== scope.id)) {
-				await withAuthLock(async () => {
-					if (!isAuthScopeCurrent(scope) || await _GM.getValue(key) !== raw) return;
-					await _GM.deleteValue(key);
-				});
-				continue;
-			}
-			records.push({
-				key,
-				raw,
-				bytes: encoder.encode(raw).byteLength,
-				usedAt: record.usedAt
-			});
-		}
-		let size = records.reduce((n, r) => n + r.bytes, 0);
-		records.sort((a, b) => a.usedAt - b.usedAt);
-		for (const record of records) {
-			if (size <= totalLimit || !isAuthScopeCurrent(scope)) break;
-			await withAuthLock(async () => {
-				if (!isAuthScopeCurrent(scope) || await _GM.getValue(record.key) !== record.raw) return;
-				await _GM.deleteValue(record.key);
-				size -= record.bytes;
-			});
-		}
-	}
-	function serialize(context, scope, content) {
-		const value = JSON.stringify({
-			schema: 1,
-			scope: cacheScope(context, scope),
-			private: context.visibility !== "public",
-			usedAt: Date.now(),
-			...content
-		});
-		if (encoder.encode(value).byteLength > snapshotLimit) throw new StorageLimitError();
-		return value;
-	}
-	async function writeRecord(key, context, scope, content) {
-		if (!await allowed(context, scope)) throw new DOMException("Authorization changed", "AbortError");
-		const serialized = serialize(context, scope, content);
-		await _GM.setValue(key, serialized);
-		if (!await allowed(context, scope)) {
-			await _GM.deleteValue(key);
-			throw new DOMException("Authorization changed", "AbortError");
-		}
-		await trim();
-	}
-	function normalizeSettings(value) {
-		return {
-			collapsed: typeof value?.collapsed === "boolean" ? value.collapsed : false,
-			width: typeof value?.width === "number" && Number.isFinite(value.width) ? Math.max(200, Math.min(480, value.width)) : 280,
-			shortcutsEnabled: value?.shortcutsEnabled !== false,
-			language: value?.language === "en" || value?.language === "zh-CN" ? value.language : "auto"
-		};
-	}
-	async function readSettings() {
-		return normalizeSettings(await _GM.getValue(settingsKey, {}));
-	}
-	async function writeSettings(changes) {
-		await navigator.locks.request("opsgittrees:settings", async () => {
-			await _GM.setValue(settingsKey, {
-				...await readSettings(),
-				...changes
-			});
-		});
-	}
-	function observeSettings(listener) {
-		let stopped = false;
-		const registration = Promise.resolve(_GM.addValueChangeListener(settingsKey, (_name, _old, value) => {
-			if (!stopped) listener(normalizeSettings(value));
-		}));
-		return () => {
-			stopped = true;
-			registration.then((id) => _GM.removeValueChangeListener(id));
-		};
-	}
-	async function readTree(context, scope) {
-		const record = await readRecord(treeKey(context, scope), context, scope);
-		if (!record?.entries || !Array.isArray(record.entries)) return null;
-		writeRecord(treeKey(context, scope), context, scope, { entries: record.entries }).catch(() => void 0);
-		return record.entries;
-	}
-	async function writeTree(context, scope, entries) {
-		await writeRecord(treeKey(context, scope), context, scope, { entries });
-	}
-	async function readView(context, scope) {
-		return (await readRecord(viewKey(context, scope), context, scope))?.view || null;
-	}
-	async function writeView(context, scope, view) {
-		if (context.visibility !== "public" && !isAuthScopeCurrent(scope)) throw new DOMException("Authorization changed", "AbortError");
-		const key = viewKey(context, scope);
-		_GM_setValue(key, serialize(context, scope, { view }));
-		if (!await allowed(context, scope)) {
-			await _GM.deleteValue(key);
-			throw new DOMException("Authorization changed", "AbortError");
-		}
-		await trim();
-	}
-	async function purgePrivateData() {
-		await trim();
-	}
 	var safeMessage = (error) => error instanceof ApiError || error instanceof StorageLimitError ? error.detail : msg("The operation failed. Check the network and userscript manager storage permissions.");
 	async function startApplication() {
 		let settings = await readSettings();
@@ -2334,9 +2660,39 @@
 					});
 					return;
 				}
-				const context = await client.resolveTree(page.context, metadata, signal);
-				if (!live(ticket)) return;
-				if (metadata.visibility !== "public" && (await readAuthScope()).id !== scope.id) return;
+				const commit = {
+					...page.context,
+					...metadata
+				};
+				let rootTreeSha = null;
+				let cacheWarning;
+				if (metadata.visibility === "public") {
+					try {
+						rootTreeSha = await readCommitTree(commit, scope);
+					} catch (error) {
+						if (!live(ticket) || signal.aborted || isAbortError(error)) return;
+						cacheWarning = msg("Persistent cache unavailable; index remains usable in memory.");
+					}
+					if (!live(ticket) || signal.aborted) return;
+				}
+				const context = rootTreeSha ? {
+					...commit,
+					rootTreeSha
+				} : await client.resolveTree(page.context, metadata, signal);
+				if (!live(ticket) || signal.aborted) return;
+				if (metadata.visibility !== "public") {
+					const checked = await readAuthScope();
+					if (!live(ticket) || signal.aborted || checked.id !== scope.id || !checked.authenticated) return;
+				}
+				if (metadata.visibility === "public" && !rootTreeSha) {
+					try {
+						await writeCommitTree(context, scope);
+					} catch (error) {
+						if (!live(ticket) || signal.aborted || isAbortError(error)) return;
+						cacheWarning = error instanceof StorageLimitError ? error.detail : msg("Persistent cache unavailable; index remains usable in memory.");
+					}
+					if (!live(ticket) || signal.aborted) return;
+				}
 				const controller = new AbortController();
 				const current = {
 					context,
@@ -2345,49 +2701,44 @@
 					controller
 				};
 				active = current;
-				const saved = await readView(context, scope);
+				let saved = null;
+				try {
+					saved = await readView(context, scope);
+				} catch (error) {
+					if (!live(ticket) || active !== current || isAbortError(error)) return;
+					cacheWarning = msg("Persistent cache unavailable; index remains usable in memory.");
+				}
 				if (!live(ticket) || active !== current) return;
 				if (saved) handle.restoreView(saved);
+				const display = (view) => view.reason || !cacheWarning ? view : {
+					...view,
+					reason: cacheWarning
+				};
 				const key = memoryKey(context, scope);
-				let cached = memory.get(key);
-				if (!cached) {
-					const entries = await readTree(context, scope);
-					if (!live(ticket) || active !== current) return;
-					if (entries) {
-						const index = new TreeIndex();
-						index.add(entries);
-						cached = index.view("complete");
-					}
-				}
+				const cached = memory.get(key);
 				if (context.visibility !== "public" && !isAuthScopeCurrent(scope)) {
 					controller.abort();
 					return;
 				}
 				if (!live(ticket) || active !== current) return;
 				if (cached) {
-					current.index = cached;
+					current.index = display(cached);
 					memory.delete(key);
 					memory.set(key, cached);
 					while (memory.size > 2) memory.delete(memory.keys().next().value);
-					handle.setIndex(cached);
+					handle.setIndex(current.index);
 					handle.setCurrentPath(context.path);
 					return;
 				}
 				handle.setCurrentPath(context.path);
 				current.preload = startPreload(context, scope, client, (view) => {
 					if (controller.signal.aborted || active !== current || stopped) return;
-					current.index = view;
-					if (verifiedUrl === location.href) handle.setIndex(view);
+					current.index = display(view);
+					if (verifiedUrl === location.href) handle.setIndex(current.index);
 					if (view.state === "complete") {
 						memory.delete(key);
 						memory.set(key, view);
 						while (memory.size > 2) memory.delete(memory.keys().next().value);
-						writeTree(context, scope, [...view.entries.values()]).catch((error) => {
-							if (active === current && verifiedUrl === location.href && !controller.signal.aborted && !isAbortError(error)) handle.setIndex({
-								...view,
-								reason: error instanceof StorageLimitError ? error.detail : msg("Persistent cache unavailable; index remains usable in memory.")
-							});
-						});
 					} else if (view.state === "failed" && !view.canResume && context.visibility !== "public") {
 						controller.abort();
 						current.index = void 0;

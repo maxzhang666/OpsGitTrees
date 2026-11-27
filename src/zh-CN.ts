@@ -54,7 +54,6 @@ export const zhCN = {
   'Repository context changed.': '仓库上下文已变更。',
   'GitHub returned a different commit or no root tree.': 'GitHub 返回了不同的提交或缺少根目录树。',
   'GitHub returned invalid tree metadata.': 'GitHub 返回了无效的目录树元数据。',
-  'GitHub returned an invalid tree entry.': 'GitHub 返回了无效的目录树条目。',
   'GitHub rate limit remains active.': 'GitHub 限流仍在生效。',
   'GitHub request quota is low. Loaded paths remain usable; continue after the quota resets.': 'GitHub 请求额度不足，已加载的路径仍可使用；请在额度重置后继续。',
   'GitHub truncated a non-recursive directory listing. Results remain incomplete; this API cannot enumerate all entries.': 'GitHub 截断了非递归目录列表，结果仍不完整；此 API 无法枚举全部条目。',
@@ -128,5 +127,5 @@ export const zhCN = {
   'Could not start. Check userscript manager permissions and storage.': '启动失败，请检查脚本管理器的权限和存储。',
   'OpsGitTrees: Manage Token…': 'OpsGitTrees：管理 Token…',
   'OpsGitTrees: Open file navigation': 'OpsGitTrees：打开文件导航',
-  'Snapshot exceeds the 4 MiB persistent-cache limit; the complete index remains available in memory.': '快照超过 4 MiB 的持久化缓存上限，完整索引仍可在内存中使用。',
+  'Persistent-cache budget exceeded; loaded paths remain available in memory.': '已超出持久化缓存预算，已加载的路径仍可在内存中使用。',
 } as const;
