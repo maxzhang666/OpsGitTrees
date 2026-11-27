@@ -44,4 +44,4 @@
 - [x] **Step 3: Implement the exact-SHA fast path in `src/preload.ts`.** Only the canonical empty-tree SHA omits the initial Tree task; the scheduler publishes the complete empty index. Other root SHAs retain the existing path.
 - [x] **Step 4: Verify behavior.** Both focused cases, `pnpm test` (8 files, 167 tests passed), and `pnpm typecheck` passed.
 - [x] **Step 5: Rebuild and verify in the existing ScriptCat instance.** `pnpm build` produced 128.30 kB (gzip 34.74 kB); after user approval, the existing UUID ran in Chrome 156 / ScriptCat 1.5.2. The empty branch showed 0 paths complete, and main showed 58 paths complete.
-- [ ] **Step 6: Commit implementation and validation records with the eval `commit` namespace.** Documentation records the observed behavior and limits. Preserve explicit unverified items: real GM request counting, storage cost, cross-version tabs, and private-repository authorization.
+- [x] **Step 6: Commit implementation and validation records with the eval `commit` namespace.** Commit `40c8d930c6948b647e2a92577731855a3bad3f45` records source, tests, production bundle, observed behavior, and explicit external verification gaps.
