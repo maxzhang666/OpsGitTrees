@@ -10,7 +10,7 @@
 
 **Spec:** [技术设计](architecture.md)、[交互设计](interaction.md)、[仓库授权](authentication.md)、[产品需求](requirements.md)。
 
-状态：阶段 1–5 的功能已有实现，历史验证按修订保留。本轮中文多语言的七个相关文件共 65 项通过，类型修正后三个语言联动场景再次通过，类型检查和生产构建成功；真实 ScriptCat 已验证浏览器默认中文、双标签切换同步、无关偏好不覆盖语言、刷新保留及已打开 Token 弹窗实时翻译。证据见 [验证记录](technology.md#本次实现与验证记录)。**完整 Token 保存／清除、获准私有仓库及原定跨浏览器验收仍未完成**。
+状态：首版阶段 1–5 的历史实现按修订保留；目录块缓存任务 1–4 的窄检查、全量测试与类型检查通过，当前生产构建 128.30 kB（gzip 34.74 kB）。版本 0.1.2 已更新到真实 ScriptCat（Chrome 156／ScriptCat 1.5.2），并实测空树分支 0 路径完整、main 58 路径完整。缓存持久化命中、真实 GM 存储成本、跨版本标签、获准私有仓库和跨浏览器／管理器矩阵仍未完成；见[验证记录](technology.md#本次实现与验证记录)和[缓存实现计划](cache-implementation-plan.md)。
 
 ## 全局约束
 
@@ -19,7 +19,7 @@
 - 点击文件使用真实 GitHub 链接；目录整行切换展开；保留修饰键、中键、右键及前进／后退。
 - 预加载目录而非代码内容；额度允许时按批次自动补齐，不以批次结束要求用户继续。搜索覆盖整个已取得的索引，未完整必须提示。目录命中不自动展开子树，搜索前快照与搜索中状态分别持久化，清空查询恢复原浏览状态。
 - `Contents: read`／`Metadata: read` 为所列仓库接口的权限基线；不为私有访问失败索取写权限。连接成功不证明用户未授予额外权限。
-- 初始值按 [技术设计](architecture.md#工程初值) 实施：展开宽 280 px、收起入口条 24 px、展开拖动 200–480 px；行高 24 px、上下各预留 8 行；搜索合并 80 ms；tree 并发 2、调度批大小 40、额度允许时自动续批、主额度保留 5 次；缓存总逻辑预算 16 MiB、单快照 4 MiB；状态合并写入 300 ms。
+- 初始值按 [技术设计](architecture.md#工程初值) 实施：展开宽 280 px、收起入口条 24 px、展开拖动 200–480 px；行高 24 px、上下各预留 8 行；搜索合并 80 ms；tree 并发 2、调度批大小 40、额度允许时自动续批、主额度保留 5 次；缓存总逻辑预算 16 MiB，无单记录 4 MiB 门槛；状态合并写入 300 ms。
 - 默认快捷键 `Alt+Shift+O`／`Alt+Shift+F` 由 `Settings.shortcutsEnabled` 控制，默认 true；关闭后持久化，重新初始化仍不响应。收起后释放主体宽度，保留可点击的占位入口条，管理器菜单始终可以重开。
 - pnpm 不覆盖用户共享 store 路径；只生成 pnpm 锁文件。脚本产物为 `dist/opsgittrees.user.js`，不把开发服务器依赖带进生产包。
 - 每阶段完成变更后集中运行对应的窄检查一次；不在编辑中反复跑检查，不为配置、文案、导入或模拟兼容添加测试。
@@ -79,13 +79,13 @@ credentials 提供 `readAuthScope(): Promise<AuthScope>`、`getGitHubClient(scop
 
 **Files:** 创建 `src/preload.ts`、`tree-index.ts`，完善 `storage.ts`，接入 `main.ts`；新增 `tests/preload.test.ts`、`storage.test.ts`。
 
-**Interfaces:** `startPreload(context: RepoContext, scope: AuthScope, client: GitHubClient, onChange: (view: IndexView) => void, signal: AbortSignal): {resume(): void}`；存储提供 `readTree(context: RepoContext, scope: AuthScope): Promise<readonly TreeEntry[] | null>`、`writeTree(context: RepoContext, scope: AuthScope, entries: readonly TreeEntry[]): Promise<void>` 与 `purgePrivateData(): Promise<void>`。
+- **Interfaces:** `startPreload(context, scope, client, onChange, signal): {resume(): void; prioritize(paths: readonly string[]): void}`；缓存层提供 `readCommitTree`／`writeCommitTree` 及 `readTreeBlock`／`writeTreeBlock`，保存通过校验的提交映射与独立目录响应块，不持久化第二份完整索引。
 
 - [x] 覆盖递归／非递归截断、同 SHA 双路径、超过 40 请求自动续批、低额度暂停和双并发失败不清除 Retry-After。
 - [x] 实现主动补齐、优先级、SHA 合并、两路并发及事件循环续批；上下文取消旧任务。
 - [x] 覆盖私有 scope、公开转私有、超大索引内存可用、旧授权晚写及旧清理不误删新授权状态。
-- [x] 实现完整快照、版本键、逻辑预算与 LRU，访问／可见性先验证；私有删除持锁复核当前授权。
-- [x] 全量验证包含 preload／storage 风险测试及类型检查；一次性浏览器适配器证明同版本缓存不重拉 tree，导航测试证明旧上下文不能覆盖新索引。
+- [x] 覆盖授权隔离、v2 单键响应写入与 16 MiB 总预算；目录块分级回收、截断覆盖证明、受限最近使用和旧新键空间隔离详见 [缓存实现计划](cache-implementation-plan.md) 的任务 1–2。
+- [x] 恢复阶段从已落盘递归块／split／非递归枚举重建索引，只调度缺失目录；响应先发布路径再等待有界工作槽落盘。旧 Tree snapshot API 已在任务 4 退役。
 
 ## 阶段 4：过滤树与导航
 

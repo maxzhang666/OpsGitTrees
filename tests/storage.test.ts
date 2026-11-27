@@ -133,6 +133,29 @@ it.each(['commit', 'response'] as const)('rejected GM writes are not reported as
   await expect(kind === 'commit' ? writeCommitTree(context, scope) : writeTreeBlock(context, scope, context.rootTreeSha, true, response)).rejects.toBe(failure);
   expect(await readCommitTree(context, scope)).toBeNull(); expect(await readTreeBlock(context, scope, context.rootTreeSha, true)).toBeNull();
 });
+it('evicts ordinary records before recovery skeletons within the combined budget', async () => {
+  const scope = await readAuthScope();
+  const oldOrdinary = { sha: sha(4), truncated: false, tree: [entry('x'.repeat(4 * 1024 * 1024), 'blob', 4)] };
+  const retainedOrdinary = { sha: sha(5), truncated: false, tree: [entry('y'.repeat(4 * 1024 * 1024), 'blob', 5)] };
+  values.set(blockKey('public', sha(4)), JSON.stringify({ ...responseRecord(), usedAt: 1, treeSha: sha(4), response: oldOrdinary }));
+  values.set(blockKey('public', sha(5)), JSON.stringify({ ...responseRecord(), usedAt: 2, treeSha: sha(5), response: retainedOrdinary }));
+  values.set(commitKey(), JSON.stringify({ schema: 2, kind: 'commit', repoId: context.repoId, scope: 'public', private: false, usedAt: 3, commitSha: context.commitSha, treeSha: context.rootTreeSha }));
+  const state: ViewState = { browsing: { expanded: ['docs'], scrollTop: 12, anchorPath: 'docs', anchorOffset: 0 }, search: null };
+  values.set('ogt:data:v1:' + JSON.stringify(['view', context.repoId, context.refKind, context.refName, 'public']), JSON.stringify({ schema: 1, scope: 'public', private: false, usedAt: 4, view: state }));
+  values.set(blockKey('public', sha(6)), JSON.stringify({ ...splitRecord('public', sha(6)), usedAt: 0 }));
+  await purgePrivateData();
+  expect(await readTreeBlock(context, scope, sha(4), true)).toBeNull();
+  expect(await readTreeBlock(context, scope, sha(5), true)).toEqual({ kind: 'response', response: retainedOrdinary });
+  expect(await readCommitTree(context, scope)).toBe(context.rootTreeSha);
+  expect(await readView(context, scope)).toEqual(state);
+  expect(await readTreeBlock(context, scope, sha(6), true)).toEqual({ kind: 'split' });
+  const bytes = [...values.entries()].reduce((size, [key, value]) => {
+    if (!key.startsWith(cachePrefix) && !key.startsWith('ogt:data:v1:')) return size;
+    return size + new TextEncoder().encode(typeof value === 'string' ? value : JSON.stringify(value)).byteLength;
+  }, 0);
+  expect(bytes).toBeLessThanOrEqual(16 * 1024 * 1024);
+});
+
 it('single directory records use the total application budget', async () => {
   const scope = await readAuthScope(); const entries = [entry('x'.repeat(3 * 1024 * 1024))];
   await writeTreeBlock(context, scope, context.rootTreeSha, true, { ...response, tree: entries });

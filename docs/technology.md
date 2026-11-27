@@ -59,7 +59,7 @@
 - 目录请求直接发往 GitHub，授权与凭据使用遵循 [仓库授权](authentication.md)；不引入项目授权后端。
 - 目录索引按仓库和实际版本缓存，不在每次展开目录时重写整份持久化索引。
 - GM 存储不是加密保险箱，仍需明确凭据保存、清除、过期和错误提示的具体行为。
-- 当前逻辑预算为总计 16 MiB、单快照 4 MiB；超出时完整内存索引继续可用。真实 GM 存储序列化／传输成本尚未测得，JSON 成本单列在下方，不冒充 GM 成本。
+- 当前逻辑预算为总计 16 MiB，无单记录大小门槛；超出时完整内存索引继续可用。真实 GM 存储序列化／传输成本尚未测得，JSON 成本单列在下方，不冒充 GM 成本。
 - 当前不引入 IndexedDB、Dexie 或压缩库。只有实际数据证明现有方案无法满足需求时，才重新评估存储复杂度，而不是提前引入第二套方案。
 
 ## 验证与兼容
@@ -71,12 +71,21 @@
 
 ## 本次实现与验证记录
 
+### 可恢复目录缓存（本轮）
+
+- 任务 1–4 的窄检查：任务 1 为 `storage.test.ts`、`github.test.ts`、`navigation.test.ts` 共 92 项；任务 2 为 storage／credentials 33 项；任务 3 preload 25 项；任务 4 navigation／storage／preload／github 135 项并通过 `pnpm typecheck`。这些是分阶段证据，不累加为互不重复的全套总数。
+- 一次性受控 GM 适配器检查：写入 UTF-8 JSON 大于 4 MiB 且小于 16 MiB 的合法目录响应；在新 preload 实例恢复 9004 条路径，确认刷新恢复不发 Tree HTTP 请求。该结果不证明真实 ScriptCat 的写入确认、物理存储、跨标签管理器竞态或耗时。
+- 历史记录：早先一次安装请求后元数据仍为 0.1.1，故当时记为未确认；该中间状态已由下述用户批准的后续更新取代。
+- 空树修正：只对规范 SHA `4b825dc642cb6eb9a060e54bf8d69288fbee4904` 跳过根 Tree 请求，测试确认零条目、根 children 为空、pending 为 0；不同 SHA 返回 404 时仍失败。`pnpm test` 8 个文件／167 项通过，`pnpm typecheck` 无诊断；`pnpm build` 成功，`dist/opsgittrees.user.js` 为 128.30 kB（gzip 34.74 kB）。
+- 用户批准后，`sctl install` 更新原 UUID `05d455de-eb49-4bc6-935c-f4d519f8aa89`；`sctl get` 确认版本 0.1.2、enabled，更新时间 `2026-11-27T01:43:17.234Z`。环境：Chrome 156、ScriptCat 1.5.2、sctl 0.4.1。
+- 实际通过 GitHub 分支选择器从 main 切到 `feat/initial-userscript`，侧栏显示 `0 个路径 · 完整` 和无文件状态；切回 main 显示 `58 个路径 · 完整`。打开并刷新 `package.json` 后仍选中当前位置。未验证管理器侧 API 计数、真实 GM 存储开销、跨版本标签、私有仓库授权及其他浏览器／管理器组合。
+
 ### 构建与安装
 
 - 工具链：Node 22.22.0、pnpm 10.30.3、TypeScript 7.0.2、Vite 8.3.8、vite-plugin-monkey 8.1.1、Vitest 5.1.1、jsdom 26.1.0；版本已固定在 package.json 与 pnpm-lock.yaml，沿用用户共享 store。
 - 图标库固定为 Lucide 1.80.0，`src/icons.ts` 仅导入实际使用的 14 个图标（含 loading），供侧栏和 Token 弹窗共用，无 CDN、远程字体或整库运行时扫描。
 - 历次构建与测试证据按修订保留在下方记录。B 方案运行 `tests/navigation.test.ts`、`tests/credential-window.test.ts`，28 项全部通过，`pnpm typecheck` 成功。随后 GitHub 配色版仅调整 CSS，`pnpm build` 成功，并以真实 ScriptCat 运行时验证配色，未重跑逻辑测试。
-- 当前生产包：`dist/opsgittrees.user.js`，约 114.96 kB，2519 行可读源码；使用树区域整体 loading、树内失败／限流原因提示、单行品牌／状态底栏和仓库／分支两行顶部工具栏，继承 GitHub 主题色及控件圆角。清除 Token 和仓库检查集中于管理弹窗，包含中文翻译，无运行时框架、CDN、远程 `@require` 或项目后端。
+- 当前侧栏采用树区域整体 loading、树内错误／限流提示、单行品牌／状态底栏和仓库／分支两行工具栏，继承 GitHub 主题；设置和仓库权限检查集中于管理弹窗。生产包无运行时框架、CDN、远程 `@require` 或项目后端。
 - Lucide／品牌底栏版运行 `tests/navigation.test.ts`、`tests/credential-window.test.ts`，31 项全部通过；类型检查与构建成功，并检查最终脚本保留完整图库许可、元数据位于文件开头、无远程 `@require`。已通过 sctl 更新原 ScriptCat UUID，返回 enabled；真实页面验证 320px 浅色与 200px 深色布局，无底栏重叠或水平溢出，品牌与状态区总高 42px。设置开关、Token 弹窗关闭／眼睛图标、底部收起与重新展开均正常；Token 保持遮罩，未修改真实凭据。截图已查看，最终恢复 320px、浅色、README 高亮及完整索引状态。
 - `dist/` 纳入版本管理。源码变更后运行 `pnpm build`，将 `dist/opsgittrees.user.js` 和相关源码一起提交，安装者无需自行构建。发布构建使用 `minify: false`，不压缩、不混淆，保留正常缩进、函数名和 Unicode 文本。
 - 限流／失败提示修订将原因、重试时间和匿名认证说明放入树区域；恢复前禁用继续加载，已有路径保持可浏览。主额度重置与二级限流等待分开处理，识别没有 Retry-After 的二级限流 403，不把它当成权限错误。相关 6 项断言／用例先验证失败，再实现；`tests/navigation.test.ts`、`tests/github.test.ts` 与 `tests/preload.test.ts` 共 50 项通过，类型检查、构建及产物语法检查通过。

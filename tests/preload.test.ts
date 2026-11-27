@@ -294,3 +294,77 @@ it.each(['permission', 'scope'] as const)('private cache work stops after %s cha
     fault.mockRestore();
   }
 });
+it('keeps settled responses for queued duplicate-SHA consumers across a public pause', async () => {
+  const failure = deferred<Reply>(), large = deferred<Reply>();
+  const storageEntered = deferred<void>(), releaseStorage = deferred<void>();
+  const largePath = 'z'.repeat(9 * 1024 * 1024);
+  let retry = false, sha4Calls = 0, storageHold: Promise<unknown> | undefined;
+  setHttpHandler(async ({ url }) => {
+    const u = new URL(url), id = u.pathname.split('/').pop();
+    if (id === sha(2) && u.search) return { body: { sha: id, truncated: true, tree: [] } };
+    if (id === sha(2)) return { body: { sha: id, truncated: false, tree: [entry('c', 'tree', 5), entry('a', 'tree', 4), entry('b', 'tree', 4)] } };
+    if (id === sha(4)) {
+      sha4Calls++;
+      return sha4Calls === 1 ? large.promise : { body: { sha: id, truncated: false, tree: [entry('unexpected.ts')] } };
+    }
+    if (id === sha(5) && !retry) return failure.promise;
+    return { body: { sha: id, truncated: false, tree: [] } };
+  });
+  let latest: IndexView | undefined;
+  const controller = new AbortController(), client = createGitHubClient(null);
+  const loader = startPreload(context, scope, client, value => { latest = value; }, controller.signal);
+  try {
+    await vi.waitFor(() => expect(requests).toHaveLength(4));
+    storageHold = navigator.locks.request('opsgittrees:storage', async () => { storageEntered.resolve(); await releaseStorage.promise; });
+    await storageEntered.promise;
+    failure.resolve({ status: 500, body: {} });
+    await vi.waitFor(() => expect(latest?.state).toBe('failed'));
+    expect(latest?.entries.has('c')).toBe(true);
+    large.resolve({ body: { sha: sha(4), truncated: false, tree: [entry(largePath)] } });
+    await vi.waitFor(() => expect(latest?.entries.has('a/' + largePath)).toBe(true));
+    retry = true; loader.resume();
+    await vi.waitFor(() => expect(latest?.entries.has('b/' + largePath)).toBe(true));
+    expect(sha4Calls).toBe(1);
+    expect(requests.filter(request => new URL(request.url).pathname.endsWith('/' + sha(4)))).toHaveLength(1);
+    releaseStorage.resolve(); await storageHold;
+    await vi.waitFor(() => expect(latest?.state).toBe('complete'));
+    expect(requests.filter(request => new URL(request.url).pathname.endsWith('/' + sha(5)))).toHaveLength(2);
+  } finally {
+    controller.abort(); failure.resolve({ body: {} }); large.resolve({ body: {} }); releaseStorage.resolve();
+    await storageHold;
+    await navigator.locks.request('opsgittrees:storage', async () => undefined);
+  }
+});
+
+it('canonical empty Git tree completes without a Tree request', async () => {
+  const emptyTree = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+  setHttpHandler(async () => ({ status: 404, body: { message: 'Not Found' } }));
+  let latest: IndexView | undefined;
+  const controller = new AbortController();
+  startPreload({ ...context, rootTreeSha: emptyTree }, scope, createGitHubClient(null), value => { latest = value; }, controller.signal);
+  try {
+    await vi.waitFor(() => expect(latest?.state).toBe('complete'));
+    expect(latest?.entries.size).toBe(0);
+    expect(latest?.children.get('')).toEqual([]);
+    expect(latest?.pending).toBe(0);
+    expect(requests).toHaveLength(0);
+  } finally {
+    controller.abort();
+    await navigator.locks.request('opsgittrees:storage', async () => undefined);
+  }
+});
+
+it('non-empty root 404 remains failed', async () => {
+  setHttpHandler(async () => ({ status: 404, body: { message: 'Not Found' } }));
+  let latest: IndexView | undefined;
+  const controller = new AbortController();
+  startPreload(context, scope, createGitHubClient(null), value => { latest = value; }, controller.signal);
+  try {
+    await vi.waitFor(() => expect(latest?.state).toBe('failed'));
+    expect(latest?.entries.size).toBe(0);
+    expect(requests).toHaveLength(1);
+  } finally {
+    controller.abort();
+    await navigator.locks.request('opsgittrees:storage', async () => undefined);
+  }
+});
