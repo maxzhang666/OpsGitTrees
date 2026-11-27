@@ -1114,6 +1114,8 @@
 	var objectSha = /^[0-9a-f]{40}$/i;
 	var encoder = new TextEncoder();
 	var totalLimit = 16777216;
+	var trimTextThreshold = 1048576;
+	var pendingTrimText = 0;
 	var recent = new Map();
 	function rememberUse(key) {
 		recent.delete(key);
@@ -1175,6 +1177,19 @@
 		const now = await readAuthScope();
 		return scope.authenticated && now.authenticated && now.id === scope.id && isAuthScopeCurrent(scope);
 	}
+	function validTreeView(value) {
+		if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+		const view = value;
+		return Array.isArray(view.expanded) && view.expanded.every((path) => typeof path === "string") && typeof view.scrollTop === "number" && Number.isFinite(view.scrollTop) && view.scrollTop >= 0 && (view.anchorPath === null || typeof view.anchorPath === "string") && typeof view.anchorOffset === "number" && Number.isFinite(view.anchorOffset) && view.anchorOffset >= 0;
+	}
+	function validViewState(value) {
+		if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+		const view = value;
+		if (!validTreeView(view.browsing)) return false;
+		if (view.search === null) return true;
+		if (!view.search || typeof view.search !== "object" || Array.isArray(view.search)) return false;
+		return typeof view.search.query === "string" && validTreeView(view.search.view) && Array.isArray(view.search.collapsed) && view.search.collapsed.every((path) => typeof path === "string");
+	}
 	function parseLegacy(key, value) {
 		if (typeof value !== "string") return null;
 		try {
@@ -1190,7 +1205,7 @@
 				"branch",
 				"tag",
 				"commit"
-			].includes(identity[2]) && typeof identity[3] === "string" && identity[3] && record.view && typeof record.view === "object" && !("entries" in record)) return record;
+			].includes(identity[2]) && typeof identity[3] === "string" && identity[3] && validViewState(record.view) && !("entries" in record)) return record;
 			return null;
 		} catch {
 			return null;
@@ -1257,7 +1272,7 @@
 		for (const key of await _GM.listValues()) {
 			if (!key.startsWith(prefix) && !key.startsWith(cachePrefix)) continue;
 			const raw = await _GM.getValue(key);
-			if (!isAuthScopeCurrent(scope)) return;
+			if (!isAuthScopeCurrent(scope)) return false;
 			const record = key.startsWith(cachePrefix) ? parseCache(key, raw) : parseLegacy(key, raw);
 			if (!record && key.startsWith(prefix)) continue;
 			if (!record || record.schema === 1 && record.entries || record.private && (!scope.authenticated || record.scope !== scope.id)) {
@@ -1290,12 +1305,12 @@
 			}
 			blocks[record.recursive ? "recursive" : "listing"] = record.response;
 		}
-		if (!isAuthScopeCurrent(scope)) return;
+		if (!isAuthScopeCurrent(scope)) return false;
 		for (const key of recent.keys()) if (!present.has(key)) recent.delete(key);
 		let size = records.reduce((bytes, item) => bytes + item.bytes, 0);
 		records.sort((a, b) => a.usedAt - b.usedAt);
 		for (const item of records) {
-			if (!isAuthScopeCurrent(scope)) return;
+			if (!isAuthScopeCurrent(scope)) return false;
 			const record = item.record;
 			if (record.schema !== 2 || record.kind !== "response" || !record.recursive || !record.response.truncated) continue;
 			const group = groups.get(JSON.stringify([record.repoId, record.scope]));
@@ -1319,20 +1334,29 @@
 			}
 		}
 		for (const skeleton of [false, true]) for (const item of records) {
-			if (size <= totalLimit || !isAuthScopeCurrent(scope)) return;
+			if (!isAuthScopeCurrent(scope)) return false;
+			if (size <= totalLimit) return true;
 			const record = item.record;
 			if ((record.schema === 2 && (record.kind === "split" || record.kind === "response" && !record.recursive)) !== skeleton) continue;
 			if (await changeUnchanged(item.key, item.raw, scope)) size -= item.bytes;
 		}
+		return isAuthScopeCurrent(scope);
 	}
 	function serialize(record) {
 		const value = JSON.stringify(record);
 		if (encoder.encode(value).byteLength > totalLimit) throw new StorageLimitError();
 		return value;
 	}
-	async function finishWrite(key, serialized, context, scope) {
+	function noteSuccessfulWrite(serialized) {
+		pendingTrimText += serialized.length;
+		return pendingTrimText >= trimTextThreshold;
+	}
+	function resetTrimCounters() {
+		pendingTrimText = 0;
+	}
+	async function finishWrite(key, serialized, context, scope, written = true) {
 		const authorized = await allowed(context, scope);
-		if (authorized) await trim();
+		if (authorized && written && noteSuccessfulWrite(serialized) && await trim()) resetTrimCounters();
 		if (!authorized || !await allowed(context, scope)) {
 			await changeUnchanged(key, serialized, await readAuthScope());
 			throw new DOMException("Authorization changed", "AbortError");
@@ -1347,7 +1371,7 @@
 				if (!await allowed(context, scope)) throw new DOMException("Authorization changed", "AbortError");
 				if (record.response.truncated && (previous?.kind === "split" || previous?.kind === "response" && !previous.response.truncated)) {
 					rememberUse(key);
-					await finishWrite(key, raw, context, scope);
+					await finishWrite(key, raw, context, scope, false);
 					return;
 				}
 			}
@@ -1441,7 +1465,9 @@
 		await navigator.locks.request(storageLock, () => finishWrite(key, serialized, context, scope));
 	}
 	async function purgePrivateData() {
-		await navigator.locks.request(storageLock, trim);
+		await navigator.locks.request(storageLock, async () => {
+			if (await trim()) resetTrimCounters();
+		});
 	}
 	function parentPath(path) {
 		const slash = path.lastIndexOf("/");
@@ -2658,7 +2684,7 @@
 					const checked = await readAuthScope();
 					if (!live(ticket) || signal.aborted || checked.id !== scope.id || !checked.authenticated) return;
 				}
-				if (!rootTreeSha) {
+				if (metadata.visibility === "public" && !rootTreeSha) {
 					try {
 						await writeCommitTree(context, scope);
 					} catch (error) {

@@ -137,7 +137,7 @@ export async function startApplication(): Promise<{ stop(): void }> {
         const checked = await readAuthScope();
         if (!live(ticket) || signal.aborted || checked.id !== scope.id || !checked.authenticated) return;
       }
-      if (!rootTreeSha) {
+      if (metadata.visibility === 'public' && !rootTreeSha) {
         try { await writeCommitTree(context, scope); }
         catch (error) {
           if (!live(ticket) || signal.aborted || isAbort(error)) return;

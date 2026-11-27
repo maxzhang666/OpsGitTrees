@@ -336,3 +336,29 @@ it('concurrent changes to different preferences preserve both choices', async ()
   await Promise.all([writeSettings({ shortcutsEnabled: false }), writeSettings({ width: 340 }), writeSettings({ language: 'zh-CN' })]);
   expect(await readSettings()).toMatchObject({ shortcutsEnabled: false, width: 340, language: 'zh-CN' });
 });
+
+it('batches cache budget scans by serialized size', async () => {
+  const scope = await readAuthScope();
+  await purgePrivateData();
+  const listValues = vi.spyOn(GM, 'listValues');
+  try {
+    for (let i = 0; i < 40; i++) {
+      const treeSha = sha(20 + i);
+      await writeTreeBlock(context, scope, treeSha, true, { sha: treeSha, truncated: false, tree: [] });
+    }
+    expect(listValues).not.toHaveBeenCalled();
+
+    const firstSha = sha(60);
+    await writeTreeBlock(context, scope, firstSha, true, { sha: firstSha, truncated: false, tree: [entry('a'.repeat(256 * 1024))] });
+    expect(listValues).not.toHaveBeenCalled();
+    const secondSha = sha(61);
+    await writeTreeBlock(context, scope, secondSha, true, { sha: secondSha, truncated: false, tree: [entry('b'.repeat(256 * 1024))] });
+    expect(listValues).toHaveBeenCalledTimes(1);
+
+    await purgePrivateData();
+    listValues.mockClear();
+    const largeSha = sha(62);
+    await writeTreeBlock(context, scope, largeSha, true, { sha: largeSha, truncated: false, tree: [entry('x'.repeat(1024 * 1024))] });
+    expect(listValues).toHaveBeenCalledTimes(1);
+  } finally { listValues.mockRestore(); }
+});

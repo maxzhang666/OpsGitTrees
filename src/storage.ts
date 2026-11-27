@@ -12,6 +12,8 @@ const storageLock = 'opsgittrees:storage';
 const objectSha = /^[0-9a-f]{40}$/i;
 const encoder = new TextEncoder();
 const totalLimit = 16 * 1024 * 1024;
+const trimTextThreshold = 1024 * 1024;
+let pendingTrimText = 0;
 interface CacheEnvelope { schema: 2; repoId: number; scope: string; private: boolean; usedAt: number; treeSha: string }
 type CacheRecord = CacheEnvelope & ({ kind: 'commit'; commitSha: string } | { kind: 'response'; recursive: boolean; response: TreeResponse } | { kind: 'split'; recursive: true });
 interface RecordValue { schema: 1; scope: string; private: boolean; usedAt: number; entries?: readonly TreeEntry[]; view?: ViewState }
@@ -54,6 +56,23 @@ async function allowed(context: CommitContext, scope: AuthScope): Promise<boolea
   const now = await readAuthScope();
   return scope.authenticated && now.authenticated && now.id === scope.id && isAuthScopeCurrent(scope);
 }
+function validTreeView(value: unknown): value is ViewState['browsing'] {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const view = value as Partial<ViewState['browsing']>;
+  return Array.isArray(view.expanded) && view.expanded.every(path => typeof path === 'string') &&
+    typeof view.scrollTop === 'number' && Number.isFinite(view.scrollTop) && view.scrollTop >= 0 &&
+    (view.anchorPath === null || typeof view.anchorPath === 'string') &&
+    typeof view.anchorOffset === 'number' && Number.isFinite(view.anchorOffset) && view.anchorOffset >= 0;
+}
+function validViewState(value: unknown): value is ViewState {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const view = value as Partial<ViewState>;
+  if (!validTreeView(view.browsing)) return false;
+  if (view.search === null) return true;
+  if (!view.search || typeof view.search !== 'object' || Array.isArray(view.search)) return false;
+  return typeof view.search.query === 'string' && validTreeView(view.search.view) &&
+    Array.isArray(view.search.collapsed) && view.search.collapsed.every(path => typeof path === 'string');
+}
 function parseLegacy(key: string, value: unknown): RecordValue | null {
   if (typeof value !== 'string') return null;
   try {
@@ -66,7 +85,7 @@ function parseLegacy(key: string, value: unknown): RecordValue | null {
       Array.isArray(record.entries) && !('view' in record) && parseTreeResponse({ sha: identity[2], truncated: false, tree: record.entries }, identity[2]) &&
       record.entries.every(entry => typeof entry.name === 'string' && typeof entry.mode === 'string')) return record;
     if (identity[0] === 'view' && identity.length === 5 && ['branch', 'tag', 'commit'].includes(identity[2]) &&
-      typeof identity[3] === 'string' && identity[3] && record.view && typeof record.view === 'object' && !('entries' in record)) return record;
+      typeof identity[3] === 'string' && identity[3] && validViewState(record.view) && !('entries' in record)) return record;
     return null;
   } catch { return null; }
 }
@@ -116,7 +135,7 @@ async function readRecord(key: string, context: RepoContext, scope: AuthScope): 
   rememberUse(key);
   return record;
 }
-async function trim(): Promise<void> {
+async function trim(): Promise<boolean> {
   const scope = await readAuthScope();
   const records: StoredRecord[] = [];
   const groups = new Map<string, CoverageGroup>();
@@ -124,7 +143,7 @@ async function trim(): Promise<void> {
   for (const key of await GM.listValues()) {
     if (!key.startsWith(prefix) && !key.startsWith(cachePrefix)) continue;
     const raw = await GM.getValue<unknown>(key);
-    if (!isAuthScopeCurrent(scope)) return;
+    if (!isAuthScopeCurrent(scope)) return false;
     const record = key.startsWith(cachePrefix) ? parseCache(key, raw) : parseLegacy(key, raw);
     if (!record && key.startsWith(prefix)) continue;
     if (!record || (record.schema === 1 && record.entries) || (record.private && (!scope.authenticated || record.scope !== scope.id))) {
@@ -141,12 +160,12 @@ async function trim(): Promise<void> {
     if (!blocks) { blocks = {}; group.blocks.set(record.treeSha, blocks); }
     blocks[record.recursive ? 'recursive' : 'listing'] = record.response;
   }
-  if (!isAuthScopeCurrent(scope)) return;
+  if (!isAuthScopeCurrent(scope)) return false;
   for (const key of recent.keys()) if (!present.has(key)) recent.delete(key);
   let size = records.reduce((bytes, item) => bytes + item.bytes, 0);
   records.sort((a, b) => a.usedAt - b.usedAt);
   for (const item of records) {
-    if (!isAuthScopeCurrent(scope)) return;
+    if (!isAuthScopeCurrent(scope)) return false;
     const record = item.record;
     if (record.schema !== 2 || record.kind !== 'response' || !record.recursive || !record.response.truncated) continue;
     const group = groups.get(JSON.stringify([record.repoId, record.scope]));
@@ -159,22 +178,29 @@ async function trim(): Promise<void> {
   }
   for (const skeleton of [false, true]) {
     for (const item of records) {
-      if (size <= totalLimit || !isAuthScopeCurrent(scope)) return;
+      if (!isAuthScopeCurrent(scope)) return false;
+      if (size <= totalLimit) return true;
       const record = item.record;
       const recovery = record.schema === 2 && (record.kind === 'split' || (record.kind === 'response' && !record.recursive));
       if (recovery !== skeleton) continue;
       if (await changeUnchanged(item.key, item.raw, scope)) size -= item.bytes;
     }
   }
+  return isAuthScopeCurrent(scope);
 }
 function serialize(record: RecordValue | CacheRecord): string {
   const value = JSON.stringify(record);
   if (encoder.encode(value).byteLength > totalLimit) throw new StorageLimitError();
   return value;
 }
-async function finishWrite(key: string, serialized: string, context: CommitContext, scope: AuthScope): Promise<void> {
+function noteSuccessfulWrite(serialized: string): boolean {
+  pendingTrimText += serialized.length;
+  return pendingTrimText >= trimTextThreshold;
+}
+function resetTrimCounters(): void { pendingTrimText = 0; }
+async function finishWrite(key: string, serialized: string, context: CommitContext, scope: AuthScope, written = true): Promise<void> {
   const authorized = await allowed(context, scope);
-  if (authorized) await trim();
+  if (authorized && written && noteSuccessfulWrite(serialized) && await trim()) resetTrimCounters();
   if (!authorized || !await allowed(context, scope)) {
     await changeUnchanged(key, serialized, await readAuthScope());
     throw new DOMException('Authorization changed', 'AbortError');
@@ -189,7 +215,7 @@ async function writeRecord(key: string, context: CommitContext, scope: AuthScope
       if (!await allowed(context, scope)) throw new DOMException('Authorization changed', 'AbortError');
       if (record.response.truncated && (previous?.kind === 'split' || (previous?.kind === 'response' && !previous.response.truncated))) {
         rememberUse(key);
-        await finishWrite(key, raw as string, context, scope);
+        await finishWrite(key, raw as string, context, scope, false);
         return;
       }
     }
@@ -235,4 +261,6 @@ export async function writeView(context: RepoContext, scope: AuthScope, view: Vi
   GM_setValue(key, serialized);
   await navigator.locks.request(storageLock, () => finishWrite(key, serialized, context, scope));
 }
-export async function purgePrivateData(): Promise<void> { await navigator.locks.request(storageLock, trim); }
+export async function purgePrivateData(): Promise<void> {
+  await navigator.locks.request(storageLock, async () => { if (await trim()) resetTrimCounters(); });
+}

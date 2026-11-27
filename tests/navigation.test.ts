@@ -161,6 +161,7 @@ it('privateCacheStillChecksContents on a warm hit and refuses cached paths after
   await configureToken('private-test-token'); codePage(); app = await startApplication();
   await vi.waitFor(() => expect(paths()).toContain('sensitive.ts'));
   await vi.waitFor(() => expect(status()).toContain('Complete'));
+
   app.stop(); requests.length = 0; app = await startApplication();
   await vi.waitFor(() => expect(status()).toContain('Complete'));
   expect(paths()).toContain('sensitive.ts');
@@ -168,6 +169,28 @@ it('privateCacheStillChecksContents on a warm hit and refuses cached paths after
   app.stop(); denied = true; requests.length = 0; app = await startApplication();
   await search('sensitive.ts'); expect(paths()).not.toContain('sensitive.ts');
   expect(requests.map(r => new URL(r.url).pathname)).toEqual(['/repos/example/repo', '/repos/example/repo/git/commits/' + sha(1)]);
+});
+it('ignores malformed saved view and continues loading the repository tree', async () => {
+  const key = 'ogt:data:v1:' + JSON.stringify(['view', context.repoId, context.refKind, context.refName, 'public']);
+  values.set(key, JSON.stringify({ schema: 1, scope: 'public', private: false, usedAt: 1, view: { browsing: {} } }));
+  codePage(); api(); app = await startApplication();
+  await vi.waitFor(() => expect(status()).toContain('Complete'));
+  expect(paths()).toContain('docs');
+});
+
+it('does not store a private commit mapping that navigation never reads', async () => {
+  setHttpHandler(async ({ url }) => {
+    const path = new URL(url).pathname;
+    if (path === '/user') return { body: { id: 1, login: 'api-user' } };
+    if (path === '/repos/example/repo') return { body: { id: 1, visibility: 'private' } };
+    if (path.includes('/git/commits/')) return { body: { sha: sha(1), tree: { sha: sha(2) } } };
+    return { body: { sha: sha(2), truncated: false, tree: [entry('private.ts')] } };
+  });
+  await configureToken('private-test-token'); codePage(); app = await startApplication();
+  await vi.waitFor(() => expect(status()).toContain('Complete'));
+  const scope = await readAuthScope();
+  const key = 'ogt:cache:v2:' + JSON.stringify(['commit', context.repoId, context.commitSha, scope.id]);
+  expect(values.has(key)).toBe(false);
 });
 it('a repository becoming private cannot reuse its old public directory block', async () => {
   let privateNow = false;
