@@ -36,6 +36,31 @@ it('the saved Token is prefilled and the eye button reveals it, while reopening 
   await vi.waitFor(async () => expect((await readAuthScope()).authenticated).toBe(false));
   await vi.waitFor(() => expect(root().querySelector<HTMLInputElement>('#token')!.value).toBe(''));
 });
+it('expands into actionable fine-grained Token creation steps', () => {
+  setLanguage('en');
+  manager = createCredentialManager(() => {}, checkRepository); manager.open();
+  const instructions = root().querySelector<HTMLDetailsElement>('.token-steps');
+  expect(instructions).not.toBeNull();
+  expect(instructions!.open).toBe(false);
+  instructions!.querySelector('summary')!.click();
+  expect(instructions!.open).toBe(true);
+  expect([...instructions!.querySelectorAll('li')].map(step => step.textContent)).toEqual([
+    'Open the “Create a fine-grained Token” link above. Enter a name and expiration, then select the Resource owner that owns the repository.',
+    'Under Repository access, choose Only select repositories and select the repository you need.',
+    'Under Repository permissions, set Contents and Metadata to Read-only. Leave all other permissions set to No access.',
+    'Click Generate token and copy it. Treat the token as confidential; never share it.',
+    'Return here, paste the token above, and select Verify & save. Then use Check current repository to test repository access.',
+  ]);
+  setLanguage('zh-CN');
+  expect(instructions!.querySelector('summary')!.textContent).toBe('如何创建细粒度 Token');
+  expect([...instructions!.querySelectorAll('li')].map(step => step.textContent)).toEqual([
+    '点击上方“创建细粒度 Token”链接，填写 Token 名称、有效期，并在 Resource owner 中选择目标仓库所属的个人账户或组织。',
+    '在 Repository access 中选择 Only select repositories，再选中需要读取的仓库。',
+    '在 Repository permissions 中将 Contents 和 Metadata 设为 Read-only；其他权限保持 No access。',
+    '点击 Generate token 生成并复制令牌。请妥善保管，不要分享给他人。',
+    '回到此弹窗，将令牌粘贴到上方并点击“验证并保存”；再点击“检查当前仓库”确认读取权限。',
+  ]);
+});
 
 it('a rejected replacement stays in the dialog as an identity error and preserves the stored credential', async () => {
   setHttpHandler(async () => ({ body: { id: 1, login: 'api-user' } })); const initial = await configureToken('existing-token');

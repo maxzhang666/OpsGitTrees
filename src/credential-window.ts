@@ -83,6 +83,18 @@ export function createCredentialManager(notice: (message: Text) => void, checkRe
     const create = node('a', msg('Create a fine-grained Token ↗')); create.href = 'https://github.com/settings/personal-access-tokens/new'; create.target = '_blank'; create.rel = 'noopener noreferrer';
     const revoke = node('a', msg('Manage / revoke on GitHub ↗')); revoke.href = 'https://github.com/settings/personal-access-tokens'; revoke.target = '_blank'; revoke.rel = 'noopener noreferrer';
     guide.append(node('h2', msg('Minimum access')), node('p', msg('Contents: Read-only · Metadata: Read-only')), create, revoke);
+    const steps = node('details', '', 'token-steps');
+    const stepTitle = node('summary', msg('How to create a fine-grained Token'));
+    const instructions = node('ol');
+    const stepTexts = [
+      'Open the “Create a fine-grained Token” link above. Enter a name and expiration, then select the Resource owner that owns the repository.',
+      'Under Repository access, choose Only select repositories and select the repository you need.',
+      'Under Repository permissions, set Contents and Metadata to Read-only. Leave all other permissions set to No access.',
+      'Click Generate token and copy it. Treat the token as confidential; never share it.',
+      'Return here, paste the token above, and select Verify & save. Then use Check current repository to test repository access.',
+    ] as const;
+    for (const text of stepTexts) instructions.append(node('li', msg(text)));
+    steps.append(stepTitle, instructions); guide.append(steps);
     const privacy = node('p', msg('This page can read the Token. Clearing locally does not revoke it on GitHub.'), 'privacy');
     main.append(header, summary, form, status, secondary, guide, privacy);
     modal.append(main); shadow.append(node('style', css), modal); doc.body.append(host);

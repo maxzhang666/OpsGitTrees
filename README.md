@@ -93,10 +93,15 @@
 
 需要读取私有仓库，或希望使用认证后的 GitHub API 请求额度时，可配置细粒度个人访问令牌（fine-grained PAT）：
 
-1. 前往 GitHub [创建细粒度 Token](https://github.com/settings/personal-access-tokens/new)。
-2. 选择正确的资源所有者、需要访问的仓库和有效期，将 **Contents** 和 **Metadata** 权限设为 **Read-only**。组织仓库可能仍需审批或 SSO 授权。
-3. 在侧栏打开“设置 → GitHub API 认证 → 管理 Token…”，粘贴 Token，点击“验证并保存”。也可从脚本管理器的“OpsGitTrees：管理 Token…”菜单打开。
-4. 保存时验证 API 账户身份；再点击侧栏中的“检查当前仓库”，单独检查该仓库的读取权限。身份验证成功不代表能访问所有仓库，也不会审计额外授予的权限。
+1. 打开 GitHub [细粒度 Token 创建页](https://github.com/settings/personal-access-tokens/new)。
+2. 在 GitHub 表单中设置 Token 名称和有效期；**Resource owner** 选择目标仓库所属的个人账户或组织。
+3. 在 **Repository access** 中选择 **Only select repositories**，并选中需要读取的仓库。
+4. 在 **Permissions → Repository permissions** 中将 **Contents** 和 **Metadata** 设为 **Read-only**；其他权限保持 **No access**。无需授予写入、Pull requests 或组织管理权限。
+5. 点击 **Generate token** 生成 Token 并复制。把它当作密码妥善保管，不要分享给他人。
+6. 返回当前 GitHub 页面，打开侧栏“设置 → GitHub API 认证 → 管理 Token…”，粘贴 Token 并点击“验证并保存”。也可从脚本管理器的“OpsGitTrees：管理 Token…”菜单打开。
+7. 保存后点击“检查当前仓库”确认该仓库的读取权限；保存时的身份验证本身不代表当前仓库已获授权。
+
+组织仓库可能要求管理员批准或 SSO 授权。细粒度 Token 一次只能选择一个资源所有者。
 
 未保存 Token 时匿名请求；**验证并保存后，全部 GitHub API 请求都会使用该 Token，包括公开仓库**，无需另外开启开关。API 使用的账户可以与 GitHub 网页登录账户不同。
 
